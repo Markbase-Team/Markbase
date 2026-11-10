@@ -1,0 +1,53 @@
+{
+  "name": "@markbase/attention",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./handlers": "./src/handlers/index.ts",
+    "./server": "./src/server/index.ts",
+    "./ui": "./src/ui/index.ts",
+    "./ui/routes": "./src/ui/routes.ts",
+    "./app/*/route": "./src/app/*/route.ts",
+    "./app/*/page": "./src/app/*/page.tsx",
+    "./app/*/layout": "./src/app/*/layout.tsx"
+  },
+  "bin": {
+    "attention": "./dist/cli.js"
+  },
+  "files": [
+    "src",
+    "migrations",
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Markbase-Team/Markbase.git",
+    "directory": "packages/attention"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/email": "*",
+    "@markbase/protocol": "*",
+    "@markbase/ui": "*",
+    "@markbase/llm": "*",
+    "@supabase/supabase-js": "^2.106.2",
+    "lucide-react": "^1.17.0",
+    "pg": "^8.13.1",
+    "sonner": "^2.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/pg": "^8.11.10",
+    "tsup": "^8.5.0",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
