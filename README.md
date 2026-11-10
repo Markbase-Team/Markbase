@@ -76,38 +76,103 @@ added back.
 
 ## Develop
 
-You need Node.js 22 or later and a Supabase project to point at — the local
-stack (`npx supabase@2 start`) is the easy one. Apply the migrations to it with
-`npx supabase@2 db push`, as [SELF-HOSTING.md](./SELF-HOSTING.md) section 1
-describes.
+From a fresh clone to a running app, in order. You need **Node.js 22 or
+later** and **Docker** (the local database runs in it).
+
+### 1. Install
 
 ```bash
-npm install            # at the repo root (npm workspaces)
-npm run dev            # the web app → http://localhost:3000
+npm install            # at the repo root; one install for every workspace
 ```
 
-`apps/web/.env.local` takes the same values as [`.env.example`](./.env.example):
-the project's URL and publishable key, its secret key, and `APP_URL`.
+### 2. Start the database
+
+Markbase runs on Supabase — auth, realtime, storage and Postgres — so this
+comes before the app: without a project to talk to, no page renders. The local
+stack is a full Supabase on your machine:
+
+```bash
+npx supabase@2 start
+```
+
+The first start pulls the images and applies everything in
+`supabase/migrations`, so the schema is ready when it finishes. Use `@2`: the
+repository targets the Supabase CLI 2 line.
+
+One local-only fix, once after every fresh start or `db reset`: the local
+image leaves the API's role without access to the tables the migrations
+created, and the app answers `42501` until it is granted.
+
+```bash
+docker exec "$(docker ps --format '{{.Names}}' | grep '^supabase_db_')" psql -U postgres -d postgres -c "grant all on all tables in schema public to service_role; grant all on all sequences in schema public to service_role;"
+```
+
+### 3. Point the app at it
+
+```bash
+npx supabase@2 status
+```
+
+prints the stack's addresses and keys. Put four of them, plus a key of your
+own, in `apps/web/.env.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321          # API_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...  # PUBLISHABLE_KEY
+SUPABASE_SECRET_KEY=sb_secret_...                        # SECRET_KEY
+APP_URL=http://localhost:3000
+SECRETS_ENCRYPTION_KEY=                                  # openssl rand -base64 32
+```
+
+These are the same names as [`.env.example`](./.env.example), which describes
+each one and lists the optional ones.
+
+### 4. Run the web app
+
+```bash
+npm run dev            # → http://localhost:3000
+```
+
+Because `APP_URL` is not markbase.so, this is a team instance, and it has no
+accounts yet: the first page is **Set up localhost:3000**, and the account you
+create there is its admin. After that, sign-up needs an invite from Settings.
+Mail from the local stack (there is none in this flow) lands in Mailpit at
+http://127.0.0.1:54324; the database UI is at http://127.0.0.1:54323.
+
+### 5. Check your change
 
 ```bash
 npm run typecheck      # every workspace — what CI runs
 npm test               # every workspace's tests
+npx supabase@2 test db # the database's own tests, after a migration change
 ```
 
-The CLI:
+### 6. The CLI and the desktop app (when you need them)
+
+Both talk to the web app from step 4, so start that first.
 
 ```bash
 cd apps/markbase && npm run build && npm link
-markbase login                       # browser sign-in, installs the sync service
+markbase login --app-url http://localhost:3000    # browser sign-in, installs the sync service
 markbase vault mount "Team notes" ~/Code/my-app/docs
 ```
 
-The desktop app (`apps/app`): `npm run build`, then `npx electron .` for a dev
-run, or `npm run dist` for a DMG. Building it from a fresh checkout has two
-extra steps, in *Building the desktop app* in the self-hosting guide.
+```bash
+cd apps/app && npm run build && npx electron .    # a dev run of the desktop app
+```
 
-`MARKBASE_APP_URL` points the CLI at a dev server; `markbase instance <url>`
-saves an instance for the CLI and the desktop app alike.
+`npm run dist` in `apps/app` packages a DMG; from a fresh checkout that has
+two extra steps, in *Building the desktop app* in
+[SELF-HOSTING.md](./SELF-HOSTING.md). `markbase instance <url>` shows or
+changes which instance the CLI and the desktop app talk to, and
+`MARKBASE_APP_URL` overrides it for one command.
+
+### Against a hosted Supabase project instead
+
+Skip step 2. Create a project on supabase.com, apply the migrations with
+`npx supabase@2 db push --db-url "<its connection string>"`, and take the
+values for step 3 from the project's settings —
+[SELF-HOSTING.md](./SELF-HOSTING.md) section 1 has the details.
 
 ## Contributing
 
