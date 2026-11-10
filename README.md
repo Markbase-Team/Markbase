@@ -4,7 +4,7 @@
 
 <h1 align="center">Markbase</h1>
 
-<p align="center"><strong>The AI-native markdown humans and agents write together.</strong></p>
+<p align="center"><strong>One markdown folder for your team and its agents.</strong></p>
 
 Markbase is a folder of markdown that syncs. You and your team edit the files
 in the folder, in the browser, in the desktop app, or through the agents you

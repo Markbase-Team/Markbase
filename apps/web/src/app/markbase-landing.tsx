@@ -45,7 +45,7 @@ const STRUCTURED_DATA = {
         width: 1024,
         height: 1024,
       },
-      description: "The AI-native markdown humans and agents write together.",
+      description: "One markdown folder for your team and its agents.",
       // Add real owned profiles (X, GitHub, LinkedIn, Product Hunt) here to
       // help search + AI models disambiguate the "Markbase" entity.
       sameAs: [],
@@ -66,7 +66,7 @@ const STRUCTURED_DATA = {
       applicationSubCategory: "Collaborative document editor",
       operatingSystem: "Web",
       description:
-        "The AI-native markdown humans and agents write together — a shared workspace where you and the agents you already use read, write, comment on, and publish the same living documents, with full version history and one source of truth.",
+        "One markdown folder for your team and its agents — a shared workspace where you and the agents you already use read, write, comment on, and publish the same living documents, with full version history and one source of truth.",
       publisher: { "@id": `${SITE_URL}/#organization` },
     },
     {
@@ -189,7 +189,7 @@ export function MarkbaseLanding() {
             <span className="size-1.5 rounded-full bg-[#c7e600]" /> Documentation for the AI era
           </span>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight text-zinc-900 md:text-6xl md:leading-[1.05]">
-            The AI-native markdown humans and agents write together
+            One markdown folder for your team and its agents
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-zinc-600">
             Read, write, review, and publish the same document — with the agents you already use.
@@ -362,7 +362,7 @@ export function MarkbaseLanding() {
                 <span className="text-base font-semibold">Markbase</span>
               </div>
               <p className="mt-3 max-w-xs text-sm text-zinc-500">
-                The documentation layer for humans and AI agents.
+                One markdown folder for your team and its agents.
               </p>
             </div>
             <FooterCol

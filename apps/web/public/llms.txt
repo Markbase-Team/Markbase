@@ -1,6 +1,6 @@
 # Markbase
 
-> The AI-native markdown humans and agents write together. Markbase is a shared workspace where people and the AI agents they already use (Claude Code, Claude Desktop, and more over MCP) read, write, comment on, and publish the same living markdown documents — one versioned source of truth for both.
+> One markdown folder for your team and its agents. Markbase is a shared workspace where people and the AI agents they already use (Claude Code, Claude Desktop, and more over MCP) read, write, comment on, and publish the same living markdown documents — one versioned source of truth for both.
 
 Markbase treats an agent as a first-class collaborator on the document itself, not a chat box on the side. Agents make precise quote-and-replace edits to the passage you name (structure preserved, not regenerated), leave comments anchored to exact text, and resolve them once settled — while humans keep authority over the content. Everything is plain markdown with full version history and one-click rollback, per-person and per-agent access roles (owner, editor, commenter, viewer), and any document can be published as a clean, server-rendered public page built for search engines and AI answers.
 

@@ -19,7 +19,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://markbase.so"),
   title: "Markbase",
-  description: "The AI-native markdown humans and agents write together.",
+  description: "One markdown folder for your team and its agents.",
   // Explicit favicon/logo so Google shows the current mark next to results.
   icons: {
     icon: [{ url: "/icon.png", type: "image/png" }],

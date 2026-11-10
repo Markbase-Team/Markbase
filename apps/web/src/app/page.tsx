@@ -43,7 +43,7 @@ export async function generateMetadata() {
   }
   if (await isApexHost()) {
     return {
-      title: "Markbase — the doc humans and AI agents write together",
+      title: "Markbase — one markdown folder for your team and its agents",
       description:
         "Google Docs for markdown, built AI-native. You and the agents you already use read, write, comment on, and publish the same living documents — one source of truth.",
       // Self-referential canonical guards against UTM/parameter duplicates.
