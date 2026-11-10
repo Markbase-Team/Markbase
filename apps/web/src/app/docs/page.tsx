@@ -48,7 +48,7 @@ it, **one folder** that mirrors them. Mount it from the desktop app (New vault,
 or the Vaults menu) or from the terminal:
 
 \`\`\`bash
-npx @markbase/cli vault mount ~/Code/my-app/docs
+npx @markbase/cli vault mount "Team notes" ~/Code/my-app/docs
 \`\`\`
 
 From then on a background sync keeps the folder and the cloud in step, both
