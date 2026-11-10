@@ -1,14 +1,15 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ProjectFinder } from "./project-finder";
 import { SkillsLanding } from "./skills-landing";
 import { MarkbaseLanding } from "./markbase-landing";
 import { getCurrentUser } from "@/lib/supabase/server";
 
-// One deployment serves several hosts; the root renders different content per
-// host (apex marketing landing / Skills landing / the app's project finder).
-// Reading the Host header makes this route dynamic.
+// One deployment serves several hosts, and the root is the one route that
+// tells them apart: markbase.so gets the marketing landing, the skills host its
+// own landing, and every other host — a self-hosted instance, a dev server — is
+// the app, whose front door is the dashboard or, signed out, sign-in (which
+// itself sends an empty instance to its admin set-up). Reading the Host header
+// makes this route dynamic.
 const SKILLS_HOST = "skills.markbase.so";
 
 async function host(): Promise<string> {
@@ -21,16 +22,12 @@ async function isSkillsHost(): Promise<boolean> {
   return h === SKILLS_HOST || h === "skills.localhost";
 }
 
-// The apex (markbase.so) is the marketing landing.
-// `landing.localhost` previews it in local dev.
+// The apex (markbase.so) is the marketing landing. `landing.localhost`
+// previews it in local dev; a plain `localhost` is a dev instance like any
+// other, so it opens the app, the way a self-hosted one does.
 async function isApexHost(): Promise<boolean> {
   const h = await host();
-  return (
-    h === "markbase.so" ||
-    h === "www.markbase.so" ||
-    h === "landing.localhost" ||
-    h === "localhost"
-  );
+  return h === "markbase.so" || h === "www.markbase.so" || h === "landing.localhost";
 }
 
 export async function generateMetadata() {
@@ -61,29 +58,6 @@ export default async function Home() {
     return <MarkbaseLanding />;
   }
 
-  // The app-host public ticket page. Signed-in owners belong on the dashboard,
-  // not this customer-facing finder.
-  if (await getCurrentUser()) {
-    redirect("/dashboard");
-  }
-
-  return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-16">
-      <h1 className="text-4xl font-bold tracking-tight">Ticketing</h1>
-      <p className="mt-3 max-w-prose text-muted-foreground">
-        Enter your project name to open it and submit or track a request.
-      </p>
-
-      <ProjectFinder />
-
-      <div className="mt-10">
-        <Link
-          href="/login"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          Sign in
-        </Link>
-      </div>
-    </main>
-  );
+  // Any other host is the app.
+  redirect((await getCurrentUser()) ? "/dashboard" : "/login");
 }
