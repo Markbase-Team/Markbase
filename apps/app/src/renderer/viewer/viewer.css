@@ -1,0 +1,19 @@
+@import "tailwindcss";
+/* The same tokens the web app loads — one palette, every window. */
+@import "@markbase/ui/theme.css";
+/* Markdown rendering needs it — @markbase/ui/markdown applies `prose` classes
+ * and says in its own header that the consumer must load this plugin. Without
+ * it the markup renders with no heading scale, no bullets and no table rules:
+ * visibly wrong, but nothing errors. */
+@plugin "@tailwindcss/typography";
+
+/* The classes this page can actually use: the shared components, and the one
+ * feature it renders. Same rule as apps/web — a directory, never a glob in the
+ * middle of a path, because a glob that matches nothing is silent. */
+@source "../../../../../packages/core/ui/src";
+@source "../../../../../packages/features/docs/src";
+
+/* The font family is the shell's to supply — see the terms window. */
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}

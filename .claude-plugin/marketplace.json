@@ -1,0 +1,19 @@
+{
+  "name": "markbase-agent-skills",
+  "owner": {
+    "name": "Markbase"
+  },
+  "metadata": {
+    "description": "Markbase collaborative docs agent skill for Claude Code",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "markbase",
+      "description": "Read and write Markbase collaborative markdown documents over the HTTP API — list/create docs, edit a passage by quoting it, comment, and read version history. Use when the user shares a Markbase doc link (markbase.so/dashboard/documents/…) or mentions MARKBASE_API_KEY.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/markbase"]
+    }
+  ]
+}

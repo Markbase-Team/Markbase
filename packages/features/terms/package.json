@@ -1,0 +1,28 @@
+{
+  "name": "@markbase/terms",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./handlers": "./src/handlers/index.ts",
+    "./server": "./src/server/index.ts",
+    "./ui": "./src/ui/index.ts",
+    "./app/*/route": "./src/app/*/route.ts",
+    "./app/*/page": "./src/app/*/page.tsx",
+    "./app/*/layout": "./src/app/*/layout.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/llm": "*",
+    "@markbase/protocol": "*",
+    "@markbase/ui": "*",
+    "lucide-react": "^1.17.0",
+    "sonner": "^2.0.7"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

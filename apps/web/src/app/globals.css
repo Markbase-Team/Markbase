@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+/* Tokens and the base layer, shared with the desktop app's local pages. */
+@import "@markbase/ui/theme.css";
+@plugin "@tailwindcss/typography";
+
+/* Scan the shared workspace packages so their Tailwind classes are generated.
+ *
+ * These pointed at packages/ui, packages/email and packages/attention until
+ * 2026-09-25 — three paths the core/ + features/ split had moved a week
+ * earlier. A stale @source fails silently: Tailwind finds no files, generates
+ * no rules, and the only symptom is a class that exists in the markup and
+ * nowhere in the CSS. Every `group-hover/*` in five feature packages was
+ * missing from the build, so a hover-revealed button was permanently invisible.
+ *
+ * Directories rather than a package list, so the next package added is not the
+ * next one to go missing. A glob in the middle of the path (features, star, src)
+ * matches nothing here, and a glob that matches nothing is exactly as silent
+ * as a path that no longer exists — which is the trap this comment is about.
+ * (Nor can that pattern be written literally above: the star-slash inside a
+ * CSS comment ends the comment.) */
+@source "../../../../packages/core/ui/src";
+@source "../../../../packages/features";

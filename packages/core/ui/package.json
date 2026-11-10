@@ -1,0 +1,59 @@
+{
+  "name": "@markbase/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./app-cache": "./src/app-cache.ts",
+    "./keys": "./src/keys.ts",
+    "./latest-ref": "./src/latest-ref.ts",
+    "./markdown-editor": "./src/markdown-editor.tsx",
+    "./navigation": "./src/navigation.tsx",
+    "./page-header": "./src/page-header.tsx",
+    "./page-host": "./src/page-host.ts",
+    "./prompt-dialog": "./src/prompt-dialog.tsx",
+    "./sidebar-slot": "./src/sidebar-slot.ts",
+    "./tab-bar": "./src/tab-bar.tsx",
+    "./theme.css": "./src/theme.css",
+    "./use-agent-sessions": "./src/use-agent-sessions.ts",
+    "./use-is-desktop": "./src/use-is-desktop.ts",
+    "./use-mobile": "./src/use-mobile.ts",
+    "./utils": "./src/utils.ts",
+    "./*": "./src/*.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Markbase-Team/Markbase.git",
+    "directory": "packages/ui"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@markbase/protocol": "*",
+    "@milkdown/crepe": "^7.21.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.4.3",
+    "react-letter": "^0.4.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0",
+    "vaul": "^1.1.2"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

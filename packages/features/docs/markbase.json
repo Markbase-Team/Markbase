@@ -1,0 +1,22 @@
+{
+  "id": "docs",
+  "pkg": "@markbase/docs",
+  "summary": "Documents: markdown that humans and agents edit together.",
+  "sidebar": [
+    {
+      "id": "documents",
+      "title": "Documents",
+      "href": "/dashboard/documents",
+      "icon": "FileText"
+    }
+  ],
+  "routes": [
+    "/dashboard/documents",
+    "/api/v1/docs",
+    "/api/v1/vaults",
+    "/api/v1/assets"
+  ],
+  "centre": [
+    "markdown"
+  ]
+}

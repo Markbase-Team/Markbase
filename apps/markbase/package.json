@@ -1,0 +1,44 @@
+{
+  "name": "@markbase/cli",
+  "version": "0.8.0",
+  "description": "Run a Markbase ticket worker on your machine — claims your tickets and executes them with Claude Code.",
+  "type": "module",
+  "bin": {
+    "markbase": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx src/cli.ts",
+    "prepublishOnly": "npx tsx ../../packages/features/docs/scripts/gen-skill.ts --check && npm run build",
+    "version": "npx tsx ../../packages/features/docs/scripts/gen-skill.ts && git add ../../skills/markbase/SKILL.md"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@supabase/supabase-js": "^2.106.2",
+    "@markbase/flows": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5",
+    "@markbase/protocol": "*",
+    "@markbase/node": "*",
+    "@markbase/vault": "*",
+    "@markbase/runner": "*",
+    "@markbase/docs": "*",
+    "vitest": "^2.1.8"
+  }
+}

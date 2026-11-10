@@ -1,0 +1,22 @@
+-- The Shared Vault: documents shared with a user, mirrored to a folder of their
+-- own by the vault daemon (docs/shared-vault.md).
+--
+-- A document shared with me lives in its OWNER's vault, at the owner's path. My
+-- daemon cannot put it there -- that folder is theirs -- so it lands in one
+-- per-user folder, the Shared Vault, laid out by owner and title. Where I file
+-- it inside that folder is my business and nobody else's: a move or a rename I
+-- make there must not move the owner's file, and the owner's moves must not
+-- rearrange mine. So the member, not the document, carries that path.
+--
+-- The change feed's shared mode (`docs.crdt_changes(..., p_shared)`) shipped
+-- with stage 2 (20261028100000); this is the one column it did not need.
+--
+-- ADDITIVE and safe to apply before any client has updated: the column is
+-- nullable, and null means "the default layout".
+
+-- Vault-relative inside the member's Shared Vault ("Jessie/Roadmap.md"). Null
+-- until the member moves or renames the file; the daemon then lays it out as
+-- <owner display name>/<title>.md. Never read for the owner, who has no member
+-- row -- and never written by anyone but the member, through
+-- PATCH /docs/:id/membership.
+alter table docs.members add column if not exists path text;

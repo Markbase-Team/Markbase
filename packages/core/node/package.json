@@ -1,0 +1,31 @@
+{
+  "name": "@markbase/node",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api-keys": "./src/api-keys.ts",
+    "./caller": "./src/caller.ts",
+    "./claude-code": "./src/claude-code.ts",
+    "./detect-claude": "./src/detect-claude.ts",
+    "./device-auth": "./src/device-auth.ts",
+    "./features": "./src/features.ts",
+    "./repo-state": "./src/repo-state.ts",
+    "./repos": "./src/repos.ts",
+    "./skill-bundle": "./src/skill-bundle.ts",
+    "./vercel-preview": "./src/vercel-preview.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/protocol": "*",
+    "@supabase/supabase-js": "^2.106.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

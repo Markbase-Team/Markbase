@@ -1,0 +1,25 @@
+{
+  "id": "email",
+  "pkg": "@markbase/email",
+  "summary": "Inbox: read mail beside the work it is about.",
+  "sidebar": [],
+  "routes": [
+    "/api/v1/inbox",
+    "/api/v1/email"
+  ],
+  "centre": [],
+  "contributes": {
+    "app": [
+      "api/v1/inbox/route",
+      "api/v1/inbox/accounts/route",
+      "api/v1/inbox/message/route",
+      "api/v1/inbox/read/route",
+      {
+        "path": "api/v1/inbox/unsubscribe/route",
+        "maxDuration": 60
+      },
+      "api/v1/email/oauth/start/route",
+      "api/v1/email/oauth/callback/route"
+    ]
+  }
+}

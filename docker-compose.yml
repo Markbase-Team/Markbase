@@ -1,0 +1,26 @@
+# One Markbase instance for a team, the way a self-hosted Grafana is one URL.
+# SELF-HOSTING.md walks through it; the short version:
+#
+#   cp .env.example .env     # fill in your Supabase project
+#   docker compose up --build -d
+#
+# The container is the web app and its API. The database, auth, realtime and
+# file storage are the Supabase project named in .env — a hosted one, or the
+# Supabase docker stack running next to this.
+services:
+  web:
+    build:
+      context: .
+      args:
+        # The one thing compiled in: which feature packages the image ships.
+        # The Supabase project is not — it comes from .env when the container
+        # starts, so the image built here can be started for any instance.
+        MARKBASE_FEATURES: ${MARKBASE_FEATURES:-}
+    image: markbase-web:local
+    # The whole of .env, the Supabase project included, at start. The container
+    # refuses to start without the project (Dockerfile, CMD) and says so in
+    # `docker compose logs web`.
+    env_file: .env
+    ports:
+      - "${MARKBASE_PORT:-3000}:3000"
+    restart: unless-stopped

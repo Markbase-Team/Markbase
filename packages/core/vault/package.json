@@ -1,0 +1,35 @@
+{
+  "name": "@markbase/vault",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./asset-refs": "./src/asset-refs.ts",
+    "./markbase-home": "./src/markbase-home.ts",
+    "./mirror": "./src/mirror.ts",
+    "./mirror-format": "./src/mirror-format.ts",
+    "./vault-account": "./src/vault-account.ts",
+    "./vault-assets": "./src/vault-assets.ts",
+    "./vault-boundary": "./src/vault-boundary.ts",
+    "./vault-fs": "./src/vault-fs.ts",
+    "./vault-ignore": "./src/vault-ignore.ts",
+    "./vault-index": "./src/vault-index.ts",
+    "./vault-lock": "./src/vault-lock.ts",
+    "./vault-registry": "./src/vault-registry.ts",
+    "./vault-sync-manager": "./src/vault-sync-manager.ts",
+    "./vault-sync-run": "./src/vault-sync-run.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/docs": "*",
+    "@markbase/protocol": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

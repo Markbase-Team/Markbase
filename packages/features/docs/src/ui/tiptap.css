@@ -1,0 +1,269 @@
+/* Editor chrome for the TipTap doc editor (tables, task lists, placeholder). */
+.ProseMirror {
+  outline: none;
+}
+/* The frontmatter node is surfaced by the Properties panel, not rendered inline. */
+.ProseMirror div[data-frontmatter] {
+  display: none;
+}
+/* Highlight mark (==text==). */
+.ProseMirror mark {
+  background: color-mix(in srgb, #f59e0b 32%, transparent);
+  border-radius: 2px;
+  padding: 0.05em 0.15em;
+  color: inherit;
+}
+/* Text that has a comment on it. */
+.ProseMirror .comment-highlight {
+  background: color-mix(in srgb, #fde047 45%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, #eab308 60%, transparent);
+  border-radius: 2px;
+}
+/* The comment that was just clicked — a brief flash to lead the eye to it. */
+.ProseMirror .comment-highlight-active {
+  animation: comment-flash 1.5s ease-out;
+}
+@keyframes comment-flash {
+  0%,
+  25% {
+    background: color-mix(in srgb, #fbbf24 85%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, #fbbf24 35%, transparent);
+  }
+  100% {
+    background: color-mix(in srgb, #fde047 45%, transparent);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Inline code as a subtle chip (Tailwind prose renders it as bare bold text
+   with literal backticks). Excludes code blocks (pre > code). */
+.ProseMirror :not(pre) > code {
+  background: var(--muted);
+  padding: 0.1em 0.35em;
+  border-radius: 0.3rem;
+  font-size: 0.875em;
+  font-weight: 400;
+}
+.ProseMirror :not(pre) > code::before,
+.ProseMirror :not(pre) > code::after {
+  content: none;
+}
+
+/* Tighten lists — prose spaces list items (and their inner <p>) far apart. */
+/* Block spacing. `prose-sm` puts 16px (1.14em) above and below every
+   paragraph and list, which reads as a blank line between each one — the gap
+   you get in a rendered blog post, not the one you get while writing in
+   Obsidian or Notion, where a paragraph break is a little more than a line.
+   Half of it keeps blocks distinct without the page turning into stanzas.
+   Headings keep prose's own rhythm: the extra room above them is what marks a
+   section, and a smaller gap after them ties them to their first paragraph. */
+.ProseMirror p,
+.ProseMirror > ul,
+.ProseMirror > ol,
+.ProseMirror blockquote {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.ProseMirror h1 + p,
+.ProseMirror h2 + p,
+.ProseMirror h3 + p {
+  margin-top: 0.35em;
+}
+/* The first block sits flush under the properties panel. */
+.ProseMirror > :first-child {
+  margin-top: 0;
+}
+.ProseMirror li {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+.ProseMirror li > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+/* Nested lists should sit as tight as sibling items — prose over-spaces them,
+   making the parent→child gap wider than the gap between equal-level bullets. */
+.ProseMirror li > ul,
+.ProseMirror li > ol {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+
+/* GFM tables */
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+  table-layout: fixed;
+}
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid var(--border);
+  padding: 0.375rem 0.5rem;
+  vertical-align: top;
+  position: relative;
+}
+.ProseMirror th {
+  background: var(--muted);
+  font-weight: 600;
+  text-align: left;
+}
+.ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  pointer-events: none;
+}
+
+/* @mention chips. In the editor these are `mention` atoms; in rendered markdown
+   (published pages, comment bodies) they arrive as `agent:` links. Style both. */
+.ProseMirror span[data-mention],
+a[href^="agent:"] {
+  display: inline-block;
+  padding: 0.05em 0.35em;
+  border-radius: 0.375rem;
+  background: var(--muted);
+  color: var(--foreground);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ProseMirror span[data-mention] {
+  cursor: default;
+  user-select: none;
+}
+
+/* Wiki-style cross-references `[[note-name]]`. Plain text underneath; this just
+   marks them as followable (⌘/Ctrl+click). Reads like a link, not a mention. */
+.ProseMirror .wikilink {
+  color: #2563eb;
+  cursor: pointer;
+  border-radius: 0.2rem;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.ProseMirror .wikilink:hover {
+  text-decoration-style: solid;
+  background: rgba(37, 99, 235, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  .ProseMirror .wikilink {
+    color: #7ab0ff;
+  }
+}
+
+/* GFM task lists */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+/* Center the checkbox on the FIRST line of the item (not the block), so wrapped
+   items stay aligned. The label is made exactly one line tall — `1lh` scales with
+   the text instead of the magic offset this used to carry. */
+.ProseMirror ul[data-type="taskList"] li > label {
+  display: flex;
+  align-items: center;
+  min-height: 1.715em; /* fallback for browsers without `lh` */
+  min-height: 1lh;
+  user-select: none;
+}
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* A task item's children hang off `li > div`, so the `li > p` / `li > ul` resets
+   above miss them: prose's paragraph margin shifts the text down past the
+   checkbox, and its list margin makes a nested todo sit further apart than its
+   siblings. Reset both — the li's own margin already spaces the rows. */
+.ProseMirror ul[data-type="taskList"] li > div > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.ProseMirror ul[data-type="taskList"] li > div > ul,
+.ProseMirror ul[data-type="taskList"] li > div > ol {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+/* The last nested item's bottom margin would stack with the next parent's top
+   margin, making the step back out to the parent level wider than a plain row. */
+.ProseMirror ul[data-type="taskList"] li > div > ul > li:last-child,
+.ProseMirror ul[data-type="taskList"] li > div > ol > li:last-child {
+  margin-bottom: 0;
+}
+
+/* Find-in-document (Cmd+F): every match gets a soft lime highlight; the current
+   one is solid lime with dark ink, on-brand and legible in light and dark. */
+.ProseMirror .search-match {
+  background-color: rgba(229, 255, 110, 0.45);
+  border-radius: 2px;
+}
+.ProseMirror .search-match-current {
+  background-color: #e5ff6e;
+  color: #171717;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+/* ```mermaid — the diagram, and only the diagram.
+   The source belongs to the markdown view (the Code button), which is a separate
+   editor. Showing it here on a click was showing the very thing you switch modes
+   to avoid. The text stays in the document — ProseMirror needs a contentDOM for a
+   text block — it is simply never displayed in this mode. */
+.mermaid-block .mermaid-preview {
+  display: none;
+}
+.mermaid-block.mermaid-live .mermaid-preview {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+.mermaid-block.mermaid-live .mermaid-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+.mermaid-block.mermaid-live > pre {
+  display: none;
+}
+/* A selected diagram gets the outline any selected block would. */
+.mermaid-block.mermaid-live .mermaid-preview.ProseMirror-selectednode,
+.mermaid-block.mermaid-live.ProseMirror-selectednode .mermaid-preview {
+  outline: 2px solid var(--ring, #94a3b8);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+/* A diagram that will not draw says why, rather than leaving a blank space. */
+.mermaid-block .mermaid-preview.mermaid-error {
+  display: block;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  color: var(--destructive, #b91c1c);
+  padding: 0.5rem 0.75rem;
+  border-left: 2px solid currentColor;
+}
+
+/* Published pages: the placeholder the server emits, and the diagram that
+   replaces it. The source stays readable if the script never runs. */
+.mermaid-figure {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.mermaid-figure svg {
+  max-width: 100%;
+  height: auto;
+}

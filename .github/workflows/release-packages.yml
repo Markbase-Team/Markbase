@@ -1,0 +1,49 @@
+name: Release packages
+
+# Publishes the reusable packages to dedicated, installable branches whose root
+# IS the package (so `npm i github:Markbase-Team/Markbase#pkg-ui` works). You keep
+# developing normally on main in one PR per change; this regenerates the
+# release branches on every push — nothing to maintain by hand.
+#
+#   @shared/ui            → branch pkg-ui
+#   @workspace/attention  → branch pkg-attention   (its @shared/ui dep is
+#                           rewritten to github:Markbase-Team/Markbase#pkg-ui)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/core/ui/**"
+      - "packages/features/attention/**"
+      - ".github/workflows/release-packages.yml"
+  workflow_dispatch:
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # subtree split needs full history
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Split @shared/ui → pkg-ui
+        run: |
+          git subtree split --prefix=packages/core/ui -b _split_ui
+          git push -f origin _split_ui:pkg-ui
+
+      - name: Split @workspace/attention → pkg-attention
+        run: |
+          git subtree split --prefix=packages/features/attention -b _split_attention
+          git checkout _split_attention
+          # On the release branch, pin the workspace UI dep to its git branch so
+          # installing attention pulls @shared/ui automatically.
+          node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('package.json','utf8'));j.dependencies['@shared/ui']='github:Markbase-Team/Markbase#pkg-ui';fs.writeFileSync('package.json',JSON.stringify(j,null,2)+'\n');"
+          git commit -am "release: pin @shared/ui to the pkg-ui branch"
+          git push -f origin _split_attention:pkg-attention

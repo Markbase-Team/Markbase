@@ -1,0 +1,37 @@
+-- Give the worker back the one write 20260916162448_security_lockdown_stage1
+-- took from it by mistake.
+--
+-- The lockdown revoked INSERT on agent_sessions from anon, on the evidence of a
+-- code map that listed the worker as reading and updating that table. It does
+-- both -- and it also inserts, four call frames down: discover-repos.ts calls
+-- reconcileAgentSessions, which marks vanished sessions missing, reactivates the
+-- ones it sees again, and INSERTS the ones it has just discovered.
+--
+-- So since 2026-09-16 every newly discovered Claude Code session has failed to
+-- record, 401 from PostgREST, while the daemon went on logging "discovered 12
+-- local repos, 88 sessions" as though it had worked. Thirty-three of those in
+-- the edge log before anyone noticed.
+--
+-- The tests did not catch it and could not have: they assert the permission
+-- matrix, and "anon cannot INSERT into agent_sessions" was passing, correct, and
+-- exactly the bug. supabase/tests/worker_writes.test.sql is the other kind of
+-- test -- it runs the writes the worker actually makes.
+--
+-- This grant is temporary in the same way the rest of public_key_grants is:
+-- stage 2 moves the worker off the publishable key entirely, and then every one
+-- of these goes at once.
+grant insert on table public.agent_sessions to anon, authenticated;
+
+-- And the delete the worker's own RPCs need.
+--
+-- report_worker_repos and report_worker_sessions both delete this owner's rows
+-- and re-insert the current set -- that is how a repo you removed stops being
+-- listed. They are SECURITY INVOKER, so they run as anon, and public_key_grants
+-- gave those tables select/insert/update only.
+--
+-- Production never noticed: it still carries the blanket grant from before the
+-- lockdown, and stage 1 did not revoke it there. A database built from this repo
+-- has no such history, so its daemon fails on the first discovery sweep --
+-- invisible here, fatal for anyone self-hosting. The rebuild check exists for
+-- exactly this, and worker_writes.test.sql is what made it say so out loud.
+grant delete on table public.worker_repos, public.worker_sessions to anon, authenticated;

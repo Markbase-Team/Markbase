@@ -1,0 +1,593 @@
+<title>Workflow Contract Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --ground:#eef1f2; --surface:#ffffff; --surface-2:#f7f9f9;
+    --ink:#161d21; --muted:#59676e; --faint:#8a979d;
+    --line:#d3dcdd; --line-soft:#e7eded;
+    --accent:#0f6f68; --accent-soft:#dcedeb; --accent-ink:#0b524d;
+    --ok:#2f7d4f; --ok-soft:#dcefe2;
+    --run:#9c6410; --run-soft:#f7e9d0;
+    --wait:#7f8d94; --wait-soft:#e6ebec;
+    --flash:#fdf0c4;
+    --code-key:#0b524d; --code-str:#8a4b1f; --code-num:#2f5aa8; --code-punc:#8a979d;
+    --sans:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#0e1416; --surface:#151d20; --surface-2:#1b2427;
+      --ink:#e2eaea; --muted:#93a4aa; --faint:#6f8188;
+      --line:#293639; --line-soft:#202b2e;
+      --accent:#49c8bc; --accent-soft:#12332f; --accent-ink:#8fe0d7;
+      --ok:#6cc48d; --ok-soft:#173021;
+      --run:#d9a441; --run-soft:#33280f;
+      --wait:#7f8d94; --wait-soft:#222c2f;
+      --flash:#3d3413;
+      --code-key:#8fe0d7; --code-str:#e0a97a; --code-num:#93b9ea; --code-punc:#6f8188;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#0e1416; --surface:#151d20; --surface-2:#1b2427;
+    --ink:#e2eaea; --muted:#93a4aa; --faint:#6f8188;
+    --line:#293639; --line-soft:#202b2e;
+    --accent:#49c8bc; --accent-soft:#12332f; --accent-ink:#8fe0d7;
+    --ok:#6cc48d; --ok-soft:#173021;
+    --run:#d9a441; --run-soft:#33280f;
+    --wait:#7f8d94; --wait-soft:#222c2f;
+    --flash:#3d3413;
+    --code-key:#8fe0d7; --code-str:#e0a97a; --code-num:#93b9ea; --code-punc:#6f8188;
+  }
+
+  body {
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1280px; margin:0 auto; padding-inline:16px; padding-block:28px 56px; }
+
+  /* ---- header ---- */
+  header { margin-bottom:22px; }
+  .eyebrow {
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); font-weight:500; margin:0 0 10px;
+  }
+  h1 { font-size:clamp(26px,4.2vw,38px); line-height:1.12; margin:0 0 10px; letter-spacing:-.02em; text-wrap:balance; }
+  .lede { margin:0; max-width:62ch; color:var(--muted); font-size:16px; }
+  .lede strong { color:var(--ink); font-weight:600; }
+
+  /* ---- agent bar ---- */
+  .agent {
+    margin:22px 0 24px; padding:14px 16px; background:var(--surface); border:1px solid var(--line);
+    border-radius:10px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  }
+  .agent-label {
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); margin-right:2px; width:100%;
+  }
+  button {
+    font-family:var(--sans); font-size:13.5px; font-weight:500; color:var(--ink);
+    background:var(--surface-2); border:1px solid var(--line); border-radius:7px;
+    padding:7px 12px; cursor:pointer; transition:background .12s, border-color .12s, color .12s;
+  }
+  button:hover:not(:disabled) { background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink); }
+  button:disabled { opacity:.45; cursor:default; }
+  button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  :root[data-theme="dark"] button.primary, :root:not([data-theme="light"]) button.primary { color:#08201e; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) button.primary { color:#fff; } }
+  button.primary:hover:not(:disabled) { filter:brightness(1.08); color:#fff; }
+  .reset { margin-left:auto; }
+
+  /* ---- grid ---- */
+  .grid { display:grid; grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr); gap:18px; align-items:start; }
+  @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .card + .card { margin-top:18px; }
+  .card-head { padding:13px 16px 11px; border-bottom:1px solid var(--line-soft); }
+  .card-title { display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; }
+  .card-title h2 { font-size:15px; margin:0; font-weight:600; letter-spacing:-.005em; }
+  .badge {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+    padding:2px 7px; border-radius:20px; background:var(--accent-soft); color:var(--accent-ink); font-weight:500;
+  }
+  .io { margin:7px 0 0; font-family:var(--mono); font-size:11.5px; color:var(--faint); line-height:1.6; }
+  .io b { font-weight:500; color:var(--muted); }
+  .card-body { padding:15px 16px 17px; }
+
+  /* ---- contract pane ---- */
+  .contract { position:sticky; top:calc(env(safe-area-inset-top, 0px) + 12px); }
+  @media (max-width:900px) { .contract { position:static; } }
+  .json { font-family:var(--mono); font-size:12.5px; line-height:1.62; overflow-x:auto; padding:2px 0; }
+  .json .ln { white-space:pre; padding:0 16px; border-left:2px solid transparent; }
+  .json .ln.hit { background:var(--flash); border-left-color:var(--run); }
+  .json .k { color:var(--code-key); }
+  .json .s { color:var(--code-str); }
+  .json .n { color:var(--code-num); }
+  .json .p { color:var(--code-punc); }
+  .contract .card-body { padding:14px 0 16px; }
+
+  /* ---- checklist ---- */
+  .meta-row { display:flex; flex-wrap:wrap; gap:8px 16px; margin-bottom:14px; font-size:13px; color:var(--muted); }
+  .meta-row span b { color:var(--ink); font-weight:600; font-family:var(--mono); font-size:12.5px; }
+  ol.steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+  ol.steps li { display:flex; gap:10px; align-items:flex-start; padding:7px 8px; border-radius:7px; }
+  ol.steps li:hover { background:var(--surface-2); }
+  .box {
+    width:15px; height:15px; margin-top:3px; flex:none; border:1.5px solid var(--line);
+    border-radius:4px; background:var(--surface);
+  }
+  .step-main { min-width:0; flex:1; }
+  .step-title {
+    font-size:14.5px; outline:none; border-radius:4px; padding:1px 3px; margin:-1px -3px;
+    border-bottom:1px dashed transparent;
+  }
+  .step-title:hover { border-bottom-color:var(--line); }
+  .step-title:focus { background:var(--accent-soft); border-bottom-color:var(--accent); }
+  .step-sub { font-family:var(--mono); font-size:11.5px; color:var(--faint); margin-top:2px; }
+  .pill {
+    display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:.05em;
+    text-transform:uppercase; padding:1.5px 6px; border-radius:20px; font-weight:500;
+    background:var(--run-soft); color:var(--run); margin-left:6px; vertical-align:1px;
+  }
+
+  /* ---- canvas ---- */
+  .canvas-scroll { overflow-x:auto; }
+  .canvas {
+    position:relative; width:660px; height:250px; background:var(--surface-2);
+    border:1px solid var(--line-soft); border-radius:8px;
+    background-image:radial-gradient(var(--line) 1px, transparent 1px);
+    background-size:22px 22px; background-position:-1px -1px;
+  }
+  .canvas svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .node {
+    position:absolute; width:158px; box-sizing:border-box; padding:8px 10px;
+    background:var(--surface); border:1px solid var(--line); border-radius:8px;
+    cursor:grab; touch-action:none; box-shadow:0 1px 2px rgba(0,0,0,.05);
+  }
+  .node:active { cursor:grabbing; }
+  .node.drag { border-color:var(--accent); box-shadow:0 4px 14px rgba(0,0,0,.14); z-index:5; }
+  .node .nt { font-size:12.5px; font-weight:500; line-height:1.3; }
+  .node .ni { font-family:var(--mono); font-size:10px; color:var(--faint); margin-top:2px; }
+  .node .gate { position:absolute; top:-7px; right:8px; }
+
+  /* ---- run ---- */
+  .runrow { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:7px; }
+  .dot { width:9px; height:9px; border-radius:50%; flex:none; }
+  .st-waiting .dot { background:var(--wait); }
+  .st-running .dot { background:var(--run); animation:pulse 1.1s ease-in-out infinite; }
+  .st-done .dot { background:var(--ok); }
+  .st-paused .dot { background:var(--run); }
+  .st-waiting { color:var(--muted); }
+  .st-done { background:var(--ok-soft); }
+  .st-running, .st-paused { background:var(--run-soft); }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+  @media (prefers-reduced-motion: reduce) { .st-running .dot { animation:none; } }
+  .runrow .rt { font-size:14px; flex:1; min-width:0; }
+  .runstat { font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .runbar { display:flex; gap:9px; align-items:center; margin-top:13px; flex-wrap:wrap; }
+
+  /* ---- panels ---- */
+  .panels { display:flex; gap:8px; min-height:104px; }
+  .panelbox {
+    flex:1; min-width:0; border:1px dashed var(--line); border-radius:7px; background:var(--surface-2);
+    padding:9px 10px; display:flex; flex-direction:column; gap:3px;
+  }
+  .panelbox .pn { font-family:var(--mono); font-size:11px; color:var(--accent-ink); font-weight:500; word-break:break-all; }
+  :root[data-theme="dark"] .panelbox .pn, :root:not([data-theme="light"]) .panelbox .pn { color:var(--accent); }
+  .panelbox .pd { font-size:11.5px; color:var(--faint); line-height:1.4; }
+
+  /* ---- note ---- */
+  .note {
+    margin-top:26px; padding:15px 17px; border-left:3px solid var(--accent);
+    background:var(--surface); border-radius:0 9px 9px 0; color:var(--muted); font-size:13.5px;
+  }
+  .note h3 { margin:0 0 7px; font-size:13px; color:var(--ink); font-weight:600; }
+  .note p { margin:0 0 8px; max-width:70ch; }
+  .note p:last-child { margin-bottom:0; }
+  .note code { font-family:var(--mono); font-size:12.5px; color:var(--accent-ink); background:var(--accent-soft); padding:1px 4px; border-radius:3px; }
+  :root[data-theme="dark"] .note code, :root:not([data-theme="light"]) .note code { color:var(--accent); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Markbase · workspace layout</p>
+    <h1>One workflow document, four UIs</h1>
+    <p class="lede">The workflow is <strong>not a screen</strong> — it is a document with a defined shape. Every
+      view below reads that same document and renders what it understands. Edit a step title, drag a node, or
+      let the agent patch it: all four stay in step, because none of them owns it.</p>
+  </header>
+
+  <div class="agent">
+    <span class="agent-label">Agent edits — each applies a patch to the document, exactly as a user edit does</span>
+    <button id="a-step">Add a “flag conflicts” step</button>
+    <button id="a-gate">Require approval before writing</button>
+    <button id="a-panel">Open the inbox panel too</button>
+    <button id="a-time">Move to 07:30</button>
+    <button class="reset" id="a-reset">Reset</button>
+  </div>
+
+  <div class="grid">
+    <!-- ---------- the contract ---------- -->
+    <div>
+      <section class="card contract">
+        <div class="card-head">
+          <div class="card-title"><h2>workflows/morning-brief.json</h2><span class="badge">the contract</span></div>
+          <p class="io">The single source. Changed lines flash.</p>
+        </div>
+        <div class="card-body"><div class="json" id="json"></div></div>
+      </section>
+    </div>
+
+    <!-- ---------- the views ---------- -->
+    <div>
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title"><h2>Checklist</h2><span class="badge">authoring</span></div>
+          <p class="io"><b>reads</b> title · trigger · steps[].title, needs, askBefore &nbsp;·&nbsp; <b>writes</b> steps[].title</p>
+        </div>
+        <div class="card-body" id="checklist"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title"><h2>Canvas</h2><span class="badge">authoring</span></div>
+          <p class="io"><b>reads</b> steps[].id, title, needs &nbsp;·&nbsp; <b>writes</b> views.canvas only — drag a node and the checklist does not change</p>
+        </div>
+        <div class="card-body">
+          <div class="canvas-scroll"><div class="canvas" id="canvas"></div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title"><h2>Run</h2><span class="badge">read-only</span></div>
+          <p class="io"><b>reads</b> steps[].id, needs, askBefore &nbsp;·&nbsp; <b>writes</b> nothing — run state lives beside the document and joins on step id</p>
+        </div>
+        <div class="card-body">
+          <div id="run"></div>
+          <div class="runbar">
+            <button class="primary" id="r-go">Run</button>
+            <button id="r-approve" hidden>Approve the write</button>
+            <button id="r-reset">Clear</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title"><h2>Workspace</h2><span class="badge">read-only</span></div>
+          <p class="io"><b>reads</b> layout &nbsp;·&nbsp; the panels this workflow puts on screen when it opens</p>
+        </div>
+        <div class="card-body"><div class="panels" id="panels"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="note">
+    <h3>Why this holds together</h3>
+    <p><b>Semantics and presentation are separate.</b> <code>steps</code> is what the workflow means;
+      <code>views.canvas</code> is where one UI happens to draw it. Dragging a node writes only into
+      <code>views</code>, so a canvas can exist without the checklist ever knowing — and a UI we have not
+      designed yet gets its own namespace in the same way.</p>
+    <p><b><code>needs</code> is what makes two authoring styles possible.</b> The canvas draws the graph; the
+      checklist is that graph linearised. Neither is the real one. Drop <code>needs</code> and the canvas has
+      nothing to connect; only then would the format really be a list.</p>
+    <p><b>The agent is not privileged.</b> Its buttons above apply the same patches a user edit does. That is
+      what “agent-editable” has to mean — one document, one set of operations, no separate agent path that
+      can drift from what the UI writes.</p>
+    <p><b>A view renders what it understands and ignores the rest.</b> “Require approval” adds one field, and
+      three views independently find something to do with it: a pill, a marker on a node, a pause in the run.
+      A view that had never heard of it would simply not draw it — which is the rule that lets a canvas ship
+      later without a migration.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------------ *
+   * The document. This is the whole contract; everything else reads it. *
+   * ------------------------------------------------------------------ */
+  function fresh() {
+    return {
+      id: "morning-brief",
+      title: "Morning brief",
+      trigger: { kind: "cron", schedule: "0 8 * * 1-5" },
+      layout: ["calendar.day", "today.list", "agent.claude"],
+      permissions: ["calendar:read", "docs:read", "docs:write"],
+      steps: [
+        { id: "calendar",  title: "Read today's calendar",       tool: "calendar.list", needs: [] },
+        { id: "deadlines", title: "Pull open deadlines",         tool: "docs.query",    needs: [] },
+        { id: "draft",     title: "Draft the brief",             agent: true,           needs: ["calendar", "deadlines"] },
+        { id: "write",     title: "Write it into today's note",  tool: "docs.insert",   target: "today.list", needs: ["draft"] }
+      ],
+      views: {
+        canvas: {
+          calendar:  { x: 24,  y: 26 },
+          deadlines: { x: 24,  y: 150 },
+          draft:     { x: 246, y: 88 },
+          write:     { x: 468, y: 88 }
+        }
+      }
+    };
+  }
+
+  var doc = fresh();
+  var run = {};          // step id -> "waiting" | "running" | "done" | "paused"
+  var timer = null;
+
+  var PANEL_COPY = {
+    "calendar.day": "Today's meetings",
+    "today.list":   "Today's note and list",
+    "agent.claude": "The agent, in context",
+    "inbox.unread": "Unread mail"
+  };
+
+  /* ---------------------------- JSON pane ---------------------------- */
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function lit(v) {
+    if (typeof v === "string") return '"' + v + '"';
+    return String(v);
+  }
+  // Emit one line per token, each tagged with its path, so a change can be located.
+  function emit(val, path, prefix, depth, comma, out) {
+    var pad = "  ".repeat(depth), tail = comma ? "," : "", k;
+    if (Array.isArray(val)) {
+      if (!val.length) { out.push({ p: path, t: pad + prefix + "[]" + tail }); return; }
+      var flat = val.every(function (v) { return v === null || typeof v !== "object"; });
+      if (flat) {
+        out.push({ p: path, t: pad + prefix + "[" + val.map(lit).join(", ") + "]" + tail });
+        return;
+      }
+      out.push({ p: path, t: pad + prefix + "[" });
+      val.forEach(function (v, i) { emit(v, path + "." + i, "", depth + 1, i < val.length - 1, out); });
+      out.push({ p: path, t: pad + "]" + tail });
+      return;
+    }
+    if (val && typeof val === "object") {
+      var keys = Object.keys(val);
+      if (!keys.length) { out.push({ p: path, t: pad + prefix + "{}" + tail }); return; }
+      out.push({ p: path, t: pad + prefix + "{" });
+      keys.forEach(function (key, i) {
+        emit(val[key], path + "." + key, '"' + key + '": ', depth + 1, i < keys.length - 1, out);
+      });
+      out.push({ p: path, t: pad + "}" + tail });
+      return;
+    }
+    out.push({ p: path, t: pad + prefix + lit(val) + tail });
+  }
+  function colour(line) {
+    var s = esc(line);
+    s = s.replace(/&quot;/g, '"');
+    s = s.replace(/^(\s*)"([^"]+)":/, function (m, sp, key) {
+      return sp + '<span class="k">"' + key + '"</span><span class="p">:</span>';
+    });
+    s = s.replace(/"([^"]*)"(?!:)/g, '<span class="s">"$1"</span>');
+    s = s.replace(/\b(true|false|null|-?\d+)\b/g, '<span class="n">$1</span>');
+    return s;
+  }
+  var seen = null;   // set of "path|text" from the previous render
+  function drawJson() {
+    var out = [];
+    emit(doc, "$", "", 0, false, out);
+    var now = {};
+    out.forEach(function (l) { now[l.p + "|" + l.t] = true; });
+    var html = out.map(function (l) {
+      var key = l.p + "|" + l.t;
+      var hit = seen && !seen[key];
+      return '<div class="ln' + (hit ? " hit" : "") + '">' + colour(l.t) + "</div>";
+    }).join("");
+    document.getElementById("json").innerHTML = html;
+    seen = now;
+  }
+
+  /* --------------------------- Checklist ----------------------------- */
+
+  function drawChecklist() {
+    var el = document.getElementById("checklist");
+    var meta =
+      '<div class="meta-row">' +
+        "<span>" + esc(doc.title) + "</span>" +
+        "<span>on <b>" + esc(doc.trigger.schedule) + "</b></span>" +
+        "<span>" + doc.permissions.length + " permissions</span>" +
+      "</div>";
+    var items = doc.steps.map(function (s) {
+      var sub = s.agent ? "agent step" : s.tool;
+      if (s.needs.length) sub += "  ·  after " + s.needs.join(", ");
+      return '<li><span class="box"></span><div class="step-main">' +
+        '<div class="step-title" contenteditable="true" spellcheck="false" data-id="' + s.id + '">' +
+          esc(s.title) + "</div>" +
+        (s.askBefore ? '<span class="pill">asks first</span>' : "") +
+        '<div class="step-sub">' + esc(sub) + "</div></div></li>";
+    }).join("");
+    el.innerHTML = meta + '<ol class="steps">' + items + "</ol>";
+
+    el.querySelectorAll(".step-title").forEach(function (node) {
+      node.addEventListener("blur", function () {
+        var step = byId(node.dataset.id);
+        var next = node.textContent.trim();
+        if (step && next && next !== step.title) { step.title = next; render(); }
+        else { node.textContent = step ? step.title : ""; }
+      });
+      node.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); node.blur(); }
+      });
+    });
+  }
+
+  /* ----------------------------- Canvas ------------------------------ */
+
+  var NW = 158, NH = 46;
+
+  function drawCanvas() {
+    var el = document.getElementById("canvas");
+    var pos = doc.views.canvas;
+    var edges = "";
+    doc.steps.forEach(function (s) {
+      s.needs.forEach(function (from) {
+        var a = pos[from], b = pos[s.id];
+        if (!a || !b) return;
+        var x1 = a.x + NW, y1 = a.y + NH / 2, x2 = b.x, y2 = b.y + NH / 2;
+        var mid = (x1 + x2) / 2;
+        edges += '<path d="M' + x1 + " " + y1 + " C" + mid + " " + y1 + ", " + mid + " " + y2 +
+                 ", " + x2 + " " + y2 + '" fill="none" stroke="var(--line)" stroke-width="1.5"/>' +
+                 '<circle cx="' + x2 + '" cy="' + y2 + '" r="3" fill="var(--accent)"/>';
+      });
+    });
+    var nodes = doc.steps.map(function (s) {
+      var p = pos[s.id] || { x: 20, y: 20 };
+      return '<div class="node" data-id="' + s.id + '" style="left:' + p.x + "px;top:" + p.y + 'px">' +
+        (s.askBefore ? '<span class="pill gate">asks first</span>' : "") +
+        '<div class="nt">' + esc(s.title) + "</div>" +
+        '<div class="ni">' + esc(s.id) + "</div></div>";
+    }).join("");
+    el.innerHTML = '<svg viewBox="0 0 660 250" aria-hidden="true">' + edges + "</svg>" + nodes;
+    el.querySelectorAll(".node").forEach(function (n) {
+      n.addEventListener("pointerdown", startDrag);
+    });
+  }
+
+  // Drag writes to the DOM, and tells the document once, on release — the same
+  // trick panel-width.ts already uses, for the same reason.
+  function startDrag(e) {
+    var node = e.currentTarget, id = node.dataset.id;
+    var host = document.getElementById("canvas");
+    var box = host.getBoundingClientRect();
+    var start = doc.views.canvas[id];
+    var dx = e.clientX - box.left - start.x, dy = e.clientY - box.top - start.y;
+    var at = { x: start.x, y: start.y };
+    node.setPointerCapture(e.pointerId);
+    node.classList.add("drag");
+
+    function move(ev) {
+      at.x = Math.max(0, Math.min(660 - NW, ev.clientX - box.left - dx));
+      at.y = Math.max(0, Math.min(250 - NH, ev.clientY - box.top - dy));
+      node.style.left = at.x + "px";
+      node.style.top = at.y + "px";
+    }
+    function up() {
+      node.removeEventListener("pointermove", move);
+      node.removeEventListener("pointerup", up);
+      node.classList.remove("drag");
+      doc.views.canvas[id] = { x: Math.round(at.x), y: Math.round(at.y) };
+      render();
+    }
+    node.addEventListener("pointermove", move);
+    node.addEventListener("pointerup", up);
+  }
+
+  /* ------------------------------- Run ------------------------------- */
+
+  function drawRun() {
+    document.getElementById("run").innerHTML = doc.steps.map(function (s) {
+      var st = run[s.id] || "waiting";
+      var label = st === "paused" ? "waiting for you" : st;
+      return '<div class="runrow st-' + st + '"><span class="dot"></span>' +
+        '<span class="rt">' + esc(s.title) + "</span>" +
+        '<span class="runstat">' + label + "</span></div>";
+    }).join("");
+    var paused = doc.steps.some(function (s) { return run[s.id] === "paused"; });
+    document.getElementById("r-approve").hidden = !paused;
+  }
+
+  function ready(s) {
+    return s.needs.every(function (n) { return run[n] === "done"; });
+  }
+  function tick() {
+    var running = doc.steps.filter(function (s) { return run[s.id] === "running"; });
+    running.forEach(function (s) { run[s.id] = "done"; });
+    var next = doc.steps.filter(function (s) {
+      return (!run[s.id] || run[s.id] === "waiting") && ready(s);
+    });
+    if (!next.length) {
+      var paused = doc.steps.some(function (s) { return run[s.id] === "paused"; });
+      var left = doc.steps.some(function (s) { return run[s.id] !== "done"; });
+      stop();
+      if (!paused && left) { /* blocked; leave as is */ }
+      drawRun();
+      return;
+    }
+    next.forEach(function (s) { run[s.id] = s.askBefore ? "paused" : "running"; });
+    drawRun();
+    if (doc.steps.some(function (s) { return run[s.id] === "paused"; })) stop();
+  }
+  function start() {
+    doc.steps.forEach(function (s) { run[s.id] = "waiting"; });
+    stop();
+    tick();
+    timer = setInterval(tick, 900);
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+  /* ---------------------------- Workspace ---------------------------- */
+
+  function drawPanels() {
+    document.getElementById("panels").innerHTML = doc.layout.map(function (p) {
+      return '<div class="panelbox"><span class="pn">' + esc(p) + "</span>" +
+        '<span class="pd">' + esc(PANEL_COPY[p] || "A panel") + "</span></div>";
+    }).join("");
+  }
+
+  /* ----------------------------- wiring ------------------------------ */
+
+  function byId(id) {
+    return doc.steps.filter(function (s) { return s.id === id; })[0];
+  }
+  function render() { drawJson(); drawChecklist(); drawCanvas(); drawRun(); drawPanels(); }
+
+  document.getElementById("a-step").addEventListener("click", function () {
+    if (byId("conflicts")) return;
+    var draft = byId("draft");
+    doc.steps.splice(2, 0, {
+      id: "conflicts", title: "Flag deadline conflicts", agent: true, needs: ["calendar", "deadlines"]
+    });
+    draft.needs = ["conflicts"];
+    doc.views.canvas.conflicts = { x: 246, y: 178 };
+    doc.views.canvas.draft = { x: 246, y: 40 };
+    render();
+  });
+
+  document.getElementById("a-gate").addEventListener("click", function () {
+    var w = byId("write");
+    w.askBefore = !w.askBefore;
+    if (!w.askBefore) delete w.askBefore;
+    render();
+  });
+
+  document.getElementById("a-panel").addEventListener("click", function () {
+    if (doc.layout.indexOf("inbox.unread") === -1) doc.layout.push("inbox.unread");
+    else doc.layout = doc.layout.filter(function (p) { return p !== "inbox.unread"; });
+    render();
+  });
+
+  document.getElementById("a-time").addEventListener("click", function () {
+    doc.trigger.schedule = doc.trigger.schedule === "0 8 * * 1-5" ? "30 7 * * 1-5" : "0 8 * * 1-5";
+    render();
+  });
+
+  document.getElementById("a-reset").addEventListener("click", function () {
+    stop(); doc = fresh(); run = {}; seen = null; render();
+  });
+
+  document.getElementById("r-go").addEventListener("click", start);
+  document.getElementById("r-reset").addEventListener("click", function () {
+    stop(); run = {}; drawRun();
+  });
+  document.getElementById("r-approve").addEventListener("click", function () {
+    doc.steps.forEach(function (s) { if (run[s.id] === "paused") run[s.id] = "running"; });
+    drawRun();
+    timer = setInterval(tick, 900);
+  });
+
+  render();
+  seen = null; drawJson();   // first paint without flashing every line
+})();
+</script>

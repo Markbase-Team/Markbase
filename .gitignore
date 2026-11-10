@@ -1,0 +1,43 @@
+# dependencies (root-hoisted + any nested)
+node_modules/
+.pnp
+.pnp.*
+
+# next.js / builds
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+coverage/
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+# the self-hosting template is the one env file that IS committed
+!.env.example
+
+# vercel
+.vercel
+
+# supabase CLI scratch
+supabase/.temp/
+
+# local screenshots / scratch
+.playwright-mcp/
+*.png
+data/
+
+# landing/marketing images are committed
+!apps/web/public/*.png
+
+# electron-builder output — 190 MB of DMG per build
+apps/app/release/

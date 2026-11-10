@@ -1,0 +1,55 @@
+{
+  "name": "@markbase/protocol",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./agent-sessions": "./src/agent-sessions.ts",
+    "./api-client": "./src/api-client.ts",
+    "./asset-refs": "./src/asset-refs.ts",
+    "./attribution": "./src/attribution.ts",
+    "./auth": "./src/auth.ts",
+    "./browser": "./src/browser.ts",
+    "./caller": "./src/caller.ts",
+    "./downloads": "./src/downloads.ts",
+    "./features": "./src/features.ts",
+    "./folders": "./src/folders.ts",
+    "./instance": "./src/instance.ts",
+    "./jobs": "./src/jobs.ts",
+    "./plans": "./src/plans.ts",
+    "./poll-backoff": "./src/poll-backoff.ts",
+    "./project-docs": "./src/project-docs.ts",
+    "./shared-vault": "./src/shared-vault.ts",
+    "./skill-files": "./src/skill-files.ts",
+    "./skills": "./src/skills.ts",
+    "./storage": "./src/storage.ts",
+    "./supabase": "./src/supabase.ts",
+    "./tickets": "./src/tickets.ts",
+    "./timeout-fetch": "./src/timeout-fetch.ts",
+    "./todos": "./src/todos.ts",
+    "./types": "./src/types.ts",
+    "./upload": "./src/upload.ts",
+    "./vault": "./src/vault.ts",
+    "./vault-reconcile": "./src/vault-reconcile.ts",
+    "./version": "./src/version.ts",
+    "./work-logs": "./src/work-logs.ts",
+    "./worker-api": "./src/worker-api.ts",
+    "./worker-connection": "./src/worker-connection.ts",
+    "./worker-repos": "./src/worker-repos.ts",
+    "./device-auth-contract": "./src/device-auth-contract.ts",
+    "./instance-config": "./src/instance-config.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

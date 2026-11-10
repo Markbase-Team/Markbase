@@ -1,0 +1,26 @@
+{
+  "id": "today",
+  "pkg": "@markbase/today",
+  "summary": "Today!: what needs you before the day starts.",
+  "sidebar": [
+    {
+      "id": "today",
+      "title": "Today!",
+      "href": "/dashboard/today",
+      "icon": "Sun"
+    }
+  ],
+  "routes": [
+    "/dashboard/today",
+    "/api/v1/todos"
+  ],
+  "centre": [],
+  "contributes": {
+    "app": [
+      { "path": "dashboard/today/page", "title": "Today!" },
+      "api/v1/todos/route",
+      "api/v1/todos/[id]/route",
+      "api/v1/todos/reorder/route"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "name": "@markbase/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/logic/index.ts",
+    "./handlers": "./src/handlers/index.ts",
+    "./server": "./src/server/index.ts",
+    "./ui": "./src/ui/index.ts",
+    "./ui/crdt-editor": "./src/ui/crdt-editor.tsx",
+    "./ui/guest-doc": "./src/ui/guest-doc.tsx",
+    "./ui/local-file-doc": "./src/ui/local-file-doc.tsx",
+    "./ui/mermaid-diagrams": "./src/ui/mermaid-diagrams.tsx",
+    "./ui/ports": "./src/ui/ports.tsx",
+    "./ui/published-tabs": "./src/ui/published-tabs.tsx",
+    "./ui/tiptap.css": "./src/ui/tiptap.css",
+    "./*": "./src/logic/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/agent": "*",
+    "@markbase/node": "*",
+    "@markbase/protocol": "*",
+    "@markbase/ui": "*",
+    "@supabase/supabase-js": "^2.106.2",
+    "@tiptap/core": "^3.22.3",
+    "@tiptap/extension-highlight": "3.27.1",
+    "@tiptap/extension-image": "^3.22.3",
+    "@tiptap/extension-link": "^3.22.3",
+    "@tiptap/extension-table": "^3.22.3",
+    "@tiptap/extension-table-cell": "^3.22.3",
+    "@tiptap/extension-table-header": "^3.22.3",
+    "@tiptap/extension-table-row": "^3.22.3",
+    "@tiptap/extension-task-item": "^3.22.3",
+    "@tiptap/extension-task-list": "^3.22.3",
+    "@tiptap/starter-kit": "^3.22.3",
+    "@types/diff-match-patch": "^1.0.36",
+    "diff": "^7.0.0",
+    "diff-match-patch": "^1.0.5",
+    "js-yaml": "^4.1.0",
+    "lucide-react": "^1.17.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-mark": "^4.0.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "node-diff3": "^3.2.1",
+    "prosemirror-changeset": "^2.2.1",
+    "prosemirror-markdown": "^1.13.1",
+    "prosemirror-model": "^1.24.1",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-transform": "^1.10.2",
+    "sonner": "^2.0.7",
+    "yjs": "*"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/markdown-it": "^14.1.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

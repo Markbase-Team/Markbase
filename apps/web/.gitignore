@@ -1,0 +1,4 @@
+src/generated/
+# route files gen-feature-slots.ts writes from the feature manifests
+src/app/(features)/
+src/app/dashboard/(features)/

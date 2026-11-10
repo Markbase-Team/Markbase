@@ -1,0 +1,13 @@
+{
+  "name": "@markbase/browser-agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "comment": "Playwright is loaded dynamically at runtime (see src/browser.ts). It is intentionally NOT a hard dependency so the package stays installable everywhere; the one-click unsubscribe path needs no browser, and the browser-driven path degrades to a manual link when Playwright/Chromium isn't present. To enable the live browser agent: `npm i -D playwright && npx playwright install chromium`."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "agents",
+  "pkg": "@markbase/agents",
+  "summary": "Agents: named Claude Code sessions you hand work to.",
+  "sidebar": [
+    {
+      "id": "agents",
+      "title": "Agents",
+      "href": "/dashboard/agents",
+      "icon": "Bot"
+    }
+  ],
+  "routes": [
+    "/dashboard/agents",
+    "/api/v1/agent-sessions"
+  ],
+  "centre": [],
+  "contributes": {
+    "routes": "./ui/routes",
+    "app": [
+      "dashboard/agents/page",
+      "api/v1/agent-sessions/route",
+      "api/v1/agent-sessions/[id]/route"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@markbase/runner",
+  "version": "0.8.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./discover-repos": "./src/discover-repos.ts",
+    "./run-ticket-worker": "./src/run-ticket-worker.ts",
+    "./version": "./src/version.ts"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/protocol": "*",
+    "@markbase/node": "*",
+    "@markbase/vault": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

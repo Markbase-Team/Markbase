@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'unsafe-inline'" />
+    <title>Markbase</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --bg-surface: #f7f7f5;
+        --text: #16150f;
+        --text-muted: #57564e;
+        --text-dim: #8a887e;
+        --border: #e2e1da;
+        --border-subtle: #eeede7;
+        --accent: #e5ff6e;
+        --accent-fg: #16150f;
+        --accent-glow: rgba(229, 255, 110, 0.35);
+        --error: #b42318;
+        --error-bg: #fef3f2;
+        --ok: #2f7a3e;
+      }
+      :root:not([data-theme="light"]) {
+        @media (prefers-color-scheme: dark) {
+          --bg: #131310;
+          --bg-surface: #1c1c18;
+          --text: #f4f3ec;
+          --text-muted: #a9a79c;
+          --text-dim: #78766c;
+          --border: #2e2e28;
+          --border-subtle: #26261f;
+          --error: #f97066;
+          --error-bg: #2a1615;
+          --ok: #75d18a;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 16px;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .col { width: 100%; max-width: 384px; }
+      .brand { text-align: center; margin-bottom: 32px; }
+      .mark {
+        width: 56px; height: 56px; margin: 0 auto 16px;
+        display: grid; place-items: center;
+        border-radius: 16px; background: var(--accent);
+      }
+      h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; }
+      .sub { font-size: 14px; color: var(--text-muted); margin: 0; }
+      button {
+        width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 600;
+        border: 1px solid transparent; cursor: pointer; font-family: inherit;
+        transition: box-shadow .15s, transform .05s, background .15s;
+      }
+      button:active { transform: scale(0.985); }
+      button:disabled { opacity: .55; cursor: default; }
+      .primary { background: var(--accent); color: var(--accent-fg); }
+      .primary:hover:not(:disabled) { box-shadow: 0 0 24px var(--accent-glow); }
+      .ghost { background: var(--bg-surface); color: var(--text); border-color: var(--border); font-weight: 500; }
+      .ghost:hover:not(:disabled) { border-color: var(--text-dim); }
+      .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-dim); font-size: 12px; font-weight: 500; }
+      .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border-subtle); }
+      input {
+        width: 100%; padding: 12px 14px; border-radius: 10px; font-size: 14px; font-family: inherit;
+        background: var(--bg-surface); color: var(--text); border: 1px solid var(--border); margin-bottom: 10px;
+      }
+      input:focus { outline: none; border-color: var(--text-dim); }
+      .row { display: flex; gap: 8px; }
+      .row button { width: auto; flex: 1; }
+      .note { font-size: 12px; color: var(--text-dim); margin: 14px 0 0; text-align: center; line-height: 1.6; }
+      .err { background: var(--error-bg); color: var(--error); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 14px; word-break: break-word; }
+      .card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--bg-surface); margin-bottom: 16px; }
+      .kv { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 3px 0; }
+      .kv span:first-child { color: var(--text-muted); }
+      .kv span:last-child { font-weight: 500; text-align: right; word-break: break-all; }
+      .hide { display: none !important; }
+      .log { font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-dim); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 8px 10px; max-height: 96px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin-bottom: 14px; }
+      .badge { display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-size: 13px; font-weight: 600; }
+      .section { margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border-subtle); }
+      .section h2 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 4px; }
+      .section .sub { margin-bottom: 14px; }
+      .section .row input { flex: 1; margin-bottom: 0; min-width: 0; }
+      .section .row button { flex: none; width: auto; padding-left: 16px; padding-right: 16px; }
+      .status { font-size: 13px; color: var(--text-muted); margin: 12px 0 0; line-height: 1.6; word-break: break-word; }
+      .status strong { color: var(--text); font-weight: 600; }
+      :target h2 { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="col">
+      <div class="brand">
+        <div class="mark">
+          <!-- lucide: sparkles -->
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16150f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+        </div>
+        <h1 id="title">Connect Claude</h1>
+        <p class="sub" id="subtitle">Markbase runs Claude for you. Sign in once to get started.</p>
+      </div>
+
+      <div id="error" class="err hide"></div>
+
+      <!-- Signed out ------------------------------------------------------- -->
+      <div id="signedOut" class="hide">
+        <button class="primary" id="btnSubscription">
+          <!-- lucide: sparkles -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+          Sign in with a Claude plan
+        </button>
+        <div class="divider">OR</div>
+        <button class="ghost" id="btnConsole">
+          <!-- lucide: credit-card -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          Use Anthropic Console (API billing)
+        </button>
+        <p class="note">Nothing else to install — Claude ships inside this app.</p>
+      </div>
+
+      <!-- Signing in ------------------------------------------------------- -->
+      <div id="signingIn" class="hide">
+        <div class="log" id="log"></div>
+        <button class="ghost" id="btnOpen">
+          <!-- lucide: external-link -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          Open the sign-in page again
+        </button>
+        <div id="codeBox" class="hide" style="margin-top:16px">
+          <input id="code" placeholder="Paste the code from your browser" autocomplete="off" spellcheck="false" />
+          <div class="row">
+            <button class="ghost" id="btnCancel">Cancel</button>
+            <button class="primary" id="btnSubmit">Finish</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signed in -------------------------------------------------------- -->
+      <div id="signedIn" class="hide">
+        <div class="card">
+          <div class="kv"><span>Status</span><span class="badge">
+            <!-- lucide: check -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Connected</span></div>
+          <div class="kv"><span>Account</span><span id="vEmail">—</span></div>
+          <div class="kv"><span>Billing</span><span id="vPlan">—</span></div>
+        </div>
+        <button class="primary" id="btnDone">Start using Markbase</button>
+        <div style="margin-top:8px"></div>
+        <button class="ghost" id="btnLogout">
+          <!-- lucide: log-out -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+          Sign out
+        </button>
+        <p class="note">This signs you into Claude Code everywhere on this Mac, not just Markbase.</p>
+      </div>
+
+      <!-- Team instance ---------------------------------------------------- -->
+      <div class="section" id="instance">
+        <h2>Team instance</h2>
+        <p class="sub">Which Markbase this app talks to. Leave it for the hosted app, or paste your team's own URL.</p>
+        <div id="instanceError" class="err hide"></div>
+        <div class="row">
+          <input id="instanceUrl" placeholder="https://markbase.example.com" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button class="ghost" id="btnInstance">
+            <!-- lucide: plug -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>
+            Connect
+          </button>
+        </div>
+        <p class="status" id="instanceStatus"></p>
+        <p class="note" style="text-align:left">Connecting to another instance signs this app out and restarts it on the new one.</p>
+      </div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      // This window's slice of the bridge: Claude sign-in, and opening the
+      // sign-in URL in the browser. Nothing else reaches here (see preload.ts).
+      const { claude, openExternal, instance } = window.markbase;
+      let handleOpen = null;
+
+      const show = (which) => {
+        for (const id of ["signedOut", "signingIn", "signedIn"]) {
+          $(id).classList.toggle("hide", id !== which);
+        }
+      };
+      const fail = (msg) => {
+        const box = $("error");
+        box.textContent = msg || "";
+        box.classList.toggle("hide", !msg);
+      };
+
+      async function refresh() {
+        fail("");
+        const s = await claude.authStatus();
+        if (s.error) fail(s.error);
+        if (s.loggedIn) {
+          $("title").textContent = "Claude is connected";
+          $("subtitle").textContent = "Markbase can run agents on your behalf.";
+          $("vEmail").textContent = s.email || "—";
+          $("vPlan").textContent =
+            s.authMethod === "console"
+              ? "Anthropic Console (API usage)"
+              : s.subscriptionType
+                ? `Claude ${s.subscriptionType} plan`
+                : "Claude plan";
+          show("signedIn");
+        } else {
+          $("title").textContent = "Connect Claude";
+          $("subtitle").textContent = "Markbase runs Claude for you. Sign in once to get started.";
+          show("signedOut");
+        }
+      }
+
+      function beginLogin(mode) {
+        fail("");
+        $("log").textContent = "Starting sign-in…\n";
+        $("codeBox").classList.add("hide");
+        show("signingIn");
+        claude.loginStart(mode);
+      }
+
+      $("btnSubscription").onclick = () => beginLogin("subscription");
+      $("btnConsole").onclick = () => beginLogin("console");
+      $("btnCancel").onclick = () => { claude.loginCancel(); refresh(); };
+      $("btnSubmit").onclick = () => {
+        const v = $("code").value.trim();
+        if (!v) return;
+        $("btnSubmit").disabled = true;
+        claude.loginCode(v);
+      };
+      $("code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnSubmit").click(); });
+      $("btnOpen").onclick = () => { if (handleOpen) openExternal(handleOpen); };
+      $("btnLogout").onclick = async () => {
+        $("btnLogout").disabled = true;
+        const r = await claude.logout();
+        $("btnLogout").disabled = false;
+        if (!r.ok) fail(r.error || "Could not sign out.");
+        refresh();
+      };
+      $("btnDone").onclick = () => claude.closeOnboarding();
+
+      claude.onLogin((ev) => {
+        if (ev.type === "url") {
+          handleOpen = ev.url;
+          $("log").textContent += "Opened your browser to sign in.\n";
+        } else if (ev.type === "needs-code") {
+          $("codeBox").classList.remove("hide");
+          $("code").focus();
+        } else if (ev.type === "output") {
+          if (ev.text.trim()) $("log").textContent += ev.text;
+          $("log").scrollTop = $("log").scrollHeight;
+        } else if (ev.type === "done") {
+          $("btnSubmit").disabled = false;
+          if (!ev.ok && ev.error !== "canceled") fail(ev.error || "Sign-in did not complete.");
+          refresh();
+        }
+      });
+
+      refresh();
+
+      // ---- Team instance (SELF-HOSTING.md) ---------------------------------
+      // Where this app points, and the one way to change it. The answer to
+      // connect() with `changed: true` means the app is restarting: the page
+      // says so and stays disabled until the process takes it down.
+      const instanceFail = (msg) => {
+        const box = $("instanceError");
+        box.textContent = msg || "";
+        box.classList.toggle("hide", !msg);
+      };
+      const describeInstance = (status) => {
+        const where = status.isDefault ? `the hosted app (${status.appUrl})` : status.appUrl;
+        const env = status.fromEnv
+          ? " APP_URL is set in this app's environment and wins over anything saved here."
+          : "";
+        return `Connected to <strong>${where}</strong>.${env}`;
+      };
+      const escapeHtml = (text) =>
+        text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+      async function showInstance() {
+        const status = await instance.current();
+        $("instanceUrl").value = status.appUrl;
+        $("instanceStatus").innerHTML = describeInstance({
+          ...status,
+          appUrl: escapeHtml(status.appUrl),
+        });
+        if (location.hash === "#instance") {
+          $("instance").scrollIntoView({ block: "start" });
+          $("instanceUrl").focus();
+          $("instanceUrl").select();
+        }
+      }
+
+      async function connectInstance() {
+        const url = $("instanceUrl").value.trim();
+        if (!url) return;
+        instanceFail("");
+        const btn = $("btnInstance");
+        btn.disabled = true;
+        $("instanceUrl").disabled = true;
+        $("instanceStatus").textContent = `Asking ${url} which project it runs on…`;
+        const res = await instance.connect(url);
+        if (!res.ok) {
+          instanceFail(res.error);
+          btn.disabled = false;
+          $("instanceUrl").disabled = false;
+          $("instanceUrl").focus();
+          await showInstance();
+          return;
+        }
+        if (!res.changed) {
+          btn.disabled = false;
+          $("instanceUrl").disabled = false;
+          $("instanceStatus").innerHTML =
+            `Already connected to <strong>${escapeHtml(res.appUrl)}</strong>. Nothing to change.`;
+          return;
+        }
+        // Stays disabled: the app is quitting and coming back on the new instance.
+        $("instanceStatus").innerHTML =
+          `Connected to <strong>${escapeHtml(res.appUrl)}</strong>. Restarting Markbase…`;
+      }
+
+      $("btnInstance").onclick = () => void connectInstance();
+      $("instanceUrl").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") void connectInstance();
+      });
+      showInstance();
+    </script>
+  </body>
+</html>

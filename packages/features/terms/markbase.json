@@ -1,0 +1,27 @@
+{
+  "id": "terms",
+  "pkg": "@markbase/terms",
+  "summary": "Terms: the vocabulary a company keeps agreeing on.",
+  "sidebar": [
+    {
+      "id": "terms",
+      "title": "Terms",
+      "href": "/dashboard/terms",
+      "icon": "BookA"
+    }
+  ],
+  "routes": [
+    "/dashboard/terms",
+    "/api/v1/terms"
+  ],
+  "centre": [],
+  "contributes": {
+    "app": [
+      "dashboard/terms/page",
+      "api/v1/terms/route",
+      "api/v1/terms/[id]/route",
+      "api/v1/terms/[id]/ask/route",
+      "api/v1/terms/messages/[id]/route"
+    ]
+  }
+}

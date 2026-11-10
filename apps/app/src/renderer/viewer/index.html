@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Served from markbase://app, a registered standard scheme. This page
+         reaches nothing: the file's text arrives over IPC, already read, and
+         goes back the same way. connect-src 'none' is the proof — the document
+         surface runs here in its local-file mode, and a request from it would
+         be a bug in that mode, not a reason to loosen this.
+         Light, like the main window's document page: the editor it now shows
+         is the same one, styled for the light theme the web app renders. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'"
+    />
+    <title>Markbase</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

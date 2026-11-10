@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Served from markbase://app, a standard secure scheme registered in
+         main.ts, so this is an ordinary origin and these rules mean what they
+         mean on the web. The page itself is local. The API it does NOT reach
+         from here: every call crosses to the main process (ipc-api.ts), which
+         holds the key, so connect-src allows no https: origin at all and a
+         script that got in could not call out with the page's standing. What
+         the page does connect to is Supabase Realtime (wss:), and the images it
+         shows are vault media (img-src https:). The ws: is the dev server. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss: ws://localhost:3000"
+    />
+    <title>Markbase</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+# Everything the image builds itself, or must never contain.
+.git
+.github
+.claude
+.claude-plugin
+.vercel
+**/node_modules
+**/.next
+**/dist
+**/build
+**/release
+**/release2
+**/coverage
+**/*.tsbuildinfo
+**/.env*
+!.env.example
+supabase/.temp
+.playwright-mcp
+docs
+skills
+*.md
+!AGENTS.md

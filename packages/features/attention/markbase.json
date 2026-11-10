@@ -1,0 +1,43 @@
+{
+  "id": "attention",
+  "pkg": "@markbase/attention",
+  "summary": "Attention: triage what arrived into boards you work from.",
+  "requires": ["email"],
+  "sidebar": [
+    {
+      "id": "attention",
+      "title": "Attention",
+      "href": "/dashboard/attention",
+      "icon": "Bell"
+    }
+  ],
+  "routes": [
+    "/dashboard/attention",
+    "/dashboard/inbox",
+    "/api/v1/attention",
+    "/api/cron/classify-unread"
+  ],
+  "centre": [],
+  "contributes": {
+    "routes": "./ui/routes",
+    "app": [
+      "dashboard/attention/page",
+      "dashboard/inbox/page",
+      "api/v1/attention/route",
+      "api/v1/attention/boards/route",
+      "api/v1/attention/boards/[id]/route",
+      "api/v1/attention/boards/[id]/clear/route",
+      "api/v1/attention/classify/route",
+      { "path": "api/v1/attention/classify-unread/route", "maxDuration": 300 },
+      "api/v1/attention/feedback/route",
+      "api/v1/attention/filed/route",
+      "api/v1/attention/items/route",
+      "api/v1/attention/items/[id]/route",
+      "api/v1/attention/move-feedback/route",
+      "api/v1/attention/reorder/route",
+      "api/v1/attention/restore/route",
+      "api/v1/attention/search/route",
+      { "path": "api/cron/classify-unread/route", "maxDuration": 300 }
+    ]
+  }
+}

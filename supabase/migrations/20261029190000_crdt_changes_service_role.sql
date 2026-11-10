@@ -1,0 +1,11 @@
+-- Stage 2 (20261028100000) made docs.crdt_changes the API's: it revoked EXECUTE
+-- from public, anon and authenticated so that only the server, on the secret
+-- key, could ask which snapshots moved. The server's role is service_role —
+-- and a function's EXECUTE for that role comes from PUBLIC, the very grant the
+-- migration removed. In production every daemon poll came back 503
+-- ("permission denied for function crdt_changes") the moment the web app
+-- deployed. The pgTAP suite runs as postgres, which owns the function, so it
+-- could not see this.
+--
+-- The grant the server needs, explicitly. The public roles stay refused.
+grant execute on function docs.crdt_changes(uuid, timestamptz, uuid, boolean) to service_role;

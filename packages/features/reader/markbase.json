@@ -1,0 +1,33 @@
+{
+  "id": "reader",
+  "pkg": "@markbase/reader",
+  "summary": "Reader: read a PDF or article beside your notes.",
+  "sidebar": [
+    {
+      "id": "reader",
+      "title": "Reader",
+      "href": "/dashboard/reader",
+      "icon": "BookOpenText"
+    }
+  ],
+  "routes": [
+    "/dashboard/reader",
+    "/api/v1/reader"
+  ],
+  "centre": [
+    "pdf"
+  ],
+  "contributes": {
+    "app": [
+      "dashboard/reader/page",
+      "api/v1/reader/documents/route",
+      "api/v1/reader/documents/[id]/route",
+      "api/v1/reader/highlights/route",
+      "api/v1/reader/highlights/[id]/route",
+      "api/v1/reader/selections/route",
+      "api/v1/reader/selections/[id]/route",
+      "api/v1/reader/messages/[id]/route",
+      "api/v1/reader/ask/route"
+    ]
+  }
+}

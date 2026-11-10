@@ -1,0 +1,28 @@
+{
+  "id": "diary",
+  "pkg": "@markbase/diary",
+  "summary": "Learning Diary: what was learned, kept where it is rereadable.",
+  "sidebar": [
+    {
+      "id": "diary",
+      "title": "Learning Diary",
+      "href": "/dashboard/diary",
+      "icon": "NotebookPen"
+    }
+  ],
+  "routes": [
+    "/dashboard/diary",
+    "/api/admin/diaries",
+    "/api/v1/learnings"
+  ],
+  "centre": [],
+  "contributes": {
+    "app": [
+      "dashboard/diary/page",
+      "api/admin/diaries/route",
+      "api/admin/diaries/[id]/route",
+      "api/v1/learnings/route",
+      "api/v1/learnings/[id]/route"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "skills",
+  "pkg": "@markbase/skills",
+  "summary": "Skills: the instructions an agent loads for a kind of task.",
+  "sidebar": [
+    {
+      "id": "skills",
+      "title": "Skills",
+      "href": "/dashboard/skills",
+      "icon": "Sparkles"
+    }
+  ],
+  "routes": [
+    "/dashboard/skills",
+    "/api/admin/skills",
+    "/api/v1/skills"
+  ],
+  "centre": [],
+  "contributes": {
+    "routes": "./ui/routes",
+    "app": [
+      "dashboard/skills/page",
+      "dashboard/skills/[id]/page",
+      "api/admin/skills/route",
+      "api/admin/skills/[id]/route",
+      "api/admin/skills/[id]/files/route",
+      "api/admin/skills/[id]/files/[fileId]/route",
+      "api/v1/skills/route",
+      "api/v1/skills/[name]/route",
+      "api/v1/skills/[name]/bundle/route",
+      "api/v1/skills/[name]/install/route"
+    ]
+  }
+}
