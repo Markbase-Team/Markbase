@@ -5,6 +5,7 @@ import { connectLink, DEFAULT_APP_URL } from "@markbase/protocol/instance";
 import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
 import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";
+import { latestMacVersion } from "@/lib/latest-release";
 import { instanceUrl } from "@/lib/instance-url";
 import { instanceHasAccounts, verifyInviteCode } from "@/lib/invite";
 
@@ -31,7 +32,12 @@ export default async function JoinPage({
 }: {
   searchParams: Promise<{ code?: string }>;
 }) {
-  const [url, { code }, desktop] = await Promise.all([instanceUrl(), searchParams, inDesktopApp()]);
+  const [url, { code }, desktop, version] = await Promise.all([
+    instanceUrl(),
+    searchParams,
+    inDesktopApp(),
+    latestMacVersion(),
+  ]);
   const hosted = url === DEFAULT_APP_URL;
   const invite = code?.trim() ?? "";
   const first = !hosted && !(await instanceHasAccounts());
@@ -92,7 +98,9 @@ export default async function JoinPage({
           >
             <Download className="size-4" />
             Download for Mac
-            <span className="text-xs text-muted-foreground">· Apple silicon</span>
+            <span className="text-xs text-muted-foreground">
+              · {version ? `v${version}, ` : ""}Apple silicon
+            </span>
           </a>
           <p className="text-center text-xs text-muted-foreground">
             {hosted

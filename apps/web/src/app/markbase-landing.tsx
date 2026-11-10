@@ -21,6 +21,7 @@ import {
 import { StayInTouchForm } from "@/components/stay-in-touch";
 
 import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
+import { latestMacVersion } from "@/lib/latest-release";
 
 // Canonical destinations, reused in the nav, footer, and the SiteNavigationElement
 // structured data that hints Google's sitelinks.
@@ -173,7 +174,8 @@ const FOUNDATIONS = [
   { icon: Globe, title: "Built to publish", body: "Server-rendered pages with structured metadata, ready for Google and AI answers." },
 ];
 
-export function MarkbaseLanding() {
+export async function MarkbaseLanding() {
+  const version = await latestMacVersion();
   return (
     <div className="min-h-svh bg-white text-zinc-900">
       <script
@@ -202,7 +204,7 @@ export function MarkbaseLanding() {
               See a live document
             </Link>
           </div>
-          <MacDownload />
+          <MacDownload version={version} />
         </div>
 
         {/* Browser-framed product screenshot */}
@@ -331,6 +333,7 @@ export function MarkbaseLanding() {
             >
               <Apple className="size-4" />
               Download for Mac
+              {version && <span className="font-normal text-zinc-400">· v{version}</span>}
             </a>
           </div>
         </div>
@@ -509,7 +512,7 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
  * under the button costs one line and saves the support message — a download
  * that appears broken is worse than one that warned you.
  */
-function MacDownload() {
+function MacDownload({ version }: { version: string | null }) {
   // Defaults to the public permalink, so a deploy needs no environment change to
   // offer the current build. GitHub resolves `latest/download/<name>` to the
   // newest release, which is why the asset name carries no version — publishing
@@ -525,7 +528,9 @@ function MacDownload() {
       <a href={href} className={secondaryBtn}>
         <Apple className="size-4" />
         Download for Mac
-        <span className="font-normal text-zinc-400">· Apple silicon</span>
+        <span className="font-normal text-zinc-400">
+          · {version ? `v${version}, ` : ""}Apple silicon
+        </span>
       </a>
       <p className="text-xs text-zinc-500">
         Unsigned build — right-click the app and choose Open the first time.
