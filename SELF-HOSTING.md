@@ -200,7 +200,7 @@ travels however your team talks:
 What the teammate does with the link:
 
 **Desktop app:** the join page has the download
-([github.com/Jarxi/markbase-releases](https://github.com/Jarxi/markbase-releases/releases),
+([the repository's releases](https://github.com/Markbase-Team/Markbase/releases),
 macOS, Apple silicon, unsigned: the first time, right-click the app and
 choose Open) and an **Open in desktop app** button. The button hands the
 app the instance's address and the invite code; the app confirms, signs

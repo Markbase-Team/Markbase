@@ -55,8 +55,9 @@ _November 4, 2026_
 - A team's join page can hand the app its instance with **Open in desktop
   app**.
 
-Earlier builds are on
-[GitHub](https://github.com/Jarxi/markbase-releases/releases).
+Every build is on
+[GitHub](https://github.com/Markbase-Team/Markbase/releases); the ones before
+0.0.7 are on [the old downloads page](https://github.com/Jarxi/markbase-releases/releases).
 `;
 
 export default function ReleasesPage() {

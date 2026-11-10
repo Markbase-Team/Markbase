@@ -14,7 +14,7 @@ it keeps working without us.
 
 - **Use it:** [markbase.so](https://markbase.so) — sign-up is open.
 - **Desktop app (macOS, Apple silicon):**
-  [download the latest](https://github.com/Jarxi/markbase-releases/releases/latest/download/Markbase-arm64.dmg) ·
+  [download the latest](https://github.com/Markbase-Team/Markbase/releases/latest/download/Markbase-arm64.dmg) ·
   [release notes](https://markbase.so/releases)
 - **Docs:** [markbase.so/docs](https://markbase.so/docs) — formats, vaults,
   shared documents, working next to your code.
