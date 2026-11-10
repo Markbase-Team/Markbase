@@ -2,13 +2,14 @@
 #
 # Publish the packaged macOS app so the landing page can link to it.
 #
-# The DMG is ~190 MB, which is why it does not live in git. It goes to GitHub
-# Releases on a SEPARATE PUBLIC repo — Jarxi/markbase-releases — that holds no
-# source. The main repo is private, and release assets on a private repo need a
-# token to fetch, so a public download button there would 404 for every visitor.
+# The DMG is ~210 MB, which is why it does not live in git. It goes to this
+# repository's GitHub Releases. (Up to 0.0.7 they were on a separate public
+# repo, Jarxi/markbase-releases, because the source was private and release
+# assets on a private repo need a token to fetch. Those releases stay where
+# they are for old links; new ones go here.)
 #
 # The landing page links to:
-#   https://github.com/Jarxi/markbase-releases/releases/latest/download/Markbase-arm64.dmg
+#   https://github.com/Markbase-Team/Markbase/releases/latest/download/Markbase-arm64.dmg
 #
 # `latest/download/<name>` is resolved by GitHub to the newest release, so the
 # link never needs updating and nothing that already points at it goes stale.
@@ -24,7 +25,7 @@
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-RELEASES_REPO="Jarxi/markbase-releases"
+RELEASES_REPO="Markbase-Team/Markbase"
 ASSET="Markbase-arm64.dmg"
 
 TAG="${1:-}"
