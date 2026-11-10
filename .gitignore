@@ -36,8 +36,9 @@ supabase/.temp/
 *.png
 data/
 
-# landing/marketing images are committed
+# landing/marketing images are committed, and the README's logo
 !apps/web/public/*.png
+!docs/assets/*.png
 
 # electron-builder output — 190 MB of DMG per build
 apps/app/release/
