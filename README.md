@@ -1,6 +1,10 @@
-# Markbase
+<p align="center">
+  <img src="docs/assets/logo.png" alt="Markbase" width="112" height="112">
+</p>
 
-**The AI-native markdown humans and agents write together.**
+<h1 align="center">Markbase</h1>
+
+<p align="center"><strong>The AI-native markdown humans and agents write together.</strong></p>
 
 Markbase is a folder of markdown that syncs. You and your team edit the files
 in the folder, in the browser, in the desktop app, or through the agents you
