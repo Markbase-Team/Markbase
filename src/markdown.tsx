@@ -15,19 +15,55 @@ function looksLikeDocPath(s: string): boolean {
 // Reusable markdown renderer. Pass a markdown string; styled via Tailwind
 // Typography (`prose`). The consumer must have the @tailwindcss/typography
 // plugin enabled. Use anywhere markdown needs to be displayed.
+/**
+ * The anchor a heading gets: lower-case, words joined by hyphens, punctuation
+ * dropped. Shared by the renderer (the id) and anything that lists a page's
+ * headings (the link), so the two always agree.
+ */
+export function headingSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[`*_~]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+/** The plain text of a hast node and everything under it. */
+interface HastLike {
+  type?: string;
+  value?: string;
+  children?: HastLike[];
+}
+function hastText(node: HastLike | undefined): string {
+  if (!node) return "";
+  if (typeof node.value === "string") return node.value;
+  return (node.children ?? []).map(hastText).join("");
+}
+
 export function Markdown({
   content,
   className,
   onOpenFile,
+  headingIds = false,
 }: {
   content: string;
   className?: string;
+  /** Give h2 and h3 an id from `headingSlug`, so a page outline can link to them. */
+  headingIds?: boolean;
   /** When set, inline code that looks like a file path becomes a clickable link
    *  calling this with the path — used to jump to a referenced doc. `newTab` is
    *  set on a ⌘/Ctrl-click. */
   onOpenFile?: (path: string, opts?: { newTab: boolean }) => void;
 }) {
-  const components: Components | undefined = onOpenFile
+  const headings: Components = headingIds
+    ? {
+        h2: ({ node, children }) => <h2 id={headingSlug(hastText(node as HastLike))}>{children}</h2>,
+        h3: ({ node, children }) => <h3 id={headingSlug(hastText(node as HastLike))}>{children}</h3>,
+      }
+    : {};
+  const fileLinks: Components | undefined = onOpenFile
     ? {
         code({ className: cls, children }) {
           const text = String(children ?? "");
@@ -60,6 +96,7 @@ export function Markdown({
         },
       }
     : undefined;
+  const components: Components = { ...headings, ...(fileLinks ?? {}) };
   return (
     <div
       className={cn(
