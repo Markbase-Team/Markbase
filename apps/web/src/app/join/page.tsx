@@ -7,7 +7,7 @@ import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";
 import { latestMacVersion } from "@/lib/latest-release";
 import { instanceUrl } from "@/lib/instance-url";
-import { instanceHasAccounts, verifyInviteCode } from "@/lib/invite";
+import { instanceKnownEmpty, verifyInviteCodeForPage } from "@/lib/invite";
 
 // The join page: the one link a member shares with a teammate.
 //
@@ -40,8 +40,8 @@ export default async function JoinPage({
   ]);
   const hosted = url === DEFAULT_APP_URL;
   const invite = code?.trim() ?? "";
-  const first = !hosted && !(await instanceHasAccounts());
-  const invited = !hosted && !first && (await verifyInviteCode(invite));
+  const first = !hosted && (await instanceKnownEmpty());
+  const invited = !hosted && !first && (await verifyInviteCodeForPage(invite));
   const host = new URL(url).host;
   const signup = invited ? `/signup?code=${encodeURIComponent(invite)}` : "/signup";
 

@@ -41,7 +41,14 @@ export async function POST(req: Request) {
   if (!email || !password) return agentJson({ error: "Email and password are required" }, 400);
   // An empty instance admits its first account with no code at all: there is
   // nobody to have issued one, and that account becomes the admin.
-  const first = !(await instanceHasAccounts());
+  // Strict here, unlike the pages: whether this request may create the admin
+  // depends on the answer, so a check that fails refuses rather than guesses.
+  let first: boolean;
+  try {
+    first = !(await instanceHasAccounts());
+  } catch {
+    return agentJson({ error: "Can't reach this instance's database right now. Try again in a minute." }, 503);
+  }
   if (!first) {
     if (!(await verifyInviteCode(body.code?.trim()))) {
       return agentJson({ error: "That invite link is not valid any more. Ask a teammate for a new one." }, 403);

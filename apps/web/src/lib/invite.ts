@@ -192,6 +192,35 @@ export async function instanceHasAccounts(): Promise<boolean> {
   return data.users.length > 0;
 }
 
+/**
+ * Whether the instance is known to have no accounts — for the pages that
+ * decide between the admin's set-up and the ordinary sign-in.
+ *
+ * A check that fails reads as "not known to be empty". Every instance but a
+ * brand-new one has accounts, so the ordinary sign-in is right for all of them,
+ * and a database that is briefly unreachable must not turn the sign-in page
+ * into an error page (the desktop app shows it in its window, and an instance
+ * whose network address changed did exactly that, 2026-11-10).
+ */
+export async function instanceKnownEmpty(): Promise<boolean> {
+  try {
+    return !(await instanceHasAccounts());
+  } catch (e) {
+    console.warn(`[invite] could not tell whether the instance has accounts: ${e instanceof Error ? e.message : String(e)}`);
+    return false;
+  }
+}
+
+/** verifyInviteCode for a page: a database that cannot be reached is "not verified", not a crash. */
+export async function verifyInviteCodeForPage(code: string | null | undefined): Promise<boolean> {
+  try {
+    return await verifyInviteCode(code);
+  } catch (e) {
+    console.warn(`[invite] could not check the invite code: ${e instanceof Error ? e.message : String(e)}`);
+    return false;
+  }
+}
+
 /** What Settings shows a member to share. */
 export interface InviteInfo {
   /** The join page with the current invite code — the link to hand on. */

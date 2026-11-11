@@ -5,7 +5,7 @@ import { AuthForm } from "@/components/auth-form";
 import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";
 import { instanceUrl } from "@/lib/instance-url";
-import { instanceHasAccounts, verifyInviteCode } from "@/lib/invite";
+import { instanceKnownEmpty, verifyInviteCodeForPage } from "@/lib/invite";
 import { safeNext } from "@/lib/routes";
 import { authProviders } from "@/lib/supabase/auth-providers";
 import { JoinForm } from "@/app/join/join-form";
@@ -51,8 +51,8 @@ export default async function SignupPage({
 
   const invite = code?.trim() ?? "";
   const [first, invited] = await Promise.all([
-    instanceHasAccounts().then((has) => !has),
-    verifyInviteCode(invite),
+    instanceKnownEmpty(),
+    verifyInviteCodeForPage(invite),
   ]);
   const host = new URL(url).host;
   const login = `/login?next=${encodeURIComponent(target)}${invited ? `&code=${encodeURIComponent(invite)}` : ""}`;
