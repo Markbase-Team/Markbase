@@ -61,7 +61,7 @@ export default async function SignupPage({
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <Image src="/logo.png" alt="" width={56} height={56} priority className="size-14 object-contain" />
+          <Image src="/markbase-logo.png" alt="" width={56} height={56} priority className="size-14 object-contain" />
           <h1 className="mt-6 text-2xl font-bold tracking-tight">{first ? `Set up ${host}` : `Join ${host}`}</h1>
           <p className="mt-1 text-2xl font-bold tracking-tight text-muted-foreground">Your team&apos;s Markbase</p>
         </div>

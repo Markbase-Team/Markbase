@@ -42,7 +42,7 @@ const STRUCTURED_DATA = {
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}/logo.png`,
+        url: `${SITE_URL}/markbase-logo.png`,
         width: 1024,
         height: 1024,
       },
@@ -361,7 +361,7 @@ export async function MarkbaseLanding() {
           <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1.5fr]">
             <div>
               <div className="flex items-center gap-2">
-                <Image src="/logo.png" alt="" width={24} height={24} className="size-6 object-contain" />
+                <Image src="/markbase-logo.png" alt="" width={24} height={24} className="size-6 object-contain" />
                 <span className="text-base font-semibold">Markbase</span>
               </div>
               <p className="mt-3 max-w-xs text-sm text-zinc-500">

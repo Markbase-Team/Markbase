@@ -140,7 +140,7 @@ export function AuthForm({
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center text-center">
         <Image
-          src="/logo.png"
+          src="/markbase-logo.png"
           alt=""
           width={56}
           height={56}

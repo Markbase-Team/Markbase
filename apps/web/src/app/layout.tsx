@@ -24,13 +24,13 @@ export const metadata: Metadata = {
   icons: {
     icon: [{ url: "/icon.png", type: "image/png" }],
     shortcut: ["/icon.png"],
-    apple: [{ url: "/logo.png" }],
+    apple: [{ url: "/markbase-logo.png" }],
   },
   openGraph: {
     siteName: "Markbase",
     type: "website",
     url: "https://markbase.so",
-    images: [{ url: "/logo.png", width: 1024, height: 1024, alt: "Markbase" }],
+    images: [{ url: "/markbase-logo.png", width: 1024, height: 1024, alt: "Markbase" }],
   },
   twitter: { card: "summary" },
 };
