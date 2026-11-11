@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, KeySquare, LogOut, Settings } from "lucide-react";
+import { ChevronRight, LogOut, Settings } from "lucide-react";
 import type { SidebarEntry } from "@markbase/registry";
 import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
 import { JoinLinkField } from "@markbase/ui/join-link";
@@ -29,7 +28,8 @@ import { Button } from "@markbase/ui/button";
 /**
  * This shell's main sidebar: the shared AppRail, plus what only the website
  * has — the per-feature sidebar sections generated for this build, and a footer
- * for the signed-in user with API keys, Settings and Log out.
+ * for the signed-in user with Settings and Log out. (The API keys page is
+ * still at /dashboard/api-keys; it is just not offered from the menu.)
  *
  * Who sees which entry is decided in the dashboard layout, which knows both
  * the viewer and the manifests; by the time entries reach here they are
@@ -62,7 +62,7 @@ export function AppSidebar({
       entries={featureEntries}
       slots={FEATURE_SIDEBAR_SLOTS}
       footer={
-        // Signed-in user → drop-up → API keys, Settings (with Log out).
+        // Signed-in user → drop-up → Settings (with Log out).
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -83,12 +83,6 @@ export function AppSidebar({
                 sideOffset={8}
                 className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
               >
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/api-keys">
-                    <KeySquare className="size-4" />
-                    API keys
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={(e) => {
                     e.preventDefault();
