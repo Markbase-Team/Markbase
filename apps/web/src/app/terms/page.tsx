@@ -48,7 +48,7 @@ We may update these Terms; continued use after changes means you accept them.
 
 ## Contact
 
-**jessiejia1997@gmail.com**.
+[hello@markbase.so](mailto:hello@markbase.so).
 `;
 
 export default function TermsPage() {
