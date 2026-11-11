@@ -71,7 +71,7 @@ updated" date above.
 
 ## Contact
 
-Questions about this policy or your data: **jessiejia1997@gmail.com**.
+Questions about this policy or your data: [hello@markbase.so](mailto:hello@markbase.so).
 `;
 
 export default function PrivacyPolicyPage() {
