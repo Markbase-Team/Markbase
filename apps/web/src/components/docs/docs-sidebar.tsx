@@ -14,7 +14,7 @@ import type { DocsSection } from "@/lib/docs-nav";
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2">
-      <Image src="/logo.png" alt="" width={28} height={28} className="size-7 object-contain" />
+      <Image src="/markbase-logo.png" alt="" width={28} height={28} className="size-7 object-contain" />
       <span className="text-base font-bold tracking-tight">Markbase</span>
     </Link>
   );
