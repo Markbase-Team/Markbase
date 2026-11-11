@@ -4,7 +4,7 @@ import { AuthForm } from "@/components/auth-form";
 import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";
 import { instanceUrl } from "@/lib/instance-url";
-import { instanceHasAccounts } from "@/lib/invite";
+import { instanceKnownEmpty } from "@/lib/invite";
 import { safeNext } from "@/lib/routes";
 import { authProviders } from "@/lib/supabase/auth-providers";
 
@@ -24,7 +24,7 @@ export default async function LoginPage({
   // A team instance with no accounts has nobody to log in: the person in
   // front of it is setting it up, and the desktop app's sign-in lands here
   // too, so the way forward is the admin's sign-up.
-  if (url !== DEFAULT_APP_URL && !(await instanceHasAccounts())) {
+  if (url !== DEFAULT_APP_URL && (await instanceKnownEmpty())) {
     redirect(`/signup?next=${encodeURIComponent(target)}`);
   }
   // An invited person who came here from the sign-up ("Already have one?")
