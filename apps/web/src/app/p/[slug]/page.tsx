@@ -56,7 +56,9 @@ export default async function PublishedDocPage({
   if (!data) notFound();
 
   const owner = await getUserDisplay(data.ownerId);
-  const authorName = owner.name || owner.email || "Markbase";
+  // The name the owner chose, else their sign-in's — never their email: this
+  // page is public.
+  const authorName = owner.name || "Markbase";
   const tabs = data.tabs.map((t) => ({
     id: t.id,
     title: t.title,

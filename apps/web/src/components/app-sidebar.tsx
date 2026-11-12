@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, LogOut, Settings } from "lucide-react";
 import type { SidebarEntry } from "@markbase/registry";
 import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
+import { DisplayNameField } from "@markbase/ui/display-name-field";
 import { JoinLinkField } from "@markbase/ui/join-link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AppRail } from "@markbase/ui/app-rail";
@@ -105,6 +106,7 @@ export function AppSidebar({
             <DialogTitle>Settings</DialogTitle>
             <DialogDescription>Signed in as {email}</DialogDescription>
           </DialogHeader>
+          <DisplayNameField />
           {instanceUrl !== DEFAULT_APP_URL && <JoinLinkField />}
           <div>
             <Button

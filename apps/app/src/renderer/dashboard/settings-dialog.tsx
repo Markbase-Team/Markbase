@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@markbase/ui/dialog";
+import { DisplayNameField } from "@markbase/ui/display-name-field";
 import { JoinLinkField } from "@markbase/ui/join-link";
 import type { InstanceBridge } from "../../preload";
 import type { InstanceStatus } from "../../instance";
@@ -62,6 +63,8 @@ export function SettingsDialog({
             Signed in as <span className="font-medium text-foreground">{userName}</span>
           </DialogDescription>
         </DialogHeader>
+
+        <DisplayNameField />
 
         <section className="space-y-2">
           <h3 className="text-sm font-semibold">Instance</h3>

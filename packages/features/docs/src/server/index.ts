@@ -44,7 +44,15 @@ export {
   type VaultRow,
 } from "./vaults";
 export { seedWelcomeDoc, WELCOME_DOC_PATH } from "./welcome";
-export { getUserDisplay } from "./users";
+export {
+  getUserDisplay,
+  getUserProfile,
+  setUserDisplayName,
+  resolveName,
+  DISPLAY_NAME_MAX,
+  type UserProfile,
+  type NameMetadata,
+} from "./users";
 export {
   publishDocument,
   publishVersions,
@@ -107,7 +115,7 @@ export {
   ASSET_URL_TTL_SECONDS,
   type AssetRow,
 } from "./assets";
-export { ownerDisplayName } from "./owner-name";
+export { ownerDisplayName, forgetOwnerName } from "./owner-name";
 
 // Who is asking, as an author. Takes what the handler layer read off the
 // request (`Credentials`) — never the request: resolveActor turns the caller
