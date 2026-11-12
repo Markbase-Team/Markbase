@@ -14,7 +14,7 @@ import { cn } from "@markbase/ui/utils";
 import { ComingSoonBadge } from "@markbase/ui/coming-soon";
 import { DownloadDocButton, downloadMarkdown } from "./download-doc";
 import { AGENTS, useAgentLauncher } from "./agent-launcher";
-import { PublishButton, PublishDialog, usePublish } from "./publish-button";
+import { hasUnpublishedChanges, PublishButton, PublishDialog, usePublish } from "./publish-button";
 import { useDocFetch } from "./doc-client";
 import { docCrdtPool } from "./doc-crdt-pool";
 import { useDocsPorts } from "./ports";
@@ -118,7 +118,7 @@ export function DocActionSet({
             {isOwner && (
               <DropdownMenuItem onSelect={() => setPublishOpen(true)}>
                 <Globe className="size-4" />
-                {publish.status.published ? "Published" : "Publish"}
+                {hasUnpublishedChanges(publish.status) ? "Publish" : "Published"}
               </DropdownMenuItem>
             )}
             {showDownload && (

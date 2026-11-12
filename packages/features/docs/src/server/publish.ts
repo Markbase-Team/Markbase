@@ -1,6 +1,15 @@
 import { supabase } from "@markbase/protocol/supabase";
-import { getMarkdown } from "@markbase/docs";
-import { readDocCrdt } from "./doc-crdt";
+import {
+  behindPublished,
+  checkpoint,
+  listVersions,
+  pinVersion,
+  pinnedVersion,
+  publishedMarkdown,
+  versionCount,
+  type VersionMeta,
+} from "@markbase/docs";
+import { editDocCrdt, readDocCrdt } from "./doc-crdt";
 import { getDocument, type DocumentRow } from "./documents";
 
 const db = () => supabase.schema("docs");
@@ -25,13 +34,53 @@ export function publicSlug(title: string, docId: string): string {
   return `${slugify(title)}-${docId.slice(0, 8)}`;
 }
 
+/** The label a version gets when publishing records it. */
+const PUBLISHED_LABEL = "Published";
+
+/**
+ * Pin a version of one document as its published one, and say which.
+ *
+ * With no `version`, the text as it stands is published: it is recorded as a
+ * version first (a no-op when the latest version already is that text), and
+ * that one is pinned. With a `version`, that existing one is pinned.
+ */
+async function pinPublished(
+  docId: string,
+  rowContent: string | null,
+  version?: number
+): Promise<number> {
+  const { result } = await editDocCrdt(docId, rowContent ?? "", (y) => {
+    let index = version;
+    if (index === undefined) {
+      checkpoint(y, { label: PUBLISHED_LABEL });
+      index = versionCount(y) - 1;
+    }
+    pinVersion(y, index);
+    return index;
+  });
+  return result;
+}
+
 // Publish a doc to the web. Assigns a stable public slug on first publish
-// (kept for re-publish), then stamps published_at. Owner-gated by the route.
+// (kept for re-publish), pins the version to show (see pinPublished) on the
+// document and the current text on every other tab of its group, then stamps
+// published_at. Owner-gated by the route.
 export async function publishDocument(
-  docId: string
-): Promise<{ slug: string }> {
+  docId: string,
+  version?: number
+): Promise<{ slug: string; version: number }> {
   const doc = await getDocument(docId);
   if (!doc) throw new Error("Document not found");
+
+  const pinned = await pinPublished(docId, doc.content, version);
+  const { data: siblings } = await db()
+    .from("documents")
+    .select("id, content")
+    .eq("tab_group_id", doc.tab_group_id);
+  const others = ((siblings ?? []) as { id: string; content: string | null }[]).filter(
+    (d) => d.id !== docId
+  );
+  await Promise.all(others.map((d) => pinPublished(d.id, d.content)));
 
   const slug = doc.public_slug ?? publicSlug(doc.title, docId);
   const { error } = await db()
@@ -39,7 +88,25 @@ export async function publishDocument(
     .update({ public_slug: slug, published_at: new Date().toISOString() })
     .eq("id", docId);
   if (error) throw error;
-  return { slug };
+  return { slug, version: pinned };
+}
+
+/** What the publish dialog needs to know about a document's versions. */
+export interface PublishVersions {
+  /** The pinned version's index; null when unpinned (published before pins, or never). */
+  version: number | null;
+  /** The document has changed since the pinned version. */
+  behind: boolean;
+  /** Every version, oldest first. */
+  versions: VersionMeta[];
+}
+
+export async function publishVersions(docId: string, rowContent: string | null): Promise<PublishVersions> {
+  return readDocCrdt(docId, rowContent ?? "", (y) => ({
+    version: pinnedVersion(y),
+    behind: behindPublished(y),
+    versions: listVersions(y),
+  }));
 }
 
 // Take a doc offline (keeps the slug so re-publishing restores the same URL).
@@ -66,18 +133,19 @@ export async function getPublishedDoc(
 }
 
 /**
- * A document's text as it stands now.
+ * The text a document is published as: its pinned version, or — published
+ * before pins existed — the text as it stands.
  *
- * The CRDT is the truth; the row's `content` is a mirror that only some
- * writers keep in step. An agent's edit through the API updates it; typing in
- * the editor or a file synced by the vault daemon does not. A page published
- * from the row therefore showed whatever the row was created with — a
- * document written in the editor published as its title and nothing else
- * (the launch post, 2026-11-12). Read from the CRDT, falling back to the row
- * for a document that has never been opened and so has no CRDT yet.
+ * Read from the CRDT, never the row. The row's `content` is a mirror that only
+ * some writers keep in step: an agent's edit through the API updates it;
+ * typing in the editor or a file synced by the vault daemon does not. A page
+ * published from the row showed whatever the row was created with — a document
+ * written in the editor published as its title and nothing else (the launch
+ * post, 2026-11-12). The row is only the seed for a document that has never
+ * been opened and so has no CRDT yet.
  */
 function liveMarkdown(docId: string, rowContent: string | null): Promise<string> {
-  return readDocCrdt(docId, rowContent ?? "", getMarkdown);
+  return readDocCrdt(docId, rowContent ?? "", publishedMarkdown);
 }
 
 // A published doc plus all tabs in its group (ordered left→right), so the public

@@ -47,6 +47,8 @@ export { seedWelcomeDoc, WELCOME_DOC_PATH } from "./welcome";
 export { getUserDisplay } from "./users";
 export {
   publishDocument,
+  publishVersions,
+  type PublishVersions,
   unpublishDocument,
   getPublishedDoc,
   getPublishedTabs,
