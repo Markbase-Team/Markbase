@@ -29,6 +29,7 @@ export const DOCS_NAV: DocsSection[] = [
     pages: [
       { slug: "docs-next-to-code", title: "Docs next to your code" },
       { slug: "keep-clients-in-the-loop", title: "Keep clients in the loop" },
+      { slug: "on-call", title: "On-call with agents" },
     ],
   },
   {

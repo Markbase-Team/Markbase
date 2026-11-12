@@ -32,4 +32,6 @@ Markbase keeps it as files. That has three consequences:
   synced document, in a few minutes.
 - [Docs next to your code](/docs/docs-next-to-code): the way we expect teams
   to work.
+- [On-call with agents](/docs/on-call): agents read the logs, people verify
+  the findings and the fix.
 - [Self-hosting](/docs/self-hosting): run your own instance for a team.
