@@ -25,10 +25,10 @@ function Brand() {
 function NavList({ nav, onNavigate }: { nav: DocsSection[]; onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
-    <nav className="space-y-7 text-sm">
+    <nav className="space-y-7">
       {nav.map((section) => (
         <div key={section.title}>
-          <div className="mb-2 px-3 text-[11px] font-semibold tracking-wider text-zinc-500 uppercase">
+          <div className="mb-1.5 px-3 text-sm font-bold tracking-tight text-zinc-950">
             {section.title}
           </div>
           <ul className="space-y-0.5">
@@ -43,8 +43,8 @@ function NavList({ nav, onNavigate }: { nav: DocsSection[]; onNavigate?: () => v
                     aria-current={active ? "page" : undefined}
                     className={
                       active
-                        ? "block rounded-lg bg-[#e5ff6e] px-3 py-2 font-semibold text-zinc-900"
-                        : "block rounded-lg px-3 py-2 text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+                        ? "block rounded-lg bg-[#e5ff6e] px-3 py-1.5 text-[13px] font-semibold text-zinc-900"
+                        : "block rounded-lg px-3 py-1.5 text-[13px] text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
                     }
                   >
                     {p.title}
