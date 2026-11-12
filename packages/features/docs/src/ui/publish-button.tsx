@@ -253,12 +253,7 @@ export function PublishDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Publish to web</DialogTitle>
-          <DialogDescription>
-            Turn this doc into a public page anyone can read — a clean URL built
-            for search (Google) and AI answers (ChatGPT, Perplexity, Claude).
-            The page shows the version you publish, and keeps showing it while
-            you go on editing. Only you can publish or take it offline.
-          </DialogDescription>
+          <DialogDescription>Turn this doc into a public page anyone can read.</DialogDescription>
         </DialogHeader>
 
         {status.published && status.url ? (
