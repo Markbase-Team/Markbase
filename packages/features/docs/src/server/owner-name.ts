@@ -17,6 +17,11 @@ const TTL_MS = 5 * 60_000;
 
 const cache = new Map<string, { name: string; at: number }>();
 
+/** The person changed their name: the next lookup asks again. */
+export function forgetOwnerName(userId: string): void {
+  cache.delete(userId);
+}
+
 /**
  * Resolve `userId` to a display name. `fallbackEmail` is used when the admin
  * lookup gives nothing — the caller often already holds the session's email, and
