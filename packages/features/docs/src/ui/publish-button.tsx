@@ -253,7 +253,7 @@ export function PublishDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Publish to web</DialogTitle>
-          <DialogDescription>Turn this doc into a public page anyone can read.</DialogDescription>
+          <DialogDescription>Turn this doc into a public page anyone, and any agent, can read.</DialogDescription>
         </DialogHeader>
 
         {status.published && status.url ? (
