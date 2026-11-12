@@ -5,20 +5,11 @@ it, one folder that mirrors them.
 
 ## Mounting
 
-Mount a vault from the desktop app (**New vault**, or the Vaults menu) or from
-the terminal:
-
-```bash
-npx @markbase/cli vault mount "Team notes" ~/Code/my-app/docs
-npx @markbase/cli vault list
-```
-
-The first vault defaults to `~/Markbase/<name>`. Unmounting stops syncing on
-that machine and leaves the files where they are:
-
-```bash
-npx @markbase/cli vault unmount "Team notes"
-```
+Mount a vault from the desktop app with **New vault**, or from the Vaults
+menu. The first vault defaults to `~/Markbase/<name>`; any folder that is not
+already a vault works. Unmounting stops syncing on that machine and leaves the
+files where they are. To mount from a terminal instead, see the CLI path in
+the [Quick start](/docs/quick-start#with-the-cli).
 
 ## How sync works
 

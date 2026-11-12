@@ -6,11 +6,8 @@ work from the same knowledge.
 
 ## Put the vault in the repository
 
-Mount a vault on the repository's `docs/` folder, or on the repository root:
-
-```bash
-npx @markbase/cli vault mount "my-app" ~/Code/my-app/docs
-```
+Create a vault on the repository's `docs/` folder, or on the repository root:
+in the desktop app, **New vault** and pick the folder.
 
 The markdown is committed like any other file. The vault adds live sync,
 comments and sharing on top, and takes nothing away: the repository still

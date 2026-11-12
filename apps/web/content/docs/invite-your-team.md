@@ -25,9 +25,3 @@ The teammate opens the link and presses **Open in desktop app**. The app
 restarts on your instance and shows its sign-up in its window, where they
 create their account with the invited address. Without the app, the link at
 the bottom of the page creates the account in the browser.
-
-From the terminal, a teammate signs in with:
-
-```bash
-npx @markbase/cli login --app-url https://markbase.example.com
-```

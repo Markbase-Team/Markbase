@@ -37,5 +37,4 @@ always shows the current version.
 
 To let a client edit, add them by address as an editor instead. They sign in,
 their edits merge into the document like yours, and the document reaches their
-machine in their [Shared Vault](/docs/sharing) if they use the desktop app or
-the CLI.
+machine in their [Shared Vault](/docs/sharing) if they use the desktop app.
