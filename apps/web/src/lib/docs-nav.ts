@@ -28,18 +28,17 @@ export const DOCS_NAV: DocsSection[] = [
     title: "Use cases",
     pages: [
       { slug: "docs-next-to-code", title: "Docs next to your code" },
-      { slug: "specs-and-handoffs", title: "Specs and handoffs" },
-      { slug: "publish-and-share", title: "Publish and share" },
+      { slug: "keep-clients-in-the-loop", title: "Keep clients in the loop" },
+      { slug: "on-call", title: "On-call with agents" },
     ],
   },
   {
     title: "Features",
     pages: [
       { slug: "vaults", title: "Vaults" },
-      { slug: "formats", title: "Formats" },
       { slug: "sharing", title: "Sharing" },
       { slug: "agents", title: "Agents" },
-      { slug: "desktop-and-cli", title: "Desktop app and CLI" },
+      { slug: "desktop-app", title: "Desktop app" },
     ],
   },
   {
@@ -53,6 +52,17 @@ export const DOCS_NAV: DocsSection[] = [
 ];
 
 export const FIRST_DOCS_PAGE = DOCS_NAV[0].pages[0].slug;
+
+/**
+ * Pages that moved, so links already shared keep working: the old slug and
+ * where it lives now.
+ */
+export const DOCS_MOVED: Record<string, string> = {
+  "desktop-and-cli": "/docs/desktop-app",
+  formats: "/docs/vaults#formats",
+  "publish-and-share": "/docs/keep-clients-in-the-loop",
+  "specs-and-handoffs": "/docs/docs-next-to-code#specs-and-handoffs",
+};
 
 /** Every page, in sidebar order, with the section it sits in. */
 export function docsPages(): (DocsPage & { section: string })[] {

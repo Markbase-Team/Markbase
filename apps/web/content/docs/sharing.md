@@ -8,11 +8,7 @@ A document someone shared with you does not land in one of your own vaults,
 because its folder is the owner's. It lands in your **Shared Vault**, a folder
 of your own, laid out by owner and title: `<owner>/<title>.md`. The same sync
 keeps it in step, and you can rearrange your copy without moving the owner's
-file.
-
-```bash
-npx @markbase/cli vault mount --shared ~/Markbase/shared
-```
+file. The desktop app puts it beside your own vaults under `~/Markbase`.
 
 ## What each role can do
 
@@ -28,4 +24,4 @@ it for.
 ## Public links
 
 A document can also be published as a public link, readable by anyone without
-an account. See [Publish and share](/docs/publish-and-share).
+an account. See [Keep clients in the loop](/docs/keep-clients-in-the-loop).

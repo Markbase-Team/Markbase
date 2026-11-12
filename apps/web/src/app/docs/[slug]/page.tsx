@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Markdown } from "@markbase/ui/markdown";
 import { DocsBody } from "@/components/docs/docs-body";
 import { DocsOutline } from "@/components/docs/docs-outline";
 import { DocsQuestions } from "@/components/docs/docs-questions";
-import { docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
+import { DOCS_MOVED, docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
 
 // One docs page: the content in the middle, with "Copy markdown" above it; the
 // page's outline and a way to ask a question on the right; and Previous / Next
@@ -36,8 +36,13 @@ const PROSE = [
 ].join(" ");
 
 export default async function DocsPageView({ params }: { params: Promise<{ slug: string }> }) {
-  const found = docsPage((await params).slug);
-  if (!found) notFound();
+  const { slug } = await params;
+  const found = docsPage(slug);
+  if (!found) {
+    const moved = DOCS_MOVED[slug];
+    if (moved) permanentRedirect(moved);
+    notFound();
+  }
   const { page, markdown, previous, next } = found;
   const outline = docsOutline(markdown);
 
