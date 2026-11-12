@@ -1,4 +1,6 @@
 import { supabase } from "@markbase/protocol/supabase";
+import { getMarkdown } from "@markbase/docs";
+import { readDocCrdt } from "./doc-crdt";
 import { getDocument, type DocumentRow } from "./documents";
 
 const db = () => supabase.schema("docs");
@@ -63,6 +65,21 @@ export async function getPublishedDoc(
   return (data as DocumentRow | null) ?? null;
 }
 
+/**
+ * A document's text as it stands now.
+ *
+ * The CRDT is the truth; the row's `content` is a mirror that only some
+ * writers keep in step. An agent's edit through the API updates it; typing in
+ * the editor or a file synced by the vault daemon does not. A page published
+ * from the row therefore showed whatever the row was created with — a
+ * document written in the editor published as its title and nothing else
+ * (the launch post, 2026-11-12). Read from the CRDT, falling back to the row
+ * for a document that has never been opened and so has no CRDT yet.
+ */
+function liveMarkdown(docId: string, rowContent: string | null): Promise<string> {
+  return readDocCrdt(docId, rowContent ?? "", getMarkdown);
+}
+
 // A published doc plus all tabs in its group (ordered left→right), so the public
 // page can render the whole tabbed document, not just the published tab.
 export async function getPublishedTabs(slug: string): Promise<{
@@ -79,9 +96,14 @@ export async function getPublishedTabs(slug: string): Promise<{
     .eq("tab_group_id", doc.tab_group_id)
     .order("position", { ascending: true });
   const rows = (data ?? []) as { id: string; title: string; content: string | null }[];
-  const tabs = rows.length
-    ? rows.map((d) => ({ id: d.id, title: d.title, content: d.content ?? "" }))
-    : [{ id: doc.id, title: doc.title, content: doc.content ?? "" }];
+  const sources = rows.length ? rows : [{ id: doc.id, title: doc.title, content: doc.content }];
+  const tabs = await Promise.all(
+    sources.map(async (d) => ({
+      id: d.id,
+      title: d.title,
+      content: await liveMarkdown(d.id, d.content),
+    }))
+  );
   return {
     publishedAt: doc.published_at,
     updatedAt: doc.updated_at,
