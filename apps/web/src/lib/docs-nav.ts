@@ -35,7 +35,6 @@ export const DOCS_NAV: DocsSection[] = [
     title: "Features",
     pages: [
       { slug: "vaults", title: "Vaults" },
-      { slug: "formats", title: "Formats" },
       { slug: "sharing", title: "Sharing" },
       { slug: "agents", title: "Agents" },
       { slug: "desktop-and-cli", title: "Desktop app and CLI" },
@@ -58,6 +57,7 @@ export const FIRST_DOCS_PAGE = DOCS_NAV[0].pages[0].slug;
  * where it lives now.
  */
 export const DOCS_MOVED: Record<string, string> = {
+  formats: "/docs/vaults#formats",
   "publish-and-share": "/docs/keep-clients-in-the-loop",
   "specs-and-handoffs": "/docs/docs-next-to-code#specs-and-handoffs",
 };
