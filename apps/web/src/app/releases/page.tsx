@@ -17,7 +17,7 @@ const CONTENT = `# Releases
 The Markbase desktop app for macOS (Apple silicon).
 [Download the latest](${MAC_DOWNLOAD_URL}).
 
-## 0.0.8
+## 2.0.0
 
 _November 12, 2026_
 
