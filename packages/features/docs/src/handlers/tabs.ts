@@ -4,6 +4,7 @@ import {
   getDocument,
   listTabs,
   publishDocument,
+  publishVersions,
   reorderTabs,
   unpublishDocument,
 } from "../server";
@@ -75,26 +76,49 @@ export const docTabHandler = {
 const publicUrl = (req: Request, slug: string): string =>
   `${new URL(req.url).origin}/p/${slug}`;
 
+/** What every publish answer carries: where it is, which version, and the choices. */
+async function publishAnswer(req: Request, id: string): Promise<Response> {
+  const doc = await getDocument(id);
+  const published = Boolean(doc?.published_at);
+  const versions = await publishVersions(id, doc?.content ?? null);
+  return json({
+    published,
+    url: published && doc?.public_slug ? publicUrl(req, doc.public_slug) : null,
+    // The pin only means something while the document is public.
+    version: published ? versions.version : null,
+    behind: published && versions.behind,
+    versions: versions.versions,
+  });
+}
+
 export const docPublishHandler = {
-  // GET — current publish status (owner only).
+  // GET — current publish status and the versions to choose from (owner only).
   GET: async (req: Request, id: string): Promise<Response> => {
     const auth = await requireDocCapability(req, id, "owner");
     if (!auth.ok) return json({ error: auth.error }, auth.status);
-    const doc = await getDocument(id);
-    const published = Boolean(doc?.published_at);
-    return json({
-      published,
-      url:
-        published && doc?.public_slug ? publicUrl(req, doc.public_slug) : null,
-    });
+    return publishAnswer(req, id);
   },
 
-  // POST — publish to the web (owner only). Idempotent; keeps the same URL.
+  // POST { version? } — publish to the web (owner only). With no version the
+  // text as it stands is published; with one, that version. Keeps the URL.
   POST: async (req: Request, id: string): Promise<Response> => {
     const auth = await requireDocCapability(req, id, "owner");
     if (!auth.ok) return json({ error: auth.error }, auth.status);
-    const { slug } = await publishDocument(id);
-    return json({ published: true, url: publicUrl(req, slug) });
+    let body: { version?: number } = {};
+    try {
+      body = (await req.json()) as { version?: number };
+    } catch {
+      // No body: publish the text as it stands.
+    }
+    if (body.version !== undefined && !Number.isInteger(body.version)) {
+      return json({ error: "version must be a whole number" }, 400);
+    }
+    try {
+      await publishDocument(id, body.version);
+    } catch (e) {
+      return json({ error: e instanceof Error ? e.message : "Could not publish" }, 400);
+    }
+    return publishAnswer(req, id);
   },
 
   // DELETE — take it offline (owner only).
@@ -102,6 +126,6 @@ export const docPublishHandler = {
     const auth = await requireDocCapability(req, id, "owner");
     if (!auth.ok) return json({ error: auth.error }, auth.status);
     await unpublishDocument(id);
-    return json({ published: false, url: null });
+    return publishAnswer(req, id);
   },
 };

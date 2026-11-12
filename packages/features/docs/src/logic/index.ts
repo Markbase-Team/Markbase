@@ -144,3 +144,4 @@ export {
   type MarkdownLens,
 } from "./media";
 export { chooseRevival, type RevivalCandidate, type Revival } from "./revive";
+export { pinnedVersion, pinVersion, publishedMarkdown, behindPublished } from "./publish-pin";

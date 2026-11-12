@@ -27,11 +27,17 @@ const crdt = new Map<string, Uint8Array>();
 /** Just enough of the query builder for getPublishedDoc and the tab listing. */
 function query(table: Row[]) {
   let found = [...table];
+  let pendingPatch: Partial<Row> | null = null;
   const q = {
     select: () => q,
+    update: (patch: Partial<Row>) => {
+      pendingPatch = patch;
+      return q;
+    },
     eq: (col: keyof Row, value: string) => {
       found = found.filter((r) => r[col] === value);
-      return q;
+      if (pendingPatch) for (const r of found) Object.assign(r, pendingPatch);
+      return pendingPatch ? Object.assign(Promise.resolve({ data: null, error: null }), q) : q;
     },
     not: (col: keyof Row) => {
       found = found.filter((r) => r[col] !== null);
@@ -48,8 +54,18 @@ vi.mock("@markbase/protocol/supabase", () => ({
 }));
 vi.mock("../src/server/crdt-store", () => ({
   loadCrdtSnapshot: async (id: string) => (crdt.has(id) ? { state: crdt.get(id)!, version: 1 } : null),
-  saveCrdtSnapshot: vi.fn(),
-  broadcastCrdt: vi.fn(),
+  // The store as the publish path uses it: the saved state becomes the document's.
+  saveCrdtSnapshot: async (id: string, incoming: Uint8Array) => {
+    crdt.set(id, incoming);
+    return { changed: true, state: incoming, version: 2 };
+  },
+  broadcastCrdt: async () => {},
+}));
+// The searchable mirror is not what these tests are about.
+vi.mock("../src/server/documents", async (original) => ({
+  ...(await original<typeof import("../src/server/documents")>()),
+  mirrorDocContent: async () => {},
+  getDocument: async (id: string) => rows.find((r) => r.id === id) ?? null,
 }));
 
 function row(over: Partial<Row>): Row {
@@ -111,5 +127,39 @@ describe("getPublishedTabs", () => {
     const { getPublishedTabs } = await import("../src/server/publish");
     rows.push(row({ published_at: null }));
     expect(await getPublishedTabs("launch-post-d1")).toBeNull();
+  });
+});
+
+describe("publishing pins a version", () => {
+  it("publishes the text as it stands and keeps showing it after more edits", async () => {
+    const { getPublishedTabs, publishDocument, publishVersions } = await import("../src/server/publish");
+    rows.push(row({ published_at: null, public_slug: null }));
+    crdt.set("d1", crdtOf("# Launch Post\n\nReady to ship.\n"));
+
+    const { slug, version } = await publishDocument("d1");
+    expect(version).toBe(0);
+
+    // The author keeps writing; the public page does not move.
+    const { restore, snapshot: snap } = await import("../src/logic/sync");
+    const live = restore(crdt.get("d1")!);
+    setMarkdown(live, "# Launch Post\n\nReady to ship. And a half-finished thought\n", "editor");
+    crdt.set("d1", snap(live));
+
+    const data = await getPublishedTabs(slug);
+    expect(data?.tabs[0].content).toBe("# Launch Post\n\nReady to ship.\n");
+    const state = await publishVersions("d1", null);
+    expect(state).toMatchObject({ version: 0, behind: true });
+    expect(state.versions).toHaveLength(1);
+
+    // Publishing again takes the latest text as a new version.
+    const again = await publishDocument("d1");
+    expect(again.version).toBe(1);
+    expect((await getPublishedTabs(slug))?.tabs[0].content).toContain("half-finished thought");
+    expect(await publishVersions("d1", null)).toMatchObject({ version: 1, behind: false });
+
+    // And an older version can be chosen back.
+    await publishDocument("d1", 0);
+    expect((await getPublishedTabs(slug))?.tabs[0].content).toBe("# Launch Post\n\nReady to ship.\n");
+    await expect(publishDocument("d1", 7)).rejects.toThrow();
   });
 });
