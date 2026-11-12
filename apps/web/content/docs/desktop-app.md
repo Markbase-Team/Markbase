@@ -2,8 +2,7 @@
 
 The desktop app is the documents surface plus the sync that mirrors your
 vaults to folders. It is for macOS on Apple silicon; download it from the
-[releases page](/releases). The build is not notarised yet: the first time,
-right-click the app and choose **Open**.
+[releases page](/releases).
 
 ## Signing in
 

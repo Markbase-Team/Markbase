@@ -1,6 +1,6 @@
 {
   "name": "@markbase/app",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
   "description": "Mac desktop shell for the Markbase ticketing + docs web app",
   "author": "Jessie Jia",
@@ -45,7 +45,11 @@
         "dmg"
       ],
       "icon": "build/icon.icns",
-      "identity": null
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
+      "notarize": true
     },
     "fileAssociations": [
       {

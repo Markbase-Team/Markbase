@@ -106,8 +106,8 @@ export default async function JoinPage({
             {hosted
               ? "The app points here out of the box; Open in desktop app just launches it."
               : invited || first
-                ? `Opening in the app points it at ${host} and restarts it there, where you create your account. Unsigned build — right-click the app and choose Open the first time.`
-                : `Opening in the app points it at ${host} and restarts it there, where you sign in. Unsigned build — right-click the app and choose Open the first time.`}
+                ? `Opening in the app points it at ${host} and restarts it there, where you create your account.`
+                : `Opening in the app points it at ${host} and restarts it there, where you sign in.`}
           </p>
         </div>
 

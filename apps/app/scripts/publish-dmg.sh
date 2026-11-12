@@ -18,6 +18,16 @@
 #   ./scripts/publish-dmg.sh v0.0.2               # build, then publish
 #   ./scripts/publish-dmg.sh v0.0.2 --skip-build
 #
+# Every published build is signed with a Developer ID and notarised by Apple,
+# so it opens with a double-click. That needs, on the machine that builds:
+#   - a "Developer ID Application" certificate in the login keychain
+#     (electron-builder finds it by itself), and
+#   - notarytool credentials saved once under a keychain profile:
+#       xcrun notarytool store-credentials markbase-notary \
+#         --apple-id <apple id> --team-id <team id>
+# The profile name can be changed with APPLE_KEYCHAIN_PROFILE. Without either,
+# this script stops before building rather than publish a build macOS refuses.
+#
 # Supabase storage was the first attempt and is not viable: a project-wide upload
 # limit caps every bucket, is not exposed in the database or the storage API, and
 # sits below the size of a packaged Electron app.
@@ -46,6 +56,17 @@ if ! gh repo view "$RELEASES_REPO" --json name >/dev/null 2>&1; then
   exit 1
 fi
 
+export APPLE_KEYCHAIN_PROFILE="${APPLE_KEYCHAIN_PROFILE:-markbase-notary}"
+if ! security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
+  echo "error: no Developer ID Application certificate in the keychain." >&2
+  exit 1
+fi
+if ! xcrun notarytool history --keychain-profile "$APPLE_KEYCHAIN_PROFILE" >/dev/null 2>&1; then
+  echo "error: notarytool has no working credentials under '$APPLE_KEYCHAIN_PROFILE'." >&2
+  echo "       run: xcrun notarytool store-credentials $APPLE_KEYCHAIN_PROFILE --apple-id <apple id> --team-id <team id>" >&2
+  exit 1
+fi
+
 # electron-builder names the file after apps/app/package.json's version.
 VERSION="$(node -p "require('$APP_DIR/package.json').version")"
 DMG="$APP_DIR/release/Markbase-${VERSION}-arm64.dmg"
@@ -55,14 +76,30 @@ if [[ "$skip_build" == false ]]; then
 fi
 [[ -f "$DMG" ]] || { echo "error: no DMG at $DMG — run without --skip-build" >&2; exit 1; }
 
+# electron-builder notarises the app inside; the disk image is notarised and
+# stapled on its own so Gatekeeper accepts it offline too. Then check both the
+# way a downloader's Mac will.
+echo "==> notarising the disk image"
+xcrun notarytool submit "$DMG" --keychain-profile "$APPLE_KEYCHAIN_PROFILE" --wait
+xcrun stapler staple "$DMG"
+xcrun stapler validate "$DMG"
+spctl --assess --type open --context context:primary-signature -vv "$DMG"
+mnt="$(mktemp -d)"
+hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$DMG" >/dev/null
+trap 'hdiutil detach "$mnt" >/dev/null 2>&1 || true' EXIT
+spctl --assess --type execute -vv "$mnt/Markbase.app"
+xcrun stapler validate "$mnt/Markbase.app"
+hdiutil detach "$mnt" >/dev/null
+trap - EXIT
+
 # Upload under the stable name, whatever electron-builder called it locally.
 STAGED="$(mktemp -d)/$ASSET"
 cp "$DMG" "$STAGED"
 echo "==> publishing $(du -h "$STAGED" | cut -f1) as $TAG"
 
-NOTES="macOS, Apple silicon.
+NOTES="macOS, Apple silicon. Signed and notarised by Apple.
 
-Not notarised — right-click the app and choose **Open** the first time; a double-click will be refused."
+What changed: https://markbase.so/releases"
 
 # Retried: a ~190 MB upload over a lossy link drops often enough that a single
 # attempt is not a fair test, and gh reports the drop as a bare \`EOF\`.

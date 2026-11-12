@@ -508,9 +508,7 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
  * the newest release — so publishing a build (apps/app/scripts/publish-dmg.sh)
  * needs no change here and nothing already linking to it goes stale.
  *
- * The app is not notarised, so macOS will refuse it on a double-click. Saying so
- * under the button costs one line and saves the support message — a download
- * that appears broken is worse than one that warned you.
+ * The app is signed and notarised, so it opens with a double-click.
  */
 function MacDownload({ version }: { version: string | null }) {
   // Defaults to the public permalink, so a deploy needs no environment change to
@@ -532,9 +530,6 @@ function MacDownload({ version }: { version: string | null }) {
           · {version ? `v${version}, ` : ""}Apple silicon
         </span>
       </a>
-      <p className="text-xs text-zinc-500">
-        Unsigned build — right-click the app and choose Open the first time.
-      </p>
     </div>
   );
 }

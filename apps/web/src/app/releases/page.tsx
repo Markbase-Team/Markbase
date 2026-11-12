@@ -15,8 +15,17 @@ export const metadata = {
 const CONTENT = `# Releases
 
 The Markbase desktop app for macOS (Apple silicon).
-[Download the latest](${MAC_DOWNLOAD_URL}). The build is not notarised yet:
-the first time, right-click the app and choose **Open**.
+[Download the latest](${MAC_DOWNLOAD_URL}).
+
+## 0.0.8
+
+_November 12, 2026_
+
+- Signed and notarised by Apple: the app opens with a double-click, with no
+  trip to System Settings the first time.
+- Settings has a **Display name** field. It is the name shown on your
+  versions, invitations and published pages, instead of the one your sign-in
+  brought along.
 
 ## 0.0.7
 
