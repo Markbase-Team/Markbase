@@ -2,15 +2,15 @@ import type { ReactNode } from "react";
 import { DocsSidebar } from "@/components/docs/docs-sidebar";
 import { DOCS_NAV } from "@/lib/docs-nav";
 
-// Every docs page: the sidebar on the left, the page (its content and its
-// outline) beside it, in the site's standard section width.
+// Every docs page, full width: the sidebar against the left edge, the page (its
+// content and its outline) across the rest. The docs are the one public section
+// that fills the window rather than the site's centred column — a reference is
+// read with the navigation and the outline in view, and both need the room.
 export default function DocsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-svh bg-white text-zinc-900">
-      <main className="mx-auto w-full max-w-6xl px-6 py-12 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-10">
-        <DocsSidebar nav={DOCS_NAV} />
-        <div className="min-w-0">{children}</div>
-      </main>
+    <div className="min-h-svh w-full bg-white text-zinc-900 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <DocsSidebar nav={DOCS_NAV} />
+      <main className="min-w-0 px-6 py-8 lg:px-12 lg:py-12">{children}</main>
     </div>
   );
 }
