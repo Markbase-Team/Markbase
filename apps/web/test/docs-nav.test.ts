@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { headingSlug } from "@markbase/ui/markdown";
 import { DOCS_MARKDOWN } from "@/generated/docs-pages";
-import { DOCS_NAV, docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
+import { DOCS_MOVED, DOCS_NAV, docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
 
 // The docs' sidebar and its pages must agree: every entry has a markdown file,
 // every file has an entry, and Previous / Next walk the sidebar's order.
@@ -42,6 +42,15 @@ describe("docs navigation", () => {
       for (const m of md.matchAll(/\]\(\/docs\/([a-z0-9-]+)/g)) {
         expect(slugs.has(m[1]), `${slug}.md links to /docs/${m[1]}`).toBe(true);
       }
+    }
+  });
+
+  it("sends every moved page to a page that exists, and never shadows a live one", () => {
+    const slugs = new Set(docsPages().map((p) => p.slug));
+    for (const [old, to] of Object.entries(DOCS_MOVED)) {
+      expect(slugs.has(old), `${old} is still a page`).toBe(false);
+      const target = /^\/docs\/([a-z0-9-]+)/.exec(to)?.[1];
+      expect(target && slugs.has(target), `${old} → ${to}`).toBe(true);
     }
   });
 });

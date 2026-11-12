@@ -28,4 +28,4 @@ it for.
 ## Public links
 
 A document can also be published as a public link, readable by anyone without
-an account. See [Publish and share](/docs/publish-and-share).
+an account. See [Keep clients in the loop](/docs/keep-clients-in-the-loop).
