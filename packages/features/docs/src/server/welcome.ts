@@ -26,7 +26,7 @@ Click anywhere and start typing. Press **/** for a menu of blocks — headings, 
 ## What makes it special
 
 - **Edit by chatting.** Connect Claude and just say *"tighten the intro"* — it makes precise, minimal edits instead of rewriting the whole thing.
-- **Tabs.** One document can hold many tabs — clean sections you can point an agent at (there's a comment on this one explaining how).
+- **Vaults.** A vault is one folder of markdown that syncs both ways — keep it next to your code, and your team and its agents read and write the same files.
 - **Comments.** Highlight any passage and leave a comment — ask a question, flag a blocker, or reply in a thread. Agents can comment too (say, to ask you to clarify) and mark them resolved when the point is settled.
 - **History.** Every change is versioned — roll back to any past version anytime.
 - **Share.** Invite people or hand out a link — they can read, comment, or edit.
@@ -67,10 +67,6 @@ Done reading? **Delete this doc** anytime with the trash icon on the documents l
 // comment anchors to.
 const SEED_COMMENTS: { needle: string; body: string }[] = [
   {
-    needle: "Tabs",
-    body: `👋 Tabs let you cleanly section a document. Each tab has its own id, so an agent can reference a specific tab and tell which one holds the more important tasks. An agent can also create a new tab for specific content or a purpose — for example, keep a product design in one tab and an action plan in another.`,
-  },
-  {
     needle: "Comments",
     body: `💬 Comments are the perfect place for an agent to weigh in without changing the document directly — leave a question, a suggestion, or a note here instead of editing the text, so you stay in control of the doc and decide what to act on.`,
   },
@@ -79,7 +75,7 @@ const SEED_COMMENTS: { needle: string; body: string }[] = [
 type PMNode = ReturnType<typeof markdownToDoc>;
 
 // First position range where `needle` appears in the doc's text, in ProseMirror
-// coordinates — used to anchor the seeded comment to the "Tabs" bullet.
+// coordinates — used to anchor a seeded comment to its bullet.
 function findAnchor(
   doc: PMNode,
   needle: string
