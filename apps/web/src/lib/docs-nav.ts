@@ -28,7 +28,6 @@ export const DOCS_NAV: DocsSection[] = [
     title: "Use cases",
     pages: [
       { slug: "docs-next-to-code", title: "Docs next to your code" },
-      { slug: "specs-and-handoffs", title: "Specs and handoffs" },
       { slug: "publish-and-share", title: "Publish and share" },
     ],
   },
