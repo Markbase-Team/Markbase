@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { instanceConfigScript } from "@markbase/protocol/instance-config";
 import { Toaster } from "@markbase/ui/sonner";
 import { serverInstanceConfig } from "@/lib/instance-info";
+import { SITE_OG_IMAGE } from "@/lib/seo";
 import "./globals.css";
 
 // Google Analytics (gtag.js) measurement ID.
@@ -26,11 +27,12 @@ export const metadata: Metadata = {
     shortcut: ["/icon.png"],
     apple: [{ url: "/markbase-logo.png" }],
   },
+  // No `url` here: a page that sets none must not claim to be the home page.
+  // Public pages set their own through pageMetadata() in @/lib/seo.
   openGraph: {
     siteName: "Markbase",
     type: "website",
-    url: "https://markbase.so",
-    images: [{ url: "/markbase-logo.png", width: 1024, height: 1024, alt: "Markbase" }],
+    images: [SITE_OG_IMAGE],
   },
   twitter: { card: "summary" },
 };

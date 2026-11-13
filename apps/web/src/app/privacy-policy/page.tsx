@@ -1,9 +1,11 @@
+import { pageMetadata } from "@/lib/seo";
 import { Markdown } from "@markbase/ui/markdown";
 
-export const metadata = {
-  title: "Privacy Policy",
+export const metadata = pageMetadata({
+  path: "/privacy-policy",
+  title: "Privacy Policy — Markbase",
   description: "How Markbase handles your information.",
-};
+});
 
 const CONTENT = `# Privacy Policy
 
