@@ -1,4 +1,4 @@
-import { applyAnchoredEdit, checkpoint, restoreVersion } from "../logic";
+import { applyAnchoredEdit, checkpoint, restoreVersion, type Author, type VersionCredit } from "../logic";
 import { editDocCrdt, setDocContent } from "../server";
 import { requireDocCapability, requireDocEndpoint } from "./actor";
 import { json } from "./respond";
@@ -81,7 +81,7 @@ export const docEditsHandler = async (req: Request, id: string): Promise<Respons
       applyAnchoredEdit(doc, { quote, insert });
       // Record a version so /history stays populated even for a doc no
       // browser has open (only the browser's ticker checkpoints otherwise).
-      checkpoint(doc, { author: auth.actor.name });
+      checkpoint(doc, versionCredit(auth.actor));
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Anchor not found";
@@ -90,6 +90,15 @@ export const docEditsHandler = async (req: Request, id: string): Promise<Respons
   }
   return json({ ok: true });
 };
+
+/**
+ * Who a version written through the API is credited to. An agent's edit is
+ * credited as an agent's ("Jessie's Claude Code"), so history and line credit
+ * show it as one; a person's edit, to the person.
+ */
+export function versionCredit(actor: Author): VersionCredit {
+  return actor.kind === "agent" ? { agents: [actor.name] } : { author: actor.name };
+}
 
 // POST { version } — make a past CRDT version the new head by writing its
 // content back as a normal edit (editor+). Nothing is rewound; history stays
@@ -113,10 +122,7 @@ export const docRestoreHandler = async (req: Request, id: string): Promise<Respo
   try {
     await editDocCrdt(id, auth.doc.content, (doc) => {
       restoreVersion(doc, version); // throws if the version index doesn't exist
-      checkpoint(doc, {
-        author: auth.actor.name,
-        label: `Restored version ${version + 1}`,
-      });
+      checkpoint(doc, { ...versionCredit(auth.actor), label: `Restored version ${version + 1}` });
     });
     return json({ ok: true });
   } catch (e) {

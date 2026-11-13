@@ -99,16 +99,20 @@ const UNRECORDED: LineWriter = { kind: "unrecorded", agents: [], person: null };
 function writerOf(version: VersionMeta): LineWriter {
   const agents = version.agents ?? [];
   const person = version.author ?? null;
+  // No person and no agent named: the edit came in as a file changed on disk
+  // with no hook to say who, which is how agents edit a vault. Credited to an
+  // agent rather than to an anonymous "someone".
+  if (agents.length === 0 && person === null) return { kind: "agent", agents: [], person: null };
   if (agents.length === 0) return { kind: "person", agents: [], person };
   return { kind: version.mixed ? "mixed" : "agent", agents, person };
 }
 
-/** A writer in words: "Claude Code · Jessie's", "Jessie", "Jessie + Cursor". */
+/** A writer in words: "Claude Code · Jessie's", "Jessie", "Jessie + Cursor", "Agent". */
 export function writerText(writer: LineWriter): string {
-  const agents = writer.agents.map(agentLabel).join(" + ");
+  const agents = writer.agents.map(agentLabel).join(" + ") || "Agent";
   if (writer.kind === "agent") return writer.person ? `${agents} · ${writer.person}’s` : agents;
-  if (writer.kind === "mixed") return `${writer.person ?? "Someone"} + ${agents}`;
-  if (writer.kind === "person") return writer.person ?? "Someone";
+  if (writer.kind === "mixed") return writer.person ? `${writer.person} + ${agents}` : agents;
+  if (writer.kind === "person") return writer.person ?? "Agent";
   return "Not recorded yet";
 }
 
