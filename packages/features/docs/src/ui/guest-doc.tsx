@@ -8,7 +8,7 @@ import { DocClientProvider } from "./doc-client";
 
 // Includes "claude" to match DocView's panel; the guest page has no vault, so the
 // Claude Code tab is never shown — this just keeps the prop types aligned.
-type PanelTab = "tabs" | "comments" | "history" | "claude";
+type PanelTab = "analytics" | "comments" | "history" | "claude";
 
 /**
  * A shared document opened through a link (guest or member), as a standalone

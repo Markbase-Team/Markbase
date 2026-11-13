@@ -18,6 +18,7 @@ import * as Y from "yjs";
 import { VaultDoc, LOCAL_ORIGIN, type ApplyResult } from "./vault";
 import { SyncSession, type DocStore, type DocPubSub } from "./transport";
 import { checkpoint, listVersions, shouldCheckpoint, versionContent, versionCount } from "./versions";
+import { addAgentReads, type AgentReadTally } from "./analytics";
 import { getMarkdown, observeMarkdown, setMarkdown, type Origin } from "./crdt";
 import { snapshot } from "./sync";
 import type { VaultSyncFs, VaultBaseStore } from "@markbase/protocol/storage";
@@ -464,6 +465,16 @@ export class VaultSync {
       this.lastEditAt = Date.now();
       this.lastOrigin = origin;
     });
+  }
+
+  /**
+   * Add agents' reads of this file to the document's tally (analytics.ts), so
+   * every surface that opens the document sees them. A read-only replica's
+   * Y.Doc goes nowhere, so there they are dropped.
+   */
+  recordAgentReads(reads: AgentReadTally[]): void {
+    if (this.mode.readOnly) return;
+    addAgentReads(this.doc, reads);
   }
 
   /**

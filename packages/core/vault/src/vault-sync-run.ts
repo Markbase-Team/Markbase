@@ -22,7 +22,7 @@ import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/protocol/timeou
 import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
 import { ApiCrdtTransport, bearerCrdtRequest } from "@markbase/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
-import { agentCredit } from "./agent-audit";
+import { agentCredit, takeAgentReads } from "./agent-audit";
 import {
   NodeVaultFs,
   NodeVaultBaseStore,
@@ -1102,6 +1102,10 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
       // Which agent wrote a change, when its hook reported the write
       // (`markbase write-audit`): a version then says so.
       agentCredit: (path) => agentCredit(dir, path),
+      // The reads those hooks reported (`markbase read-audit`), for each
+      // document's tally. Not in the Shared Vault: its documents are other
+      // people's, and what this machine's agents read is not theirs to keep.
+      agentReads: shared ? undefined : () => takeAgentReads(dir, author),
     }
   );
   if (startedOffline) manager.setClaims(refs);
@@ -1994,6 +1998,8 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
         }
         const n = manager.checkpointDue();
         if (n > 0) log(`recorded ${n} version(s)`);
+        const reads = manager.recordAgentReads();
+        if (reads > 0) log(`recorded ${reads} agent read(s)`);
       } catch (e) {
         // Keeping history is never worth taking sync down for.
         log(`couldn't record versions: ${e instanceof Error ? e.message : String(e)}`);

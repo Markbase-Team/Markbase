@@ -56,6 +56,14 @@ version: the version shows the agent's name where it would show yours, in the
 desktop app and on the web. A version that holds both your edits and an
 agent's names you both.
 
+Every document also has an **Analytics** panel, beside Comments and History:
+
+- **Read by agents**: how many times each agent read the file, and whose
+  agent it was (the person whose machine it ran on).
+- **Who wrote it**: how much of the document as it is now each person and
+  each agent wrote.
+- **Line by line**: which lines are whose.
+
 See what was recorded:
 
 ```

@@ -137,9 +137,22 @@ export {
   KEYFRAME_EVERY,
   agentLabel,
   versionCreditText,
+  versionContents,
   type VersionMeta,
   type VersionCredit,
 } from "./versions";
+export {
+  addAgentReads,
+  listAgentReads,
+  watchAgentReads,
+  lineCredit,
+  writerText,
+  type AgentReadTally,
+  type LineWriter,
+  type CreditedRange,
+  type WriterShare,
+  type LineCredit,
+} from "./analytics";
 export {
   imageRefs,
   rewriteImageRefs,

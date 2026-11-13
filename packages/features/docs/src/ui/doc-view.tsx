@@ -4,7 +4,7 @@ import { api } from "@markbase/protocol/api-client";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useDocsPorts } from "./ports";
 import { CachedCopyBadge, useCachedCopy } from "./use-cached-copy";
-import { ChevronDown, ChevronUp, Clock, Code2, Eye, Files, MessageSquare, Search, X } from "lucide-react";
+import { ChartColumn, ChevronDown, ChevronUp, Clock, Code2, Eye, MessageSquare, Search, X } from "lucide-react";
 import { ClaudeMark } from "./claude-mark";
 import {
   getMarkdown,
@@ -28,7 +28,7 @@ import { DocHistory } from "./doc-history";
 import { VersionPreview } from "./version-preview";
 import { useDocVersions } from "./use-doc-versions";
 import { CommentsPanel } from "./comments-panel";
-import { TabsPanel } from "./tab-bar";
+import { DocAnalytics } from "./doc-analytics";
 import { AgentChatDock } from "./agent-chat-dock";
 import { DocActionSet } from "./doc-action-set";
 import { LocalForkBanner } from "./local-fork-banner";
@@ -47,14 +47,14 @@ export type TabDoc = {
 };
 
 
-type PanelTab = "tabs" | "comments" | "history" | "claude";
+type PanelTab = "analytics" | "comments" | "history" | "claude";
 
 /** The rendered editor, or the raw markdown it is derived from. */
 export type DocViewMode = "preview" | "markdown";
 
 /**
  * The editing surface for ONE document: its subtabs stacked in one scroll
- * (center), the comments/history/subtabs panel (right column), and find-in-doc.
+ * (center), the analytics/comments/history panel (right column), and find-in-doc.
  * Presentational — `panelOpen` is owned by the caller so the right column can be
  * toggled from the shared top-row chrome (see DocChrome). Reused by the dashboard
  * workspace and the guest share page.
@@ -347,10 +347,6 @@ export function DocView({
     return () => root.removeEventListener("scroll", onScroll);
   }, [tabDocs, docId]);
 
-  function jumpTo(tabId: string) {
-    sectionRefs.current.get(tabId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   function onTabSelection(tabId: string, sel: EditorSelection | null) {
     // Track the selection so a manually-opened Comments panel can anchor to it,
     // but DON'T auto-open the panel on selection — that's intrusive while editing.
@@ -362,7 +358,6 @@ export function DocView({
     }
   }
 
-  const railTabs = tabDocs.map((t) => ({ id: t.id, title: titles[t.id] ?? t.title }));
   const panelSelection = selection?.tabId === activeTabId ? selection.sel : null;
 
   // The hosted agent panel is shared between documents; it offers the ACTIVE
@@ -604,11 +599,11 @@ export function DocView({
                 <div className="mb-2 flex shrink-0 items-center gap-1">
                   {!isGuest && (
                     <TabButton
-                      active={panelTab === "tabs"}
-                      onClick={() => onPanelTabChange("tabs")}
-                      label="Subtab"
+                      active={panelTab === "analytics"}
+                      onClick={() => onPanelTabChange("analytics")}
+                      label="Analytics"
                     >
-                      <Files className="size-4" />
+                      <ChartColumn className="size-4" />
                     </TabButton>
                   )}
                   <TabButton
@@ -654,14 +649,9 @@ export function DocView({
                 </div>
               ) : (
                 <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-                  {panelTab === "tabs" ? (
-                    <TabsPanel
-                      docId={docId}
-                      tabs={railTabs}
-                      activeTabId={activeTabId}
-                      editable={editable}
-                      onJump={jumpTo}
-                    />
+                  {panelTab === "analytics" ? (
+                    // The ACTIVE subtab's document: reads and line credit are per file.
+                    <DocAnalytics key={activeTabId} docId={activeTabId} />
                   ) : panelTab === "comments" ? (
                     <CommentsPanel
                       key={activeTabId}

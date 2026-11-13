@@ -13,6 +13,7 @@ import {
   recordWrites,
   shellReads,
   snapshotWrites,
+  takeAgentReads,
   undoEdits,
   writesLedgerPath,
 } from "../src/agent-audit";
@@ -239,5 +240,42 @@ describe("agentCredit", () => {
 
     recordWrites(call("cursor", { writes: [{ file: plan, edits: null, before }] }), vaults);
     expect(asked.later()).toBe("cursor");
+  });
+});
+
+describe("takeAgentReads", () => {
+  let plan: string;
+
+  beforeEach(() => {
+    plan = join(dir, "notes", "plan.md");
+    writeFileSync(plan, "x");
+    // takeAgentReads finds the vault through the registry, as the sync does.
+    mkdirSync(home, { recursive: true });
+    writeFileSync(join(home, "config.json"), JSON.stringify({ vaults }));
+  });
+
+  it("hands the sync each read once, tallied by path and agent, with whose agents they are", () => {
+    recordReads(call("claude", { reads: [plan] }), vaults, new Date(1_000));
+    recordReads(call("claude", { reads: [plan] }), vaults, new Date(2_000));
+    recordReads(call("codex", { reads: [plan] }), vaults, new Date(3_000));
+
+    const first = takeAgentReads(dir, "Jessie");
+    expect(first.get("notes/plan.md")).toEqual([
+      { agent: "claude", owner: "Jessie", count: 2, lastAt: 2_000 },
+      { agent: "codex", owner: "Jessie", count: 1, lastAt: 3_000 },
+    ]);
+    // Taken: asking again hands over nothing, until there is something new.
+    expect(takeAgentReads(dir, "Jessie").size).toBe(0);
+    recordReads(call("cursor", { reads: [plan] }), vaults, new Date(4_000));
+    expect(takeAgentReads(dir, "Jessie").get("notes/plan.md")).toEqual([
+      { agent: "cursor", owner: "Jessie", count: 1, lastAt: 4_000 },
+    ]);
+  });
+
+  it("leaves another vault's reads alone", () => {
+    recordReads(call("claude", { reads: [plan] }), vaults);
+    expect(takeAgentReads(join(dir, "..", "elsewhere"), "Jessie").size).toBe(0);
+    // …and they are still there for the vault they belong to.
+    expect(takeAgentReads(dir, "Jessie").size).toBe(1);
   });
 });

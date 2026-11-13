@@ -124,7 +124,7 @@ export {
 } from "./vault-sync-manager";
 // What a file looks like to the vault, and the adapter that makes a CRDT
 // document one. A host wiring its own container supplies an OpenSyncedFile.
-export type { SyncedFile, OpenSyncedFile, AgentCredit } from "./synced-file";
+export type { SyncedFile, OpenSyncedFile, AgentCredit, AgentReads } from "./synced-file";
 // Declared in @markbase/protocol (one declaration, no cycle); re-exported here
 // because every host that wires a vault imports them alongside the vault itself.
 export type { VaultFs, VaultSyncFs, VaultBaseStore } from "@markbase/protocol/storage";
@@ -148,6 +148,7 @@ export {
   countReads,
   countWrites,
   agentCredit,
+  takeAgentReads,
   type ReadEvent,
   type WriteEvent,
   type WriteBaseline,

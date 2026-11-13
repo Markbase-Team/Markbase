@@ -20,6 +20,16 @@
  * the change is read; `later` asks again, for a write whose record lands after
  * the file changed. Supplied by the agent audit (agent-audit.ts, agentCredit).
  */
+/** How often one agent, working for one person, read a file since last asked. */
+export interface AgentReads {
+  agent: string;
+  /** The person whose agent it is; null when not known. */
+  owner: string | null;
+  count: number;
+  /** When it last read it, in milliseconds. */
+  lastAt: number;
+}
+
 export type AgentCredit = (content: string) => { agent: string | null; later: () => string | null };
 
 /** One file the vault tracks, bound to whatever keeps its contents in sync. */
@@ -60,6 +70,12 @@ export interface SyncedFile {
    * version is due).
    */
   trackVersions(author: string | null, credit?: AgentCredit): void;
+
+  /**
+   * Agents read this file (the agent audit's record of what their hooks
+   * reported): add the reads to whatever the content keeps of them.
+   */
+  recordAgentReads(reads: AgentReads[]): void;
 
   /** The sweep ticked. Record a version if one is due; returns whether it did. */
   maybeCheckpoint(now?: number): boolean;
