@@ -38,7 +38,8 @@
     "@supabase/supabase-js": "^2.106.2",
     "lucide-react": "^1.17.0",
     "pg": "^8.13.1",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "@shared/ui": "github:Markbase-Team/Markbase#pkg-ui"
   },
   "devDependencies": {
     "@types/node": "^20",
