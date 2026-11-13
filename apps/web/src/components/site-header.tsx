@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 // The site's top bar — the landing's and every public page's (docs, say), so
-// they read as one site. Sticky, translucent, with Docs and Sign in for wide
+// they read as one site. Sticky, translucent, with Docs, Blog and Sign in for wide
 // screens and the one button that matters everywhere.
 
 export const SITE_PRIMARY_BTN =
@@ -19,6 +19,9 @@ export function SiteHeader() {
         <nav className="flex items-center gap-3">
           <Link href="/docs" className="hidden text-sm font-medium text-zinc-600 transition hover:text-zinc-900 sm:inline">
             Docs
+          </Link>
+          <Link href="/blog" className="hidden text-sm font-medium text-zinc-600 transition hover:text-zinc-900 sm:inline">
+            Blog
           </Link>
           <Link href="/login" className="hidden text-sm font-medium text-zinc-600 transition hover:text-zinc-900 sm:inline">
             Sign in

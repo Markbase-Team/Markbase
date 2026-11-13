@@ -375,6 +375,7 @@ export async function MarkbaseLanding() {
                 ["See a live doc", "/p/overview-5ac13a99"],
                 ["Download for Mac", MAC_DOWNLOAD_URL],
                 ["Releases", "/releases"],
+                ["Blog", "/blog"],
                 ["Sign in", "/login"],
                 ["Get started", "/login"],
               ]}

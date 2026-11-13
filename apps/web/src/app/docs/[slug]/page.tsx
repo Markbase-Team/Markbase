@@ -6,6 +6,7 @@ import { DocsBody } from "@/components/docs/docs-body";
 import { DocsOutline } from "@/components/docs/docs-outline";
 import { DocsQuestions } from "@/components/docs/docs-questions";
 import { DOCS_MOVED, docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
+import { SITE_PROSE } from "@/lib/site-prose";
 
 // One docs page: the content in the middle, with "Copy markdown" above it; the
 // page's outline and a way to ask a question on the right; and Previous / Next
@@ -20,20 +21,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const found = docsPage((await params).slug);
   return found ? { title: `${found.page.title} — Markbase docs` } : {};
 }
-
-// Prose in the brand: headings set firmly, links underlined in lime, code
-// blocks dark.
-const PROSE = [
-  "prose-zinc max-w-none",
-  "prose-headings:scroll-mt-8 prose-headings:font-semibold prose-headings:tracking-tight",
-  "prose-h1:text-4xl prose-h1:font-bold prose-h1:mb-6",
-  "prose-h2:mt-14",
-  "prose-a:font-medium prose-a:text-zinc-900 prose-a:underline prose-a:decoration-[#c7e600] prose-a:decoration-2 prose-a:underline-offset-4 hover:prose-a:decoration-zinc-900",
-  "prose-code:rounded prose-code:bg-zinc-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-medium prose-code:text-zinc-900",
-  "prose-pre:rounded-xl prose-pre:bg-zinc-950 prose-pre:text-zinc-100",
-  "[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:font-normal [&_pre_code]:text-zinc-100",
-  "prose-strong:text-zinc-900 prose-li:marker:text-zinc-400",
-].join(" ");
 
 export default async function DocsPageView({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -50,7 +37,7 @@ export default async function DocsPageView({ params }: { params: Promise<{ slug:
     <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-12">
       <article className="mx-auto flex min-h-[calc(100svh-8rem)] w-full max-w-3xl min-w-0 flex-col lg:min-h-[calc(100svh-6rem)]">
         <DocsBody markdown={markdown} section={page.section}>
-          <Markdown content={markdown} headingIds className={PROSE} />
+          <Markdown content={markdown} headingIds className={SITE_PROSE} />
         </DocsBody>
 
         <div className="mt-auto pt-16">
