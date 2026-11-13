@@ -89,6 +89,14 @@ export interface AuthBridge {
   signOut(): Promise<void>;
 }
 
+/** Being the Mac's default app for markdown files (see ../default-opener.ts). */
+export interface DefaultOpenerBridge {
+  /** Should the window offer it now? True at most once per machine. */
+  shouldOffer(): Promise<boolean>;
+  /** The person said yes. True when macOS made this app the default. */
+  accept(): Promise<boolean>;
+}
+
 /** The file this viewer window was opened on, and the way to write it back. */
 export interface FileBridge extends LocalFilePort {
   /** Answered per window: several .md files can be open at once, and main tells
@@ -147,6 +155,7 @@ export interface DashboardBridge extends BridgeBase {
   instance: InstanceBridge;
   /** Main asks the window to open Settings (the tray's and the Vaults menu's "Settings…"). */
   onOpenSettings(cb: () => void): () => void;
+  defaultOpener: DefaultOpenerBridge;
 }
 
 /** A loose `.md` file, opened. Nothing but the file and the editor. */
@@ -241,6 +250,11 @@ const claude: ClaudeBridge = {
   loginCode: (code) => ipcRenderer.send("claude-auth:login-code", { code }),
   loginCancel: () => ipcRenderer.send("claude-auth:login-cancel"),
   onLogin: (cb) => on<ClaudeLoginEvent>("claude-auth:login-event", cb),
+};
+
+const defaultOpener: DefaultOpenerBridge = {
+  shouldOffer: () => ipcRenderer.invoke("markbase:default-opener-offer"),
+  accept: () => ipcRenderer.invoke("markbase:default-opener-accept"),
 };
 
 const instance: InstanceBridge = {
@@ -446,6 +460,7 @@ function bridgeFor(kind: WindowKind): MarkbaseBridge {
         forks,
         instance,
         onOpenSettings: (cb) => on<void>("markbase:open-settings", () => cb()),
+        defaultOpener,
       };
     case "viewer":
       return { kind, isDesktop: true, openExternal, file };
