@@ -50,7 +50,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { SUPABASE_KEY_DEFAULT, SUPABASE_URL_DEFAULT } from "./supabase-defaults";
 import { DEFAULT_APP_URL, parseConnectLink } from "@markbase/protocol/instance";
 import { connectToInstance, instanceStatus, type InstanceStatus } from "./instance";
-import { awaitDeviceAuth, detectClaudeVersion } from "@markbase/node";
+import {
+  awaitDeviceAuth,
+  detectClaudeVersion,
+  installDocsMcp,
+  withToolPath,
+  type McpInstallResult,
+} from "@markbase/node";
 import {
   startVaultSync,
   listMarkdown,
@@ -3070,6 +3076,18 @@ function registerCredentialsIpc(): void {
   ipcMain.handle("markbase:default-opener-accept", (): Promise<boolean> =>
     becomeDefaultMarkdownOpener()
   );
+  // Settings › Connect agents: give Claude Desktop, Claude Code, Codex and
+  // Cursor the document tools (the docs MCP server), with this app's key — the
+  // same installer `markbase mcp install` runs. The app was not started from a
+  // shell, so the agents' own CLIs are looked up on a PATH that has the usual
+  // install locations.
+  ipcMain.handle("markbase:mcp-install", (): McpInstallResult[] => {
+    const key = readApiKey();
+    if (!key) return [];
+    const results = installDocsMcp({ key, base: `${APP_URL}/api/v1`, env: withToolPath() });
+    logVault(`connect agents: ${results.map((r) => `${r.name} ${r.status}`).join(", ")}`);
+    return results;
+  });
 }
 
 // ---- The team instance -------------------------------------------------------

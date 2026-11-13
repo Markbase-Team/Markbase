@@ -11,6 +11,7 @@
     "./detect-claude": "./src/detect-claude.ts",
     "./device-auth": "./src/device-auth.ts",
     "./features": "./src/features.ts",
+    "./mcp-install": "./src/mcp-install.ts",
     "./repo-state": "./src/repo-state.ts",
     "./repos": "./src/repos.ts",
     "./skill-bundle": "./src/skill-bundle.ts",

@@ -36,8 +36,11 @@ git without push and pull.
   text, version history, sharing by link or by name.
 - **Agents** — Claude Code, Codex, Cursor, anything that edits files — work on
   the markdown in the folder. The sync daemon holds the only credential; the
-  agent needs none. There is also an HTTP API and a skill
-  ([`skills/markbase`](./skills/markbase)) for agents that are not on your disk.
+  agent needs none. For agents that are not on your disk there is an MCP
+  server with the document tools — `npx @markbase/cli mcp install` connects
+  Claude Desktop, Claude Code, Codex and Cursor, and so does Settings in the
+  desktop app — plus an HTTP API and a skill
+  ([`skills/markbase`](./skills/markbase)).
 - **Teams** keep the vault in the repository, beside the code it describes, so
   the spec an engineer's agent builds from is the one the PM edited this
   morning.

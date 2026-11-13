@@ -18,6 +18,7 @@ import type {
 } from "@markbase/docs/ui/ports";
 import type { DesktopApiRequest, DesktopApiResponse } from "./api-bridge";
 import type { InstanceConnectResult, InstanceStatus } from "./instance";
+import type { McpInstallResult } from "@markbase/node/mcp-install";
 
 // The one bridge between a page and the desktop shell. contextIsolation is on
 // and nodeIntegration off, so the renderer can't touch Node or Electron — it
@@ -89,6 +90,12 @@ export interface AuthBridge {
   signOut(): Promise<void>;
 }
 
+/** Giving the agents on this machine the document tools (the docs MCP server). */
+export interface AgentsBridge {
+  /** Connect Claude Desktop, Claude Code, Codex and Cursor; one result per agent. */
+  connectMcp(): Promise<McpInstallResult[]>;
+}
+
 /** Being the Mac's default app for markdown files (see ../default-opener.ts). */
 export interface DefaultOpenerBridge {
   /** Should the window offer it now? True at most once per machine. */
@@ -156,6 +163,7 @@ export interface DashboardBridge extends BridgeBase {
   /** Main asks the window to open Settings (the tray's and the Vaults menu's "Settings…"). */
   onOpenSettings(cb: () => void): () => void;
   defaultOpener: DefaultOpenerBridge;
+  agents: AgentsBridge;
 }
 
 /** A loose `.md` file, opened. Nothing but the file and the editor. */
@@ -250,6 +258,10 @@ const claude: ClaudeBridge = {
   loginCode: (code) => ipcRenderer.send("claude-auth:login-code", { code }),
   loginCancel: () => ipcRenderer.send("claude-auth:login-cancel"),
   onLogin: (cb) => on<ClaudeLoginEvent>("claude-auth:login-event", cb),
+};
+
+const agents: AgentsBridge = {
+  connectMcp: () => ipcRenderer.invoke("markbase:mcp-install"),
 };
 
 const defaultOpener: DefaultOpenerBridge = {
@@ -461,6 +473,7 @@ function bridgeFor(kind: WindowKind): MarkbaseBridge {
         instance,
         onOpenSettings: (cb) => on<void>("markbase:open-settings", () => cb()),
         defaultOpener,
+        agents,
       };
     case "viewer":
       return { kind, isDesktop: true, openExternal, file };
