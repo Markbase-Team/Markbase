@@ -4,6 +4,14 @@ import { BLOG_MARKDOWN } from "@/generated/blog-posts";
 // body, apps/web/content/blog/<slug>.md (the body starts below the title —
 // the title and date are drawn from this entry). Its URL is /blog/<slug>.
 // Add a new post at the top: the list is shown in this order, newest first.
+//
+// How a body is laid out (see blogSections and app/blog/[slug]/page.tsx):
+//   - the text before the first `## ` heading is the lead, set large;
+//   - each `## ` heading starts a section;
+//   - a bulleted list is set as titled paragraphs — start each bullet with
+//     a bold title (`- **It asks once.** After you…`);
+//   - a section with a numbered list becomes the dark "steps" block: the
+//     text before the list beside its heading, the steps numbered in lime.
 
 /** What a post is: a change to the product, or a desktop release. */
 export type BlogKind = "Update" | "Release";
@@ -81,4 +89,28 @@ export function groupByMonth(posts: BlogPost[]): BlogMonth[] {
 /** "12" — the day of the month a post was published. */
 export function blogDay(date: string): string {
   return String(Number(date.slice(8, 10)));
+}
+
+/** One `## ` section of a post's body. */
+export interface BlogSection {
+  title: string;
+  /** The section's markdown — for a steps section, only what precedes the list. */
+  body: string;
+  /** The numbered list of a steps section, as markdown; null for any other. */
+  steps: string | null;
+}
+
+/** A post's body, split into its lead and its `## ` sections. */
+export function blogSections(markdown: string): { lead: string; sections: BlogSection[] } {
+  const [lead, ...rest] = markdown.split(/^## +/m);
+  const sections = rest.map((chunk): BlogSection => {
+    const newline = chunk.indexOf("\n");
+    const title = (newline === -1 ? chunk : chunk.slice(0, newline)).trim();
+    const body = newline === -1 ? "" : chunk.slice(newline + 1).trim();
+    const list = body.search(/^1\. /m);
+    return list === -1
+      ? { title, body, steps: null }
+      : { title, body: body.slice(0, list).trim(), steps: body.slice(list).trim() };
+  });
+  return { lead: lead.trim(), sections };
 }
