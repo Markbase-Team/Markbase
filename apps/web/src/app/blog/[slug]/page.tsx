@@ -1,10 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { Markdown } from "@markbase/ui/markdown";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { BLOG_POSTS, blogDate, blogPost, blogSections } from "@/lib/blog";
+import {
+  BLOG_POSTS,
+  blogDate,
+  blogPath,
+  blogPost,
+  blogSections,
+  siteUrl,
+  type BlogPost,
+} from "@/lib/blog";
 import { SITE_PROSE } from "@/lib/site-prose";
 
 // One blog post: a breadcrumb back to the list, the kind and date, the title, the
@@ -17,11 +26,72 @@ export function generateStaticParams() {
   return BLOG_POSTS.map((p) => ({ slug: p.slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const found = blogPost((await params).slug);
-  return found
-    ? { title: `${found.post.title} — Markbase`, description: found.post.summary }
-    : {};
+  if (!found) return { title: "Not found", robots: { index: false } };
+  const { post } = found;
+  const path = blogPath(post.slug);
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: `${post.title} — Markbase`,
+    description: post.summary,
+    alternates: {
+      canonical: path,
+      types: { "text/markdown": `${path}.md`, "application/rss+xml": "/blog/rss.xml" },
+    },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.summary,
+      url: path,
+      siteName: "Markbase",
+      publishedTime: `${post.date}T00:00:00Z`,
+      section: post.kind,
+    },
+    twitter: { card: "summary", title: post.title, description: post.summary },
+  };
+}
+
+/** What search engines and AI answers read about a post: the article, and where it sits. */
+function structuredData(post: BlogPost) {
+  const base = siteUrl();
+  const url = `${base}${blogPath(post.slug)}`;
+  const markbase = {
+    "@type": "Organization",
+    name: "Markbase",
+    url: base,
+    logo: { "@type": "ImageObject", url: `${base}/markbase-logo.png` },
+  };
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: post.title,
+        description: post.summary,
+        datePublished: `${post.date}T00:00:00Z`,
+        dateModified: `${post.date}T00:00:00Z`,
+        articleSection: post.kind,
+        inLanguage: "en",
+        author: markbase,
+        publisher: markbase,
+        url,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        isPartOf: { "@type": "Blog", name: "Markbase blog", url: `${base}${blogPath()}` },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Blog", item: `${base}${blogPath()}` },
+          { "@type": "ListItem", position: 2, name: post.title, item: url },
+        ],
+      },
+    ],
+  };
 }
 
 /** The lead: one large paragraph under the title. */
@@ -59,6 +129,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     <div className="flex min-h-svh flex-col bg-white text-zinc-900">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData(post)).replace(/</g, "\\u003c") }}
+        />
         <article className="space-y-16">
           <header className="max-w-3xl">
             <nav aria-label="Breadcrumb">

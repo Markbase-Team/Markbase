@@ -114,3 +114,22 @@ export function blogSections(markdown: string): { lead: string; sections: BlogSe
   });
   return { lead: lead.trim(), sections };
 }
+
+/** The site's address, for the absolute URLs a feed and structured data need. */
+export function siteUrl(): string {
+  return process.env.APP_URL ?? "https://markbase.so";
+}
+
+/** The path of the blog list, or of one post. */
+export function blogPath(slug?: string): string {
+  return slug ? `/blog/${slug}` : "/blog";
+}
+
+/**
+ * A post as one markdown document — its title, date and summary above the
+ * body. Served at /blog/<slug>.md for readers that want the source, AI
+ * crawlers among them.
+ */
+export function blogMarkdownDocument(post: BlogPost, markdown: string): string {
+  return `# ${post.title}\n\n_${blogDate(post.date)} · ${post.kind}_\n\n${markdown.trim()}\n`;
+}
