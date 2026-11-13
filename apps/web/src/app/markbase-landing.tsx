@@ -5,6 +5,7 @@ import { SiteHeader, SITE_PRIMARY_BTN } from "@/components/site-header";
 import {
   Apple,
   ArrowRight,
+  FolderGit2,
   Bot,
   Briefcase,
   Check,
@@ -21,19 +22,19 @@ import {
 } from "lucide-react";
 import { StayInTouchForm } from "@/components/stay-in-touch";
 
-import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE, REPO_URL } from "@markbase/protocol/downloads";
 import { latestMacVersion } from "@/lib/latest-release";
 
 // Canonical destinations, reused in the nav, footer, and the SiteNavigationElement
 // structured data that hints Google's sitelinks.
-const OVERVIEW_DOC_HREF = "/p/overview-5ac13a99";
+const DOCS_HREF = "/docs";
 const STAY_IN_TOUCH_HREF = "/#stay-in-touch";
 const SITE_URL = "https://markbase.so";
 
-// Organization + WebSite + SiteNavigationElement for rich results: the logo
-// Google shows next to the result, and the "Overview doc" / "Stay in touch"
-// sitelink hints.
-const STRUCTURED_DATA = {
+// Organization + WebSite + SoftwareApplication + SiteNavigationElement for rich
+// results: the logo Google shows next to the result, the app's facts, and the
+// "Docs" / "Stay in touch" sitelink hints. Built per request for the version.
+const structuredData = (version: string | null) => ({
   "@context": "https://schema.org",
   "@graph": [
     {
@@ -48,9 +49,8 @@ const STRUCTURED_DATA = {
         height: 1024,
       },
       description: "One markdown folder for your team and its agents.",
-      // Add real owned profiles (X, GitHub, LinkedIn, Product Hunt) here to
-      // help search + AI models disambiguate the "Markbase" entity.
-      sameAs: [],
+      // Owned profiles, so search and AI models can tell this "Markbase" apart.
+      sameAs: [REPO_URL],
     },
     {
       "@type": "WebSite",
@@ -66,15 +66,20 @@ const STRUCTURED_DATA = {
       url: SITE_URL,
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "Collaborative document editor",
-      operatingSystem: "Web",
+      operatingSystem: "Web, macOS",
       description:
-        "One markdown folder for your team and its agents — a shared workspace where you and the agents you already use read, write, comment on, and publish the same living documents, with full version history and one source of truth.",
+        "One markdown folder for your team and its agents: plain markdown files that sync between a folder on your machine and the cloud, edited by people in a WYSIWYG editor and by agents like Claude Code, Codex and Cursor on disk, with version history, comments and sharing.",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      downloadUrl: MAC_DOWNLOAD_URL,
+      ...(version ? { softwareVersion: version } : {}),
+      license: "https://www.apache.org/licenses/LICENSE-2.0",
+      codeRepository: REPO_URL,
       publisher: { "@id": `${SITE_URL}/#organization` },
     },
     {
       "@type": "SiteNavigationElement",
       name: "Docs",
-      url: `${SITE_URL}${OVERVIEW_DOC_HREF}`,
+      url: `${SITE_URL}${DOCS_HREF}`,
     },
     {
       "@type": "SiteNavigationElement",
@@ -82,7 +87,7 @@ const STRUCTURED_DATA = {
       url: `${SITE_URL}${STAY_IN_TOUCH_HREF}`,
     },
   ],
-};
+});
 
 const primaryBtn = SITE_PRIMARY_BTN;
 const secondaryBtn =
@@ -181,7 +186,7 @@ export async function MarkbaseLanding() {
     <div className="min-h-svh bg-white text-zinc-900">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData(version)) }}
       />
       <SiteHeader />
 
@@ -189,7 +194,7 @@ export async function MarkbaseLanding() {
       <section className="px-6 pt-24 pb-16 md:pt-32">
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600">
-            <span className="size-1.5 rounded-full bg-[#c7e600]" /> Documentation for the AI era
+            <span className="size-1.5 rounded-full bg-[#c7e600]" /> Open source · free to use
           </span>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight text-zinc-900 md:text-6xl md:leading-[1.05]">
             One markdown folder for your team and its agents
@@ -201,9 +206,9 @@ export async function MarkbaseLanding() {
             <Link href="/login" className={primaryBtn}>
               Get started <ArrowRight className="size-4" />
             </Link>
-            <Link href="/p/overview-5ac13a99" className={secondaryBtn}>
-              See a live document
-            </Link>
+            <a href={REPO_URL} className={secondaryBtn}>
+              <FolderGit2 className="size-4" /> View on GitHub
+            </a>
           </div>
           <MacDownload version={version} />
         </div>

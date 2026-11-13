@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { headingSlug } from "@markbase/ui/markdown";
 import { DOCS_MARKDOWN } from "@/generated/docs-pages";
-import { DOCS_MOVED, DOCS_NAV, docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
+import { DOCS_MOVED, DOCS_NAV, docsDescription, docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
 
 // The docs' sidebar and its pages must agree: every entry has a markdown file,
 // every file has an entry, and Previous / Next walk the sidebar's order.
@@ -52,5 +52,35 @@ describe("docs navigation", () => {
       const target = /^\/docs\/([a-z0-9-]+)/.exec(to)?.[1];
       expect(target && slugs.has(target), `${old} → ${to}`).toBe(true);
     }
+  });
+});
+
+describe("docsDescription", () => {
+  it("is the first paragraph as plain text", () => {
+    expect(docsDescription("# Title\n\nA [linked](/x) `code` **bold** line.\n\n## Next\n\nMore.", 160, 10)).toBe(
+      "A linked code bold line.",
+    );
+  });
+
+  it("adds the next paragraph when the first is short", () => {
+    expect(docsDescription("# T\n\nShort one.\n\n## Section\n\nThe rest of it.", 160, 20)).toBe(
+      "Short one. The rest of it.",
+    );
+  });
+
+  it("skips lists and code to find the first paragraph", () => {
+    expect(docsDescription("# T\n\n```bash\nnpm i\n```\n\n- item\n\nThe text.")).toBe("The text.");
+  });
+
+  it("cuts long text at a word, under the limit", () => {
+    const d = docsDescription(`# T\n\n${"word ".repeat(60)}`, 50);
+    expect(d.length).toBeLessThanOrEqual(50);
+    expect(d.endsWith("word…")).toBe(true);
+  });
+
+  it("gives every docs page its own description", () => {
+    const all = docsPages().map((p) => docsDescription(docsPage(p.slug)!.markdown));
+    expect(all.every((d) => d.length >= 50 && d.length <= 160)).toBe(true);
+    expect(new Set(all).size).toBe(all.length);
   });
 });

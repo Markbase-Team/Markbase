@@ -1,11 +1,13 @@
 import { Markdown } from "@markbase/ui/markdown";
 import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
 import { SiteHeader } from "@/components/site-header";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = pageMetadata({
+  path: "/releases",
   title: "Releases — Markbase",
   description: "What changed in each release of the Markbase desktop app, newest first.",
-};
+});
 
 // The desktop app's releases, newest first. The download button everywhere on
 // the site follows GitHub's "latest" release (see @markbase/protocol/downloads),

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SkillsLanding } from "./skills-landing";
 import { MarkbaseLanding } from "./markbase-landing";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { pageMetadata } from "@/lib/seo";
 
 // One deployment serves several hosts, and the root is the one route that
 // tells them apart: markbase.so gets the marketing landing, the skills host its
@@ -39,13 +40,13 @@ export async function generateMetadata() {
     };
   }
   if (await isApexHost()) {
-    return {
+    // Self-referential canonical guards against UTM/parameter duplicates.
+    return pageMetadata({
+      path: "/",
       title: "Markbase — one markdown folder for your team and its agents",
       description:
-        "Google Docs for markdown, built AI-native. You and the agents you already use read, write, comment on, and publish the same living documents — one source of truth.",
-      // Self-referential canonical guards against UTM/parameter duplicates.
-      alternates: { canonical: "https://markbase.so" },
-    };
+        "Your team's docs as plain markdown in one synced folder, edited by people and by agents like Claude Code, Codex and Cursor. Open source and free.",
+    });
   }
   return {};
 }

@@ -5,7 +5,8 @@ import { Markdown } from "@markbase/ui/markdown";
 import { DocsBody } from "@/components/docs/docs-body";
 import { DocsOutline } from "@/components/docs/docs-outline";
 import { DocsQuestions } from "@/components/docs/docs-questions";
-import { DOCS_MOVED, docsOutline, docsPage, docsPages } from "@/lib/docs-nav";
+import { DOCS_MOVED, docsOutline, docsPage, docsPages, docsDescription } from "@/lib/docs-nav";
+import { pageMetadata } from "@/lib/seo";
 import { SITE_PROSE } from "@/lib/site-prose";
 
 // One docs page: the content in the middle, with "Copy markdown" above it; the
@@ -19,7 +20,12 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const found = docsPage((await params).slug);
-  return found ? { title: `${found.page.title} — Markbase docs` } : {};
+  if (!found) return {};
+  return pageMetadata({
+    path: `/docs/${found.page.slug}`,
+    title: `${found.page.title} — Markbase docs`,
+    description: docsDescription(found.markdown),
+  });
 }
 
 export default async function DocsPageView({ params }: { params: Promise<{ slug: string }> }) {

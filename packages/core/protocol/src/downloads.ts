@@ -13,6 +13,9 @@
  */
 export const RELEASES_REPO = "Markbase-Team/Markbase";
 
+/** The source repository, linked from the site and named in its structured data. */
+export const REPO_URL = `https://github.com/${RELEASES_REPO}`;
+
 export const MAC_DOWNLOAD_URL =
   `https://github.com/${RELEASES_REPO}/releases/latest/download/Markbase-arm64.dmg`;
 

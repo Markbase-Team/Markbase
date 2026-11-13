@@ -83,6 +83,33 @@ export function docsPage(slug: string): {
   return { page: all[i], markdown, previous: all[i - 1] ?? null, next: all[i + 1] ?? null };
 }
 
+/**
+ * A page's meta description: its opening prose as plain text, cut at a word
+ * before `max` characters. A one-line opening ("You share documents, not
+ * folders.") is followed by the next paragraph, so every page says enough.
+ */
+export function docsDescription(markdown: string, max = 160, min = 80): string {
+  const paragraphs = markdown
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter((block) => block && !/^(#|```|~~~|[-*] |\d+\. |>|\|)/.test(block))
+    .map((block) =>
+      block
+        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replace(/[`*_]/g, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    );
+  let text = "";
+  for (const paragraph of paragraphs) {
+    text = text ? `${text} ${paragraph}` : paragraph;
+    if (text.length >= min) break;
+  }
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:.]$/, "")}…`;
+}
+
 /** One heading in a page's outline. */
 export interface OutlineItem {
   id: string;

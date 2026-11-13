@@ -1,9 +1,11 @@
+import { pageMetadata } from "@/lib/seo";
 import { Markdown } from "@markbase/ui/markdown";
 
-export const metadata = {
-  title: "Terms of Service",
+export const metadata = pageMetadata({
+  path: "/terms",
+  title: "Terms of Service — Markbase",
   description: "Terms governing use of Markbase.",
-};
+});
 
 const CONTENT = `# Terms of Service
 
