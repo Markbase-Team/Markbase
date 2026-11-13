@@ -19,7 +19,7 @@ export default function BlogPage() {
           <h1 className="text-4xl font-bold tracking-tight">Blog</h1>
           <p className="mt-3 text-zinc-600">Short notes on what changed in Markbase.</p>
 
-          <ul className="mt-10 divide-y divide-zinc-100 border-t border-zinc-100">
+          <ul className="mt-6 space-y-2">
             {BLOG_POSTS.map((post) => (
               <li key={post.slug}>
                 <Link href={`/blog/${post.slug}`} className="group block py-6">
