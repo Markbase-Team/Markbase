@@ -6,6 +6,10 @@
 
 <p align="center"><strong>One markdown folder for your team and its agents.</strong></p>
 
+<p align="center">
+  <img src="apps/web/public/welcome-doc.png" alt="Markbase: a document in the editor, with comments from an agent alongside" width="900">
+</p>
+
 Markbase is a folder of markdown that syncs. You and your team edit the files
 in the folder, in the browser, in the desktop app, or through the agents you
 already run, and everyone reads one version. Comments, history and sharing sit
