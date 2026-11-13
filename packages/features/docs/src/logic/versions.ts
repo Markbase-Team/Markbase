@@ -124,6 +124,27 @@ export function versionContent(doc: Y.Doc, index: number): string {
   return content;
 }
 
+/**
+ * The markdown of every version, oldest first — each built from the one
+ * before it, where `versionContent` would walk back to a keyframe for every
+ * index asked. For a reader that needs them all (line credit).
+ */
+export function versionContents(doc: Y.Doc): string[] {
+  const contents: string[] = [];
+  let content = "";
+  for (const entry of log(doc).toArray()) {
+    if (entry.patch === undefined) {
+      content = entry.full ?? content;
+    } else {
+      const next = applyPatch(content, entry.patch);
+      if (next === false) throw new Error(`Version ${contents.length} could not be reconstructed`);
+      content = next;
+    }
+    contents.push(content);
+  }
+  return contents;
+}
+
 /** Who and what a version is credited to, and when. */
 export interface VersionCredit {
   label?: string;

@@ -18,7 +18,7 @@
     "@tiptap/core": "3.27.1",
     "@tiptap/pm": "3.27.1"
   },
-  "//optionalDependencies": "Linux native binaries for the Vercel build (Turbopack/lightningcss + Tailwind v4 oxide) and for vitest/rollup in CI, x64 and arm64 \u2014 the Docker image (Dockerfile) builds on whichever the host is, and an Apple Silicon host is arm64. npm skips them on macOS (os/cpu mismatch); declaring them forces full lockfile entries so a linux install actually gets them \u2014 otherwise it fails with 'Cannot find module \u2026linux-x64-gnu(.node)'.",
+  "//optionalDependencies": "Linux native binaries for the Vercel build (Turbopack/lightningcss + Tailwind v4 oxide) and for vitest/rollup in CI, x64 and arm64 — the Docker image (Dockerfile) builds on whichever the host is, and an Apple Silicon host is arm64. npm skips them on macOS (os/cpu mismatch); declaring them forces full lockfile entries so a linux install actually gets them — otherwise it fails with 'Cannot find module …linux-x64-gnu(.node)'.",
   "optionalDependencies": {
     "lightningcss-linux-x64-gnu": "1.32.0",
     "lightningcss-linux-arm64-gnu": "1.32.0",
@@ -26,5 +26,9 @@
     "@tailwindcss/oxide-linux-arm64-gnu": "4.3.0",
     "@rollup/rollup-linux-x64-gnu": "4.60.4",
     "@rollup/rollup-linux-arm64-gnu": "4.60.4"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true,
+    "node-pty@1.1.0": true
   }
 }

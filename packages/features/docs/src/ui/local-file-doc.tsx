@@ -24,7 +24,7 @@ import { useDocsPorts, type LocalFile } from "./ports";
 
 // Includes "claude" to match DocView's panel; there is no vault here, so the
 // Claude Code tab is never shown — this only keeps the prop types aligned.
-type PanelTab = "tabs" | "comments" | "history" | "claude";
+type PanelTab = "analytics" | "comments" | "history" | "claude";
 
 const MARKDOWN_EXT = /\.(md|markdown|mdown|mkd)$/i;
 

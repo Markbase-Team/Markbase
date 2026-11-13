@@ -13,7 +13,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { markbaseHome } from "./markbase-home";
 import { readMountedVaults, type MountedVault } from "./vault-registry";
 import type { HookCall, HookEdit, HookWrite } from "./agent-hook";
-import type { AgentCredit } from "./synced-file";
+import type { AgentCredit, AgentReads } from "./synced-file";
 import { changeTotals, textChanges, type TextChange } from "./text-changes";
 
 // The audit of what agents read and write in mounted vaults.
@@ -482,7 +482,74 @@ export function agentCredit(dir: string, path: () => string): AgentCredit {
 }
 
 /** Was this write to a vault mounted at `dir`? Two vaults can hold the same relative path. */
-function sameDir(event: WriteEvent, dir: string): boolean {
+function sameDir(event: { vaultId: string }, dir: string): boolean {
   const mounted = readMountedVaults().find((v) => v.vaultId === event.vaultId);
   return mounted === undefined || realPath(resolve(mounted.dir)) === realPath(resolve(dir));
+}
+
+/** Where one vault's reader has got to in the read ledger. */
+function readsCursorPath(dir: string): string {
+  const key = createHash("sha256").update(realPath(resolve(dir))).digest("hex");
+  return join(auditDir(), "cursors", `reads-${key}.json`);
+}
+
+/**
+ * The reads agents made of the files of the vault mounted at `dir` since this
+ * was last called for it, by path inside the vault — for the sync to add to
+ * each document's tally. `owner` is the person whose agents these are: the
+ * account this machine's sync is signed in to.
+ *
+ * Taking consumes: how far the ledger has been read is kept beside it, per
+ * vault, so a read is handed over once however often the sync restarts. Only
+ * whole lines are taken; one still being written waits for the next call.
+ */
+export function takeAgentReads(dir: string, owner: string | null): Map<string, AgentReads[]> {
+  const taken = new Map<string, AgentReads[]>();
+  let ledger: Buffer;
+  try {
+    ledger = readFileSync(readsLedgerPath());
+  } catch {
+    return taken;
+  }
+  const cursorPath = readsCursorPath(dir);
+  let offset = 0;
+  try {
+    const cursor: { offset?: number } = JSON.parse(readFileSync(cursorPath, "utf8"));
+    if (typeof cursor.offset === "number" && cursor.offset <= ledger.length) offset = cursor.offset;
+  } catch {
+    // no cursor yet: everything in the ledger is new to this vault
+  }
+  const end = ledger.lastIndexOf(0x0a) + 1;
+  if (end <= offset) return taken;
+
+  for (const line of ledger.subarray(offset, end).toString("utf8").split("\n")) {
+    if (!line.trim()) continue;
+    let event: ReadEvent;
+    try {
+      event = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (!sameDir(event, dir) || !mountedHere(event, dir)) continue;
+    const at = Date.parse(event.at);
+    const tallies = taken.get(event.path) ?? [];
+    const tally = tallies.find((t) => t.agent === event.agent);
+    if (tally) {
+      tally.count++;
+      tally.lastAt = Math.max(tally.lastAt, at);
+    } else {
+      tallies.push({ agent: event.agent, owner, count: 1, lastAt: at });
+    }
+    taken.set(event.path, tallies);
+  }
+
+  mkdirSync(dirname(cursorPath), { recursive: true, mode: 0o700 });
+  writeFileSync(cursorPath, JSON.stringify({ offset: end }), { mode: 0o600 });
+  return taken;
+}
+
+/** Is the vault this event names mounted at `dir`? (An event for a vault mounted nowhere is not ours.) */
+function mountedHere(event: { vaultId: string }, dir: string): boolean {
+  const mounted = readMountedVaults().find((v) => v.vaultId === event.vaultId);
+  return mounted !== undefined && realPath(resolve(mounted.dir)) === realPath(resolve(dir));
 }

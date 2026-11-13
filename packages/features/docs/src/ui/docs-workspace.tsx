@@ -9,7 +9,7 @@ import {
   type ComponentType,
   type CSSProperties,
 } from "react";
-import { Clock, FileText, Files, MessageSquare, PanelRightClose, X } from "lucide-react";
+import { ChartColumn, Clock, FileText, MessageSquare, PanelRightClose, X } from "lucide-react";
 import type { Capability } from "@markbase/docs/server";
 import { cn } from "@markbase/ui/utils";
 import { AgentMenu } from "./doc-action-set";
@@ -33,7 +33,7 @@ import { useClientValue } from "./client-value";
 import { AgentChatDock } from "./agent-chat-dock";
 import type { EditorSelection } from "./doc-editor";
 
-type PanelTab = "tabs" | "comments" | "history" | "claude";
+type PanelTab = "analytics" | "comments" | "history" | "claude";
 
 // How many recently-viewed docs keep their editors mounted. Flipping among these
 // is an instant visibility toggle (no content rebuild, no refetch); older docs
@@ -106,11 +106,11 @@ export function DocsWorkspace({
   const ports = useDocsPorts();
   const entry = activeId ? store.get(activeId) : undefined;
 
-  // The right column (comments/history/subtabs) and its active tab persist across
+  // The right column (analytics/comments/history) and its active tab persist across
   // doc switches as a workspace-level preference — the shared top-row actions and
   // the surface both read them, so they live here.
   const [panelOpen, setPanelOpen] = useState(false);
-  const [panelTab, setPanelTab] = useState<PanelTab>("tabs");
+  const [panelTab, setPanelTab] = useState<PanelTab>("analytics");
   const [shareOpen, setShareOpen] = useState(false);
   // The panel column width lives here too (not just in DocView) so the top strip's
   // panel-tab bar can be exactly this wide — the split lines up with the panel
@@ -455,7 +455,7 @@ const DocViewSlot = memo(function DocViewSlot({
 
 // The panel's tab bar, living in the top strip's right side (split from the doc
 // tabs). Clicking a tab opens the right panel to it; clicking the active one again
-// closes the panel. Subtab / Comments / History always show; Claude Code needs a
+// closes the panel. Analytics / Comments / History always show; Claude Code needs a
 // vault.
 function PanelTabBar({
   panelTab,
@@ -512,7 +512,7 @@ function PanelTabBar({
       style={panelOpen ? { width: "var(--doc-panel-w, 320px)" } : undefined}
     >
       <div className="flex items-center gap-0.5">
-        {tab("tabs", "Subtab", Files)}
+        {tab("analytics", "Analytics", ChartColumn)}
         {tab("comments", "Comments", MessageSquare)}
         {tab("history", "History", Clock)}
         {/* The Claude Code icon is replaced by the agent menu ("Open in this

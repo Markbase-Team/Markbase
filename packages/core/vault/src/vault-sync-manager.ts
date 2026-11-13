@@ -14,7 +14,7 @@
 
 import { filesUnder, normalizePath } from "@markbase/protocol/folders";
 import type { VaultSyncFs } from "@markbase/protocol/storage";
-import type { AgentCredit, OpenSyncedFile, SyncedFile } from "./synced-file";
+import type { AgentCredit, AgentReads, OpenSyncedFile, SyncedFile } from "./synced-file";
 
 // VaultDocRef is a document's identity, so it belongs to the protocol rather
 // than to the sync engine. Re-exported here because every existing caller
@@ -61,6 +61,12 @@ export interface VaultSyncOptions {
    * so a renamed file is still found. Omitted, every version is the author's.
    */
   agentCredit?: (path: () => string) => AgentCredit;
+  /**
+   * The reads agents made of this vault's files since last asked, by path —
+   * taken from the agent audit, so asking consumes them. Omitted, no reads
+   * are recorded.
+   */
+  agentReads?: () => Map<string, AgentReads[]>;
 }
 
 export class VaultSyncManager {
@@ -422,6 +428,24 @@ export class VaultSyncManager {
       if (vs.confirmPendingEmpty()) emptied++;
     }
     return emptied;
+  }
+
+  /**
+   * Hand each document the reads agents made of its file since the last
+   * sweep. Returns how many reads were recorded; a read of a file this
+   * manager holds no document for is dropped.
+   */
+  recordAgentReads(): number {
+    const reads = this.opts.agentReads?.();
+    if (!reads) return 0;
+    let recorded = 0;
+    for (const [path, tallies] of reads) {
+      const vs = this.byPath.get(path);
+      if (!vs) continue;
+      vs.recordAgentReads(tallies);
+      for (const tally of tallies) recorded += tally.count;
+    }
+    return recorded;
   }
 
   checkpointDue(now: number = Date.now()): number {
