@@ -132,3 +132,36 @@ export { docsSyncedFiles } from "./docs-synced-file";
 
 export * from "./mirror-format";
 export * from "./mirror";
+// What agents read and write in mounted vaults, as their own hooks report it.
+export {
+  auditDir,
+  readsLedgerPath,
+  writesLedgerPath,
+  findVaultFile,
+  shellReads,
+  recordReads,
+  snapshotWrites,
+  recordWrites,
+  undoEdits,
+  readReadEvents,
+  readWriteEvents,
+  countReads,
+  countWrites,
+  type ReadEvent,
+  type WriteEvent,
+  type WriteBaseline,
+  type VaultFile,
+  type ReadCount,
+  type WriteCount,
+} from "./agent-audit";
+export {
+  parseHookPayload,
+  detectAgent,
+  patchFiles,
+  readHookCall,
+  type Json,
+  type HookCall,
+  type HookEdit,
+  type HookWrite,
+} from "./agent-hook";
+export { textChanges, changeTotals, type TextChange } from "./text-changes";

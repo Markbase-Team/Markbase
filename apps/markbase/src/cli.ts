@@ -12,6 +12,7 @@ import { runSkillInstall } from "./integration/skill";
 import { runApi } from "./integration/api";
 import { runMcp, runMcpInstall } from "./integration/mcp";
 import { runInstance } from "./instance";
+import { runReadAudit, runWriteAudit } from "./audit";
 
 const HELP = `markbase — run a Markbase ticket worker on your machine.
 It claims your tickets and executes them locally with Claude Code.
@@ -40,6 +41,10 @@ Usage:
                              Codex + Cursor (--desktop / --claude-code / --codex
                              / --cursor to pick specific ones)
   markbase mcp                 Run the MCP server (stdio) — Claude Desktop runs this
+  markbase read-audit          Record which agent read which vault file — run by an
+                             agent's hook (report to see the counts)
+  markbase write-audit         Record which agent changed which characters of which
+                             vault file — run by an agent's hook (report to see them)
 
 First run:  markbase login
 `;
@@ -90,6 +95,12 @@ async function main(): Promise<void> {
       break;
     case "vault":
       await runVault(process.argv.slice(3));
+      break;
+    case "read-audit":
+      await runReadAudit(process.argv.slice(3));
+      break;
+    case "write-audit":
+      await runWriteAudit(process.argv.slice(3));
       break;
     case "api":
       await runApi(process.argv.slice(3));

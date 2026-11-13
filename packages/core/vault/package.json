@@ -5,10 +5,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./agent-audit": "./src/agent-audit.ts",
+    "./agent-hook": "./src/agent-hook.ts",
     "./asset-refs": "./src/asset-refs.ts",
     "./markbase-home": "./src/markbase-home.ts",
     "./mirror": "./src/mirror.ts",
     "./mirror-format": "./src/mirror-format.ts",
+    "./text-changes": "./src/text-changes.ts",
     "./vault-account": "./src/vault-account.ts",
     "./vault-assets": "./src/vault-assets.ts",
     "./vault-boundary": "./src/vault-boundary.ts",
@@ -26,7 +29,8 @@
   },
   "dependencies": {
     "@markbase/docs": "*",
-    "@markbase/protocol": "*"
+    "@markbase/protocol": "*",
+    "diff": "^8.0.4"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
