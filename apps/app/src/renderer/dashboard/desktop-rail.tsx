@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@markbase/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@markbase/ui/sidebar";
-import type { InstanceBridge } from "../../preload";
+import type { AgentsBridge, InstanceBridge } from "../../preload";
 import { SettingsDialog } from "./settings-dialog";
 
 // This shell's main sidebar: the shared AppRail with what only the desktop app
@@ -38,6 +38,7 @@ export function DesktopRail({
   signOut,
   onSignedOut,
   instance,
+  agents,
   onOpenSettings,
 }: {
   userName: string;
@@ -47,6 +48,7 @@ export function DesktopRail({
   onSignedOut: () => void;
   /** Which instance this app is on, and switching. */
   instance: InstanceBridge;
+  agents: AgentsBridge;
   /** Main asks for Settings from the tray or the Vaults menu. */
   onOpenSettings: (cb: () => void) => () => void;
 }) {
@@ -129,6 +131,7 @@ export function DesktopRail({
         onOpenChange={setSettingsOpen}
         userName={userName}
         instance={instance}
+        agents={agents}
         signOut={signOut}
         onSignedOut={onSignedOut}
       />
