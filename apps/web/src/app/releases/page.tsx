@@ -1,5 +1,5 @@
 import { Markdown } from "@markbase/ui/markdown";
-import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
@@ -15,8 +15,18 @@ export const metadata = {
 const CONTENT = `# Releases
 
 The Markbase desktop app for macOS (Apple silicon).
-[Download the latest](${MAC_DOWNLOAD_URL}). The build is not notarised yet:
-the first time, right-click the app and choose **Open**.
+[Download the latest](${MAC_DOWNLOAD_URL}).${MAC_FIRST_OPEN_NOTE ? ` ${MAC_FIRST_OPEN_NOTE}` : ""}
+
+## 2.0.0
+
+_November 12, 2026_
+
+- Signed with a Developer ID, so macOS knows who built it. Notarisation by
+  Apple is on its way; until then, allow the app once under System Settings →
+  Privacy & Security → Open Anyway.
+- Settings has a **Display name** field. It is the name shown on your
+  versions, invitations and published pages, instead of the one your sign-in
+  brought along.
 
 ## 0.0.7
 

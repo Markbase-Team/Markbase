@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AppWindow, Download } from "lucide-react";
 import { connectLink, DEFAULT_APP_URL } from "@markbase/protocol/instance";
-import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
 import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";
 import { latestMacVersion } from "@/lib/latest-release";
@@ -106,8 +106,8 @@ export default async function JoinPage({
             {hosted
               ? "The app points here out of the box; Open in desktop app just launches it."
               : invited || first
-                ? `Opening in the app points it at ${host} and restarts it there, where you create your account. Unsigned build — right-click the app and choose Open the first time.`
-                : `Opening in the app points it at ${host} and restarts it there, where you sign in. Unsigned build — right-click the app and choose Open the first time.`}
+                ? `Opening in the app points it at ${host} and restarts it there, where you create your account.${MAC_FIRST_OPEN_NOTE ? ` ${MAC_FIRST_OPEN_NOTE}` : ""}`
+                : `Opening in the app points it at ${host} and restarts it there, where you sign in.${MAC_FIRST_OPEN_NOTE ? ` ${MAC_FIRST_OPEN_NOTE}` : ""}`}
           </p>
         </div>
 
