@@ -34,7 +34,7 @@ export {
 export { mergeSnapshot, type MergedSnapshot } from "./crdt-merge";
 
 export { docSchema } from "./schema";
-export { docExtensions, Frontmatter } from "./extensions";
+export { docExtensions, Frontmatter, SelectAllShortcut } from "./extensions";
 export {
   markdownToDoc,
   docToMarkdown,

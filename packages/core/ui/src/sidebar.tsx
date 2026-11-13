@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
 import { useIsMobile } from "./use-mobile"
-import { cn } from "./utils"
+import { cn, isEditableTarget } from "./utils"
 import { Button } from "./button"
 import { Input } from "./input"
 import { Separator } from "./separator"
@@ -98,16 +98,6 @@ function SidebarProvider({
   // the document editor) so ⌘/Ctrl+B keeps bolding text there instead of opening
   // the sidebar.
   React.useEffect(() => {
-    const isEditableTarget = (target: EventTarget | null): boolean => {
-      const el = target as HTMLElement | null
-      if (!el) return false
-      const tag = el.tagName
-      return (
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        el.isContentEditable === true
-      )
-    }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&

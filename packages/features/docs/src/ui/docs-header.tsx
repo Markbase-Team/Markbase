@@ -123,7 +123,7 @@ export function DocsHeader({
               <button
                 type="button"
                 aria-label="Collapse sidebar"
-                title="Collapse sidebar (⌘B)"
+                title="Collapse sidebar (⌘\)"
                 onClick={onCollapse}
                 className={iconBtn}
               >

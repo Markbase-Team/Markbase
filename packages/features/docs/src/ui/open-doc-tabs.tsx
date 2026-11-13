@@ -146,7 +146,7 @@ export function OpenDocTabs({
             type="button"
             onClick={onExpandSidebar}
             aria-label="Show documents"
-            title="Show documents (⌘B)"
+            title="Show documents (⌘\)"
             className={cn("mb-1.5 shrink-0 self-center", navButton, noDrag)}
           >
             <PanelLeftOpen className="size-4" strokeWidth={1.5} />
