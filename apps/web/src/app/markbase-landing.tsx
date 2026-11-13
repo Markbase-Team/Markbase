@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { StayInTouchForm } from "@/components/stay-in-touch";
 
-import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
 import { latestMacVersion } from "@/lib/latest-release";
 
 // Canonical destinations, reused in the nav, footer, and the SiteNavigationElement
@@ -508,7 +508,9 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
  * the newest release — so publishing a build (apps/app/scripts/publish-dmg.sh)
  * needs no change here and nothing already linking to it goes stale.
  *
- * The app is signed and notarised, so it opens with a double-click.
+ * Until the build is notarised, macOS refuses it on a double-click, so the
+ * first-open step sits under the button: a download that appears broken is
+ * worse than one that warned you.
  */
 function MacDownload({ version }: { version: string | null }) {
   // Defaults to the public permalink, so a deploy needs no environment change to
@@ -530,6 +532,9 @@ function MacDownload({ version }: { version: string | null }) {
           · {version ? `v${version}, ` : ""}Apple silicon
         </span>
       </a>
+      {MAC_FIRST_OPEN_NOTE && (
+        <p className="max-w-sm text-center text-xs text-zinc-500">{MAC_FIRST_OPEN_NOTE}</p>
+      )}
     </div>
   );
 }

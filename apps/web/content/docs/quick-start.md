@@ -16,7 +16,9 @@ sent you instead; see [Invite your team](/docs/invite-your-team).
 ### 1. Install and sign in
 
 Download the app from the [releases page](/releases) (macOS, Apple silicon)
-and open it. Sign in inside its window. On a self-hosted instance,
+and open it. The first time, allow it under **System Settings → Privacy &
+Security → Open Anyway**: the build is signed but not notarised yet. Sign in
+inside its window. On a self-hosted instance,
 use the switcher in the top-right corner of the sign-in page first.
 
 ### 2. Create a vault

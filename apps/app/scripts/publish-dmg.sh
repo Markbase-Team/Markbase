@@ -17,6 +17,7 @@
 #
 #   ./scripts/publish-dmg.sh v0.0.2               # build, then publish
 #   ./scripts/publish-dmg.sh v0.0.2 --skip-build
+#   ./scripts/publish-dmg.sh v0.0.2 --unnotarised  # signed, not notarised
 #
 # Every published build is signed with a Developer ID and notarised by Apple,
 # so it opens with a double-click. That needs, on the machine that builds:
@@ -27,6 +28,11 @@
 #         --apple-id <apple id> --team-id <team id>
 # The profile name can be changed with APPLE_KEYCHAIN_PROFILE. Without either,
 # this script stops before building rather than publish a build macOS refuses.
+#
+# --unnotarised publishes a build that is signed but not notarised, for when
+# Apple's notary is holding a submission. macOS then asks people to allow the
+# app once in System Settings, which the site says next to every download
+# (MAC_FIRST_OPEN_NOTE in @markbase/protocol/downloads).
 #
 # Supabase storage was the first attempt and is not viable: a project-wide upload
 # limit caps every bucket, is not exposed in the database or the storage API, and
@@ -44,7 +50,14 @@ if [[ -z "$TAG" ]]; then
   exit 1
 fi
 skip_build=false
-[[ "${2:-}" == "--skip-build" ]] && skip_build=true
+notarise=true
+for arg in "${@:2}"; do
+  case "$arg" in
+    --skip-build) skip_build=true ;;
+    --unnotarised) notarise=false ;;
+    *) echo "error: unknown option $arg" >&2; exit 1 ;;
+  esac
+done
 
 # gh must be the account that owns the releases repo. This machine has two, and
 # the wrong one 404s on a repo it cannot see — which looks like "no such repo"
@@ -56,12 +69,17 @@ if ! gh repo view "$RELEASES_REPO" --json name >/dev/null 2>&1; then
   exit 1
 fi
 
-export APPLE_KEYCHAIN_PROFILE="${APPLE_KEYCHAIN_PROFILE:-markbase-notary}"
 if ! security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
   echo "error: no Developer ID Application certificate in the keychain." >&2
   exit 1
 fi
-if ! xcrun notarytool history --keychain-profile "$APPLE_KEYCHAIN_PROFILE" >/dev/null 2>&1; then
+if [[ "$notarise" == true ]]; then
+  export APPLE_KEYCHAIN_PROFILE="${APPLE_KEYCHAIN_PROFILE:-markbase-notary}"
+else
+  # electron-builder notarises whenever a profile is set; this build must not.
+  unset APPLE_KEYCHAIN_PROFILE APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_API_KEY
+fi
+if [[ "$notarise" == true ]] && ! xcrun notarytool history --keychain-profile "$APPLE_KEYCHAIN_PROFILE" >/dev/null 2>&1; then
   echo "error: notarytool has no working credentials under '$APPLE_KEYCHAIN_PROFILE'." >&2
   echo "       run: xcrun notarytool store-credentials $APPLE_KEYCHAIN_PROFILE --apple-id <apple id> --team-id <team id>" >&2
   exit 1
@@ -79,6 +97,7 @@ fi
 # electron-builder notarises the app inside; the disk image is notarised and
 # stapled on its own so Gatekeeper accepts it offline too. Then check both the
 # way a downloader's Mac will.
+if [[ "$notarise" == true ]]; then
 echo "==> notarising the disk image"
 xcrun notarytool submit "$DMG" --keychain-profile "$APPLE_KEYCHAIN_PROFILE" --wait
 xcrun stapler staple "$DMG"
@@ -91,15 +110,34 @@ spctl --assess --type execute -vv "$mnt/Markbase.app"
 xcrun stapler validate "$mnt/Markbase.app"
 hdiutil detach "$mnt" >/dev/null
 trap - EXIT
+else
+  echo "==> not notarised (--unnotarised): checking the signature only"
+  codesign --verify --deep --strict "$DMG" 2>/dev/null || true
+  mnt="$(mktemp -d)"
+  hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$DMG" >/dev/null
+  trap 'hdiutil detach "$mnt" >/dev/null 2>&1 || true' EXIT
+  codesign --verify --deep --strict -v "$mnt/Markbase.app"
+  codesign -dvv "$mnt/Markbase.app" 2>&1 | grep -E "^Authority=Developer ID Application"
+  hdiutil detach "$mnt" >/dev/null
+  trap - EXIT
+fi
 
 # Upload under the stable name, whatever electron-builder called it locally.
 STAGED="$(mktemp -d)/$ASSET"
 cp "$DMG" "$STAGED"
 echo "==> publishing $(du -h "$STAGED" | cut -f1) as $TAG"
 
-NOTES="macOS, Apple silicon. Signed and notarised by Apple.
+if [[ "$notarise" == true ]]; then
+  NOTES="macOS, Apple silicon. Signed and notarised by Apple.
 
 What changed: https://markbase.so/releases"
+else
+  NOTES="macOS, Apple silicon. Signed with a Developer ID; not notarised yet.
+
+The first time, open the app, then allow it under **System Settings → Privacy & Security → Open Anyway**.
+
+What changed: https://markbase.so/releases"
+fi
 
 # Retried: a ~190 MB upload over a lossy link drops often enough that a single
 # attempt is not a fair test, and gh reports the drop as a bare \`EOF\`.
