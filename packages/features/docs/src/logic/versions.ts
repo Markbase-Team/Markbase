@@ -44,6 +44,8 @@ interface VersionEntry {
   at: number;
   label?: string;
   author?: string;
+  agents?: string[];
+  mixed?: boolean;
   /** The complete markdown — a keyframe. */
   full?: string;
   /** A unified diff from the PREVIOUS version's markdown. */
@@ -57,7 +59,16 @@ export interface VersionMeta {
   index: number;
   at: number;
   label?: string;
+  /** The person — whose account, and for a file edit whose machine. */
   author?: string;
+  /**
+   * The agents whose writes are in this version ("claude", "codex", "cursor"),
+   * as their own hooks reported them (the vault's agent audit). Absent when no
+   * agent is known to have written any of it.
+   */
+  agents?: string[];
+  /** With `agents`: the person edited in this version too, so it is not all the agents'. */
+  mixed?: boolean;
   added: number;
   removed: number;
 }
@@ -79,6 +90,8 @@ export function listVersions(doc: Y.Doc): VersionMeta[] {
       at: e.at,
       ...(e.label === undefined ? {} : { label: e.label }),
       ...(e.author === undefined ? {} : { author: e.author }),
+      ...(e.agents === undefined ? {} : { agents: e.agents }),
+      ...(e.mixed === undefined ? {} : { mixed: e.mixed }),
       added: e.added,
       removed: e.removed,
     }));
@@ -111,6 +124,33 @@ export function versionContent(doc: Y.Doc, index: number): string {
   return content;
 }
 
+/** Who and what a version is credited to, and when. */
+export interface VersionCredit {
+  label?: string;
+  author?: string;
+  agents?: string[];
+  mixed?: boolean;
+  at?: number;
+}
+
+/** An agent's name as people know it: "claude" is Claude Code. */
+export function agentLabel(agent: string): string {
+  const known: Record<string, string> = { claude: "Claude Code", codex: "Codex", cursor: "Cursor" };
+  return known[agent.toLowerCase()] ?? agent;
+}
+
+/**
+ * Who a version is credited to, in words: the agents when it is all theirs,
+ * the person and the agents when both edited, else the person (null when
+ * nobody is named).
+ */
+export function versionCreditText(v: { author?: string; agents?: string[]; mixed?: boolean }): string | null {
+  const agents = (v.agents ?? []).map(agentLabel);
+  if (agents.length === 0) return v.author ?? null;
+  if (v.mixed) return [v.author ?? "You", ...agents].join(" + ");
+  return agents.join(" + ");
+}
+
 /**
  * Record `markdown` as a new version. Returns false if it's identical to the last
  * one — the daemon flushes constantly and the editor fires on every keystroke, so
@@ -119,7 +159,7 @@ export function versionContent(doc: Y.Doc, index: number): string {
 export function appendVersion(
   doc: Y.Doc,
   markdown: string,
-  meta: { label?: string; author?: string; at?: number } = {}
+  meta: VersionCredit = {}
 ): boolean {
   const entries = log(doc);
   const count = entries.length;
@@ -131,6 +171,8 @@ export function appendVersion(
     at: meta.at ?? Date.now(),
     ...(meta.label === undefined ? {} : { label: meta.label }),
     ...(meta.author === undefined ? {} : { author: meta.author }),
+    ...(meta.agents === undefined || meta.agents.length === 0 ? {} : { agents: meta.agents }),
+    ...(meta.mixed === true && meta.agents !== undefined && meta.agents.length > 0 ? { mixed: true } : {}),
     added,
     removed,
   };
@@ -149,10 +191,7 @@ export function appendVersion(
 }
 
 /** Record the document's CURRENT markdown as a version. */
-export function checkpoint(
-  doc: Y.Doc,
-  meta: { label?: string; author?: string; at?: number } = {}
-): boolean {
+export function checkpoint(doc: Y.Doc, meta: VersionCredit = {}): boolean {
   return appendVersion(doc, getMarkdown(doc), meta);
 }
 

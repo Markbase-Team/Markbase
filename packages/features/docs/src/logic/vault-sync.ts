@@ -81,6 +81,17 @@ function keepRejected(
   onConflict?.({ path, copy });
 }
 
+/**
+ * Which agent wrote a file's content, if one did — asked for every change read
+ * off the disk. `agent` is what is known now; `later` asks again, for a write
+ * whose record had not landed yet when the file changed (an agent's hook
+ * reports after its tool finishes, and the watcher can be quicker).
+ *
+ * The answer comes from the vault's agent audit (@markbase/vault,
+ * agent-audit.ts): this module only asks, and knows nothing of hooks.
+ */
+export type AgentCredit = (content: string) => { agent: string | null; later: () => string | null };
+
 export class VaultSync {
   private detach: () => void = () => {};
 
@@ -94,6 +105,13 @@ export class VaultSync {
   private lastOrigin: Origin = null;
   private lastVersionAt: number | null = null;
   private lastVersionContent = "";
+  /** Asks which agent wrote a change; absent, every change is the author's. */
+  private credit: AgentCredit | null = null;
+  /**
+   * The file changes absorbed since the last version, each as the agent that
+   * made it, or — not known yet — a way to ask again when the version is cut.
+   */
+  private pendingWrites: { agent: string | null; later: () => string | null }[] = [];
 
   /** An empty read of a non-empty document, held until the sweep confirms it. */
   private pendingEmpty = false;
@@ -347,10 +365,37 @@ export class VaultSync {
    * onto the file, so the two sides agree again and nothing is lost.
    */
   private absorb(content: string): void {
+    this.noteWriter(content);
     const r = this.vaultDoc.applyFileContent(content);
     if (r.rejected === undefined) return;
     keepRejected(this.fs, this.path, r, this.onConflict);
     this.fs.write(this.path, this.vaultDoc.markdown());
+  }
+
+  /**
+   * Before a change off the disk is applied: note who made it, and if the
+   * writer changed — the person after an agent, an agent after the person,
+   * one agent after another — close the version in progress first, so each
+   * version is one writer's work as far as that can be known.
+   */
+  private noteWriter(content: string): void {
+    if (!this.tracking || this.credit === null) return;
+    if (content === this.vaultDoc.markdown()) return; // our own write, echoed back
+    const write = this.credit(content);
+    const last = this.pendingWrites[this.pendingWrites.length - 1];
+    if (last !== undefined && last.agent !== write.agent) this.recordVersion(Date.now());
+    // A document with text but no history yet (a file just adopted): that text
+    // was there before the agent wrote, so it gets a version of its own first
+    // rather than being folded into the agent's.
+    else if (last === undefined && write.agent !== null && this.lastVersionAt === null) {
+      this.recordVersion(Date.now());
+    }
+    // One entry says it all for a run of writes by the same known agent; the
+    // rest are kept to ask again, up to a bound a long session cannot outgrow.
+    const again = this.pendingWrites[this.pendingWrites.length - 1];
+    if (again !== undefined && write.agent !== null && again.agent === write.agent) return;
+    if (this.pendingWrites.length >= 200) this.pendingWrites.shift();
+    this.pendingWrites.push(write);
   }
 
   /**
@@ -396,8 +441,9 @@ export class VaultSync {
    * Off by default, so a caller with no identity records nothing by accident —
    * the browser runs its own ticker and must not get a second one here.
    */
-  trackVersions(author: string | null): void {
+  trackVersions(author: string | null, credit?: AgentCredit): void {
     this.author = author;
+    this.credit = credit ?? null;
     if (this.tracking) return;
     this.tracking = true;
 
@@ -449,7 +495,33 @@ export class VaultSync {
     });
     if (!due) return false;
 
-    const recorded = checkpoint(this.doc, this.author === null ? {} : { author: this.author });
+    return this.recordVersion(now);
+  }
+
+  /**
+   * Cut a version of the document as it stands, credited to the author and to
+   * whichever agents wrote the file changes in it. False when there is nothing
+   * new to record.
+   */
+  private recordVersion(now: number): boolean {
+    if (this.mode.readOnly) return false;
+    const content = this.markdown();
+    if (content === this.lastVersionContent) return false;
+
+    // Settle who wrote what: a change not credited when it arrived asks again.
+    const agents: string[] = [];
+    let person = false;
+    for (const write of this.pendingWrites) {
+      const agent = write.agent ?? write.later();
+      if (agent === null) person = true;
+      else if (!agents.includes(agent)) agents.push(agent);
+    }
+    this.pendingWrites = [];
+
+    const recorded = checkpoint(this.doc, {
+      ...(this.author === null ? {} : { author: this.author }),
+      ...(agents.length > 0 ? { agents, mixed: person } : {}),
+    });
     if (recorded) {
       this.lastVersionAt = now;
       this.lastVersionContent = content;

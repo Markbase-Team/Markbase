@@ -1,6 +1,6 @@
 {
   "name": "@markbase/cli",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Run a Markbase ticket worker on your machine — claims your tickets and executes them with Claude Code.",
   "type": "module",
   "bin": {
@@ -26,14 +26,14 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@supabase/supabase-js": "^2.106.2",
-    "@markbase/flows": "*"
+    "@supabase/supabase-js": "^2.106.2"
   },
   "devDependencies": {
     "@types/node": "^20",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5",
+    "@markbase/flows": "*",
     "@markbase/protocol": "*",
     "@markbase/node": "*",
     "@markbase/vault": "*",

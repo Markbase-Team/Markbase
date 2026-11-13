@@ -45,6 +45,17 @@ and the Markbase CLI has two commands made for it.
 Both do nothing for a file outside a mounted vault, never block the agent, and
 keep their record on your machine, under `~/.markbaseConfig/audit`.
 
+Set the hooks up for every agent on the machine with one command:
+
+```
+markbase audit install
+```
+
+Once they are in place, a document's **History** says which agent wrote a
+version: the version shows the agent's name where it would show yours, in the
+desktop app and on the web. A version that holds both your edits and an
+agent's names you both.
+
 See what was recorded:
 
 ```
@@ -52,6 +63,9 @@ markbase read-audit report                    # reads per file, by agent
 markbase write-audit report                   # writes per file, by agent
 markbase write-audit report --file notes/plan.md   # every change to one file
 ```
+
+The sections below are what `markbase audit install` writes, for setting an
+agent up by hand.
 
 ### Claude Code
 

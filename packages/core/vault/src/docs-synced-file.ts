@@ -22,7 +22,7 @@ import {
   type DocPubSub,
 } from "@markbase/docs";
 import type { VaultSyncFs, VaultBaseStore } from "@markbase/protocol/storage";
-import type { OpenSyncedFile, SyncedFile } from "./synced-file";
+import type { AgentCredit, OpenSyncedFile, SyncedFile } from "./synced-file";
 
 /**
  * A CRDT document, wearing the vault's interface.
@@ -60,8 +60,8 @@ class DocsSyncedFile implements SyncedFile {
   close(): void {
     this.vs.close();
   }
-  trackVersions(author: string | null): void {
-    this.vs.trackVersions(author);
+  trackVersions(author: string | null, credit?: AgentCredit): void {
+    this.vs.trackVersions(author, credit);
   }
   maybeCheckpoint(now?: number): boolean {
     return this.vs.maybeCheckpoint(now);
