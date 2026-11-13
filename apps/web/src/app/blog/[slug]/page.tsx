@@ -6,10 +6,12 @@ import { Markdown } from "@markbase/ui/markdown";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
+  BLOG_IMAGE,
   BLOG_POSTS,
   blogDate,
   blogPath,
   blogPost,
+  blogPostingData,
   blogSections,
   siteUrl,
   type BlogPost,
@@ -51,6 +53,7 @@ export async function generateMetadata({
       siteName: "Markbase",
       publishedTime: `${post.date}T00:00:00Z`,
       section: post.kind,
+      images: [{ url: BLOG_IMAGE.path, width: BLOG_IMAGE.width, height: BLOG_IMAGE.height, alt: "Markbase" }],
     },
     twitter: { card: "summary", title: post.title, description: post.summary },
   };
@@ -60,27 +63,11 @@ export async function generateMetadata({
 function structuredData(post: BlogPost) {
   const base = siteUrl();
   const url = `${base}${blogPath(post.slug)}`;
-  const markbase = {
-    "@type": "Organization",
-    name: "Markbase",
-    url: base,
-    logo: { "@type": "ImageObject", url: `${base}/markbase-logo.png` },
-  };
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "BlogPosting",
-        headline: post.title,
-        description: post.summary,
-        datePublished: `${post.date}T00:00:00Z`,
-        dateModified: `${post.date}T00:00:00Z`,
-        articleSection: post.kind,
-        inLanguage: "en",
-        author: markbase,
-        publisher: markbase,
-        url,
-        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        ...blogPostingData(post),
         isPartOf: { "@type": "Blog", name: "Markbase blog", url: `${base}${blogPath()}` },
       },
       {
