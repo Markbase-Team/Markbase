@@ -14,6 +14,7 @@ import { shell } from "../shell";
 import { desktopDocsPorts } from "./desktop-ports";
 import { DesktopNavigation } from "./desktop-navigation";
 import { DesktopRail } from "./desktop-rail";
+import { DefaultOpenerOffer } from "./default-opener-offer";
 import "./dashboard.css";
 
 // The app, rendered here rather than fetched from the site.
@@ -197,6 +198,7 @@ function App() {
       <SidebarInset className="min-w-0">
         <Surface me={phase.me} />
       </SidebarInset>
+      <DefaultOpenerOffer defaultOpener={bridge.defaultOpener} />
     </SidebarProvider>
   );
 }

@@ -25,6 +25,11 @@ import {
   type LaunchAgentSpec,
 } from "./launch-agent";
 import {
+  becomeDefaultMarkdownOpener,
+  defaultMarkdownOpener,
+  shouldOfferDefaultOpener,
+} from "./default-opener";
+import {
   appendFileSync,
   chmodSync,
   existsSync,
@@ -297,6 +302,12 @@ interface Settings {
    * which the app then respects on every launch.
    */
   startAtLogin?: boolean;
+  /**
+   * When the main window offered to make this app the Mac's default for
+   * markdown files (default-opener.ts). Set whatever the answer was — the
+   * offer is made once, after the first sign-in, not on every launch.
+   */
+  defaultOpenerOfferedAt?: string;
 }
 
 interface CloudVault {
@@ -3035,6 +3046,30 @@ function registerCredentialsIpc(): void {
   ipcMain.handle("markbase:sign-out", async (): Promise<void> => {
     await signOut();
   });
+  // The main window asks, once it is showing a signed-in account, whether to
+  // offer making this app the default for markdown files. A yes is recorded
+  // here, before the toast is even drawn: the offer is made once per machine.
+  ipcMain.handle("markbase:default-opener-offer", async (): Promise<boolean> => {
+    const facts = {
+      platform: process.platform,
+      packaged: app.isPackaged,
+      signedIn: signedIn(),
+      offeredBefore: Boolean(loadSettings().defaultOpenerOfferedAt),
+    };
+    // Asked without the opener first: it is the one fact that costs a process
+    // to learn, and on every launch after the first the answer is no without it.
+    if (!shouldOfferDefaultOpener({ ...facts, currentOpener: null })) return false;
+    const offer = shouldOfferDefaultOpener({
+      ...facts,
+      currentOpener: await defaultMarkdownOpener(),
+    });
+    // Re-read: the await let other writers in.
+    saveSettings({ ...loadSettings(), defaultOpenerOfferedAt: new Date().toISOString() });
+    return offer;
+  });
+  ipcMain.handle("markbase:default-opener-accept", (): Promise<boolean> =>
+    becomeDefaultMarkdownOpener()
+  );
 }
 
 // ---- The team instance -------------------------------------------------------
