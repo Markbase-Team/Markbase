@@ -13,6 +13,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { markbaseHome } from "./markbase-home";
 import { readMountedVaults, type MountedVault } from "./vault-registry";
 import type { HookCall, HookEdit, HookWrite } from "./agent-hook";
+import type { AgentCredit } from "./synced-file";
 import { changeTotals, textChanges, type TextChange } from "./text-changes";
 
 // The audit of what agents read and write in mounted vaults.
@@ -77,6 +78,12 @@ export interface WriteEvent {
   /** Characters inserted and removed in all; null when the changes are. */
   inserted: number | null;
   removed: number | null;
+  /**
+   * A hash of the file as the agent left it — how the sync knows a change it
+   * reads off the disk is this write and nobody else's (agentCredit). Absent
+   * on events recorded before it existed.
+   */
+  afterHash?: string;
 }
 
 /** A file inside a mounted vault. */
@@ -188,6 +195,8 @@ export function recordReads(
 /** A file as it was at the agent's before-the-tool hook. */
 interface Snapshot {
   file: string;
+  /** The agent about to write. */
+  agent?: string;
   at: number;
   /** Null when the file did not exist. */
   content: string | null;
@@ -198,6 +207,11 @@ const SNAPSHOT_MAX_AGE_MS = 10 * 60 * 1000;
 
 function snapshotPath(file: string): string {
   return join(pendingDir(), `${createHash("sha256").update(realPath(resolve(file))).digest("hex")}.json`);
+}
+
+/** The hash a write event and the sync compare a file's content by. */
+export function contentHash(content: string): string {
+  return createHash("sha256").update(content).digest("hex");
 }
 
 function readFileOrNull(file: string): string | null {
@@ -217,7 +231,12 @@ export function snapshotWrites(
   let kept = 0;
   for (const write of call.writes) {
     if (!findVaultFile(write.file, vaults)) continue;
-    const snapshot: Snapshot = { file: write.file, at: now.getTime(), content: readFileOrNull(write.file) };
+    const snapshot: Snapshot = {
+      file: write.file,
+      agent: call.agent,
+      at: now.getTime(),
+      content: readFileOrNull(write.file),
+    };
     mkdirSync(pendingDir(), { recursive: true, mode: 0o700 });
     writeFileSync(snapshotPath(write.file), JSON.stringify(snapshot), { mode: 0o600 });
     kept++;
@@ -301,6 +320,7 @@ export function recordWrites(
       changes,
       inserted: totals ? totals.inserted : null,
       removed: totals ? totals.removed : null,
+      afterHash: contentHash(after),
     });
   }
   for (const event of events) append(writesLedgerPath(), event);
@@ -396,4 +416,73 @@ export function countWrites(events: WriteEvent[]): WriteCount[] {
     counts.set(key, count);
   }
   return [...counts.values()].sort((a, b) => b.writes - a.writes || a.path.localeCompare(b.path));
+}
+
+/** An agent's before-the-tool snapshot is "in flight" for this long: the write is expected any moment. */
+const IN_FLIGHT_MS = 60 * 1000;
+
+/** The write ledger, re-read only when the file has changed. */
+let ledgerCache: { path: string; size: number; mtimeMs: number; events: WriteEvent[] } | null = null;
+
+function cachedWriteEvents(): WriteEvent[] {
+  const path = writesLedgerPath();
+  let size = 0;
+  let mtimeMs = 0;
+  try {
+    const stat = statSync(path);
+    size = stat.size;
+    mtimeMs = stat.mtimeMs;
+  } catch {
+    return [];
+  }
+  if (ledgerCache && ledgerCache.path === path && ledgerCache.size === size && ledgerCache.mtimeMs === mtimeMs) {
+    return ledgerCache.events;
+  }
+  const events = readWriteEvents();
+  ledgerCache = { path, size, mtimeMs, events };
+  return events;
+}
+
+/**
+ * For one file of a vault mounted at `dir`: the way the sync asks which agent
+ * wrote a change it has just read off the disk (see AgentCredit).
+ *
+ * An agent is credited when the content is byte for byte what one of its
+ * recorded writes left behind — the newest such write, if several match — or,
+ * before that record has landed, when the agent's before-the-tool snapshot of
+ * this file is seconds old: it said it was about to write, and the file
+ * changed. Anything else is nobody's on record, which the caller takes to be
+ * the person.
+ */
+export function agentCredit(dir: string, path: () => string): AgentCredit {
+  return (content) => {
+    const hash = contentHash(content);
+    const fromLedger = (): string | null => {
+      const file = findVaultFile(join(dir, path()), [{ vaultId: "", name: "", dir }]);
+      if (!file) return null;
+      const events = cachedWriteEvents();
+      for (let i = events.length - 1; i >= 0; i--) {
+        const e = events[i];
+        if (e.afterHash === hash && e.path === file.path && sameDir(e, dir)) return e.agent;
+      }
+      return null;
+    };
+    const inFlight = (): string | null => {
+      const raw = readFileOrNull(snapshotPath(join(dir, path())));
+      if (raw === null) return null;
+      try {
+        const snapshot: Snapshot = JSON.parse(raw);
+        return snapshot.agent !== undefined && Date.now() - snapshot.at <= IN_FLIGHT_MS ? snapshot.agent : null;
+      } catch {
+        return null;
+      }
+    };
+    return { agent: fromLedger() ?? inFlight(), later: fromLedger };
+  };
+}
+
+/** Was this write to a vault mounted at `dir`? Two vaults can hold the same relative path. */
+function sameDir(event: WriteEvent, dir: string): boolean {
+  const mounted = readMountedVaults().find((v) => v.vaultId === event.vaultId);
+  return mounted === undefined || realPath(resolve(mounted.dir)) === realPath(resolve(dir));
 }

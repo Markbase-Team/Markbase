@@ -22,6 +22,7 @@ import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/protocol/timeou
 import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
 import { ApiCrdtTransport, bearerCrdtRequest } from "@markbase/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
+import { agentCredit } from "./agent-audit";
 import {
   NodeVaultFs,
   NodeVaultBaseStore,
@@ -1098,6 +1099,9 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
       onMoved: paths.persist,
       onOpened: (done, total) => opts.onProgress?.({ phase: "opening", done, total }),
       author,
+      // Which agent wrote a change, when its hook reported the write
+      // (`markbase write-audit`): a version then says so.
+      agentCredit: (path) => agentCredit(dir, path),
     }
   );
   if (startedOffline) manager.setClaims(refs);

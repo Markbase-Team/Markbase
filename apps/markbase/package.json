@@ -1,6 +1,6 @@
 {
   "name": "@markbase/cli",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Run a Markbase ticket worker on your machine — claims your tickets and executes them with Claude Code.",
   "type": "module",
   "bin": {

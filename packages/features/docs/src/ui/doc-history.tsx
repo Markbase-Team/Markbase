@@ -1,5 +1,7 @@
 "use client";
 
+import { Bot } from "lucide-react";
+import { versionCreditText } from "@markbase/docs";
 import { cn } from "@markbase/ui/utils";
 import { useDocVersions } from "./use-doc-versions";
 
@@ -60,10 +62,16 @@ function CrdtHistory({
                     </span>
                   )}
                 </span>
-                <span className="text-muted-foreground">
-                  {v.author ?? "You"}
-                  {" · "}
-                  {new Date(v.at).toLocaleString()}
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  {/* An agent wrote some or all of it: its hook said so (the vault's agent audit). */}
+                  {v.agents && v.agents.length > 0 && (
+                    <Bot className="size-3 shrink-0" aria-label="Written by an agent" />
+                  )}
+                  <span className="truncate">
+                    {versionCreditText(v) ?? "You"}
+                    {" · "}
+                    {new Date(v.at).toLocaleString()}
+                  </span>
                 </span>
               </button>
             </li>

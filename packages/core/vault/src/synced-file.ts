@@ -15,6 +15,13 @@
 // speculative: documents are the only implementation, and the plugin plan warns
 // against building for plugins before the kernel exists.
 
+/**
+ * Which agent wrote a file's content, if one did. `agent` is what is known as
+ * the change is read; `later` asks again, for a write whose record lands after
+ * the file changed. Supplied by the agent audit (agent-audit.ts, agentCredit).
+ */
+export type AgentCredit = (content: string) => { agent: string | null; later: () => string | null };
+
 /** One file the vault tracks, bound to whatever keeps its contents in sync. */
 export interface SyncedFile {
   /** The cloud identity this file is bound to. Never the path — a move keeps it. */
@@ -43,14 +50,16 @@ export interface SyncedFile {
 
   /**
    * Start recording history, credited to `author` — a person, not the machine.
-   * Null still records, unattributed.
+   * Null still records, unattributed. `credit`, when given, is asked which
+   * agent wrote each change read off the disk (agent-audit.ts), so a version
+   * can say an agent wrote it.
    *
    * Versioning is content semantics on a container-owned interface, which is the
    * one seam that leaks. The split that makes it defensible: the vault owns the
    * clock (it runs the sweep), the implementation owns the policy (whether a
    * version is due).
    */
-  trackVersions(author: string | null): void;
+  trackVersions(author: string | null, credit?: AgentCredit): void;
 
   /** The sweep ticked. Record a version if one is due; returns whether it did. */
   maybeCheckpoint(now?: number): boolean;

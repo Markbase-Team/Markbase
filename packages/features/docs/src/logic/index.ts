@@ -103,7 +103,13 @@ export {
   applyRemote,
 } from "./sync";
 export { SyncSession, type DocStore, type DocPubSub } from "./transport";
-export { VaultSync, type VaultSyncFs, type VaultBaseStore, type VaultSyncOpenOptions } from "./vault-sync";
+export {
+  VaultSync,
+  type AgentCredit,
+  type VaultSyncFs,
+  type VaultBaseStore,
+  type VaultSyncOpenOptions,
+} from "./vault-sync";
 export { EditorBinding, type EditorBridge } from "./editor-binding";
 export { openEditorDoc, type OpenedDoc } from "./editor-doc";
 export {
@@ -129,7 +135,10 @@ export {
   restoreVersionContent,
   restoreVersion,
   KEYFRAME_EVERY,
+  agentLabel,
+  versionCreditText,
   type VersionMeta,
+  type VersionCredit,
 } from "./versions";
 export {
   imageRefs,

@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, w
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  agentCredit,
   countReads,
   countWrites,
   findVaultFile,
@@ -190,5 +191,53 @@ describe("undoEdits", () => {
   it("undoes a replace-all, and gives up when a replacement is not there", () => {
     expect(undoEdits("x-x-x", [{ oldText: "y", newText: "x", replaceAll: true }])).toBe("y-y-y");
     expect(undoEdits("nothing", [{ oldText: "a", newText: "zzz", replaceAll: false }])).toBeNull();
+  });
+});
+
+describe("agentCredit", () => {
+  const before = "# Plan\n\nShip on Monday.\n";
+  const after = "# Plan\n\nShip on Friday.\n";
+  let plan: string;
+
+  beforeEach(() => {
+    plan = join(dir, "notes", "plan.md");
+    writeFileSync(plan, before);
+  });
+
+  it("credits content that is exactly what an agent's recorded write left", () => {
+    writeFileSync(plan, after);
+    recordWrites(call("claude", { writes: [{ file: plan, edits: null, before }] }), vaults);
+
+    const credit = agentCredit(dir, () => "notes/plan.md");
+    expect(credit(after).agent).toBe("claude");
+    // The person typed on: not the agent's content any more.
+    expect(credit(`${after}more\n`)).toMatchObject({ agent: null });
+    expect(credit(`${after}more\n`).later()).toBeNull();
+    // Another file with the same content is not this write.
+    expect(agentCredit(dir, () => "notes/other.md")(after).agent).toBeNull();
+  });
+
+  it("credits a change while the agent's before-the-tool snapshot is fresh, then by the record", () => {
+    const write = { file: plan, edits: null };
+    snapshotWrites(call("codex", { phase: "before", writes: [write] }), vaults);
+    const credit = agentCredit(dir, () => "notes/plan.md");
+
+    // The watcher sees the file before the agent's after-hook has run.
+    writeFileSync(plan, after);
+    const early = credit(after);
+    expect(early.agent).toBe("codex");
+
+    recordWrites(call("codex", { writes: [write] }), vaults);
+    expect(early.later()).toBe("codex");
+    expect(credit(after).agent).toBe("codex");
+  });
+
+  it("finds a record that lands after the file changed", () => {
+    writeFileSync(plan, after);
+    const asked = agentCredit(dir, () => "notes/plan.md")(after);
+    expect(asked.agent).toBeNull();
+
+    recordWrites(call("cursor", { writes: [{ file: plan, edits: null, before }] }), vaults);
+    expect(asked.later()).toBe("cursor");
   });
 });

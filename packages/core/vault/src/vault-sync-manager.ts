@@ -14,7 +14,7 @@
 
 import { filesUnder, normalizePath } from "@markbase/protocol/folders";
 import type { VaultSyncFs } from "@markbase/protocol/storage";
-import type { OpenSyncedFile, SyncedFile } from "./synced-file";
+import type { AgentCredit, OpenSyncedFile, SyncedFile } from "./synced-file";
 
 // VaultDocRef is a document's identity, so it belongs to the protocol rather
 // than to the sync engine. Re-exported here because every existing caller
@@ -55,6 +55,12 @@ export interface VaultSyncOptions {
    * daemon that could not resolve its owner must not stop keeping versions.
    */
   author?: string | null;
+  /**
+   * For a file, the way to ask which agent wrote a change to it (the agent
+   * audit's record of what agents' hooks reported). `path` is read when asked,
+   * so a renamed file is still found. Omitted, every version is the author's.
+   */
+  agentCredit?: (path: () => string) => AgentCredit;
 }
 
 export class VaultSyncManager {
@@ -142,7 +148,7 @@ export class VaultSyncManager {
     this.opening.add(path);
     try {
       const vs = await open();
-      vs.trackVersions(this.opts.author ?? null);
+      vs.trackVersions(this.opts.author ?? null, this.opts.agentCredit?.(() => vs.path));
       this.byPath.set(path, vs);
     } finally {
       this.opening.delete(path);
@@ -185,7 +191,7 @@ export class VaultSyncManager {
       // Adoption bypasses openInto, so version tracking has to be switched on
       // here too — otherwise a file you created locally keeps no history at all.
       const vs = await this.openFile({ docId: id, path });
-      vs.trackVersions(this.opts.author ?? null);
+      vs.trackVersions(this.opts.author ?? null, this.opts.agentCredit?.(() => vs.path));
       this.byPath.set(path, vs);
       return id;
     } finally {
