@@ -7,7 +7,7 @@
 <p align="center"><strong>One markdown folder for your team and its agents.</strong></p>
 
 <p align="center">
-  <img src="docs/assets/screenshot.png" alt="Markbase: a vault's folders in the sidebar and an incident document open in the editor" width="900">
+  <img src="docs/assets/screenshot.png" alt="Markbase: an on-call incident document open in the editor" width="900">
 </p>
 
 Markbase is a folder of markdown that syncs. You and your team edit the files
