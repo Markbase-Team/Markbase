@@ -36,6 +36,7 @@ import { usePrompt } from "@markbase/ui/prompt-dialog";
 import { AgentLauncherProvider } from "./agent-launcher";
 import { useIsDesktop } from "@markbase/ui/use-is-desktop";
 import { useIsMobile } from "@markbase/ui/use-mobile";
+import { isEditableTarget } from "@markbase/ui/utils";
 import { DocsPortsProvider, type DocsPorts, type VaultsPort } from "./ports";
 
 /** How long a first-sync banner may go without a progress tick before it is
@@ -769,34 +770,25 @@ export function DocsShell({
   const showSidebar = useCallback(() => setSidebar(true), [setSidebar]);
 
   /**
-   * Cmd/Ctrl+B toggles the sidebar — the same key the app's other sidebars use.
-   * Cmd/Ctrl+\ does the same thing, for the muscle memory Notion and VS Code
-   * built.
+   * Cmd/Ctrl+\ toggles the sidebar from anywhere, the editor included — the
+   * key Notion and VS Code use. Cmd/Ctrl+B does the same, as in the app's
+   * other sidebars, except while the caret is in something editable: there it
+   * is bold, and the editor keeps it.
    *
    * Collapsed is a REMEMBERED state, so a sidebar closed once stays closed on
-   * every launch after it, and the only way back was one small button in the
-   * corner. Miss it and the documents are gone, with the flag sitting in a
-   * localStorage the desktop app gives you no easy console to clear.
-   *
-   * This first shipped with an exception — leave Cmd+B alone while the caret is
-   * in the editor, where it means bold — and the exception WAS the bug. The
-   * caret is in the editor essentially always, so a shortcut for reaching the
-   * sidebar that only works while you are not writing is one that does not work.
-   * Bold keeps its toolbar button and its `**markdown**`; the sidebar had
-   * neither.
+   * every launch after it; Cmd+\ is the way back that works while writing.
    */
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
-      if (e.key !== "\\" && e.key.toLowerCase() !== "b") return;
+      const bold = e.key.toLowerCase() === "b";
+      if (e.key !== "\\" && !bold) return;
+      if (bold && isEditableTarget(e.target)) return;
       e.preventDefault();
-      // And stopPropagation: the editor binds Cmd+B on its own node, so
-      // preventDefault alone would open the sidebar AND bold the selection.
       e.stopPropagation();
       setSidebar(!sidebarOpen);
     }
-    // Capture phase — ahead of the editor's handler rather than after it has
-    // already acted.
+    // Capture phase — ahead of any handler further down the tree.
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [sidebarOpen, setSidebar]);

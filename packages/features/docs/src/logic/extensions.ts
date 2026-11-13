@@ -102,6 +102,21 @@ export const StrikeShortcut = Extension.create({
   },
 });
 
+// Cmd/Ctrl+A selects the document's text, the way it does everywhere else.
+// NodeRange (the drag handle's block selection) binds the same key to a
+// block-range selection that hides the native highlight and draws nothing in
+// its place, so the key looked dead. The higher priority puts this binding
+// ahead of it. Client-only; contributes nothing to the schema.
+export const SelectAllShortcut = Extension.create({
+  name: "selectAllShortcut",
+  priority: 1000,
+  addKeyboardShortcuts() {
+    return {
+      "Mod-a": () => this.editor.commands.selectAll(),
+    };
+  },
+});
+
 // Document frontmatter (YAML `---` block) as a single top-of-doc node holding
 // the properties object in an attribute. Schema-only here (shared client +
 // server); the client attaches a node view that renders the Properties panel.

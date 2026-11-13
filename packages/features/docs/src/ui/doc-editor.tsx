@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import {
   docExtensions,
+  SelectAllShortcut,
   docSchema,
   docToMarkdown,
   resolveQuoteToRange,
@@ -281,6 +282,8 @@ export const DocEditor = forwardRef<
       MentionCommand.configure({ getSessions: getSessions }),
       // NodeRange powers the drag-handle's block selection/reordering.
       NodeRange,
+      // …and gives Cmd/Ctrl+A back to an ordinary select-all.
+      SelectAllShortcut,
       CommentHighlight,
       // ```mermaid draws as a diagram; its source appears when the cursor is in it.
       MermaidBlock,
