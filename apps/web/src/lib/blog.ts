@@ -40,3 +40,24 @@ export function blogDate(date: string): string {
     timeZone: "UTC",
   });
 }
+
+/** "November 2026" — the heading a post is listed under. */
+export function blogMonth(date: string): string {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+}
+
+/** The posts in list order, grouped by the month they were published. */
+export function blogPostsByMonth(): { month: string; posts: BlogPost[] }[] {
+  const groups: { month: string; posts: BlogPost[] }[] = [];
+  for (const post of BLOG_POSTS) {
+    const month = blogMonth(post.date);
+    const last = groups[groups.length - 1];
+    if (last && last.month === month) last.posts.push(post);
+    else groups.push({ month, posts: [post] });
+  }
+  return groups;
+}
