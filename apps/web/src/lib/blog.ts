@@ -5,8 +5,12 @@ import { BLOG_MARKDOWN } from "@/generated/blog-posts";
 // the title and date are drawn from this entry). Its URL is /blog/<slug>.
 // Add a new post at the top: the list is shown in this order, newest first.
 
+/** What a post is: a change to the product, or a desktop release. */
+export type BlogKind = "Update" | "Release";
+
 export interface BlogPost {
   slug: string;
+  kind: BlogKind;
   title: string;
   /** The day it was published, as YYYY-MM-DD. */
   date: string;
@@ -17,6 +21,7 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "default-markdown-app",
+    kind: "Update",
     title: "Markbase can be your default markdown app",
     date: "2026-11-12",
     summary:
@@ -41,23 +46,39 @@ export function blogDate(date: string): string {
   });
 }
 
-/** "November 2026" — the heading a post is listed under. */
-export function blogMonth(date: string): string {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    timeZone: "UTC",
-  });
+/** One month of the list: its name, its year, and its posts in list order. */
+export interface BlogMonth {
+  /** "2026-11" — unique per month, for keys. */
+  key: string;
+  /** "November" */
+  month: string;
+  /** "2026" */
+  year: string;
+  posts: BlogPost[];
 }
 
-/** The posts in list order, grouped by the month they were published. */
-export function blogPostsByMonth(): { month: string; posts: BlogPost[] }[] {
-  const groups: { month: string; posts: BlogPost[] }[] = [];
-  for (const post of BLOG_POSTS) {
-    const month = blogMonth(post.date);
+/** Posts in the order given, grouped by the month they were published. */
+export function groupByMonth(posts: BlogPost[]): BlogMonth[] {
+  const groups: BlogMonth[] = [];
+  for (const post of posts) {
+    const key = post.date.slice(0, 7);
     const last = groups[groups.length - 1];
-    if (last && last.month === month) last.posts.push(post);
-    else groups.push({ month, posts: [post] });
+    if (last && last.key === key) {
+      last.posts.push(post);
+      continue;
+    }
+    const day = new Date(`${post.date}T00:00:00Z`);
+    groups.push({
+      key,
+      month: day.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" }),
+      year: day.toLocaleDateString("en-US", { year: "numeric", timeZone: "UTC" }),
+      posts: [post],
+    });
   }
   return groups;
+}
+
+/** "12" — the day of the month a post was published. */
+export function blogDay(date: string): string {
+  return String(Number(date.slice(8, 10)));
 }
