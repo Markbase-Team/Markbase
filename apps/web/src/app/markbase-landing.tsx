@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader, SITE_PRIMARY_BTN } from "@/components/site-header";
 import {
   Apple,
@@ -355,49 +356,7 @@ export async function MarkbaseLanding() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-100 px-6 py-14">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1.5fr]">
-            <div>
-              <div className="flex items-center gap-2">
-                <Image src="/markbase-logo.png" alt="" width={24} height={24} className="size-6 object-contain" />
-                <span className="text-base font-semibold">Markbase</span>
-              </div>
-              <p className="mt-3 max-w-xs text-sm text-zinc-500">
-                One markdown folder for your team and its agents.
-              </p>
-            </div>
-            <FooterCol
-              title="Product"
-              links={[
-                ["Docs", "/docs"],
-                ["See a live doc", "/p/overview-5ac13a99"],
-                ["Download for Mac", MAC_DOWNLOAD_URL],
-                ["Releases", "/releases"],
-                ["Sign in", "/login"],
-                ["Get started", "/login"],
-              ]}
-            />
-            <FooterCol title="Company" links={[["Privacy", "/privacy-policy"], ["Terms", "/terms"]]} />
-            <div>
-              <div className="text-sm font-semibold text-zinc-900">Stay in touch</div>
-              <p className="mt-2 max-w-xs text-sm text-zinc-500">
-                Get product updates and early access.
-              </p>
-              <Link href={STAY_IN_TOUCH_HREF} className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-zinc-900 hover:underline">
-                Join the list <ArrowRight className="size-3.5" />
-              </Link>
-              <a href="mailto:hello@markbase.so" className="mt-3 block text-sm text-zinc-500 hover:text-zinc-900">
-                hello@markbase.so
-              </a>
-            </div>
-          </div>
-          <div className="mt-12 border-t border-zinc-100 pt-6 text-sm text-zinc-400">
-            © {new Date().getFullYear()} Markbase. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
@@ -477,23 +436,6 @@ function AudienceCard({
           <li key={p} className="flex items-start gap-2 text-sm leading-relaxed text-zinc-700">
             <Check className="mt-1 size-3.5 shrink-0 text-zinc-900" />
             <span>{p}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
-  return (
-    <div>
-      <div className="text-sm font-semibold text-zinc-900">{title}</div>
-      <ul className="mt-3 space-y-2">
-        {links.map(([label, href]) => (
-          <li key={label}>
-            <Link href={href} className="text-sm text-zinc-500 transition hover:text-zinc-900">
-              {label}
-            </Link>
           </li>
         ))}
       </ul>

@@ -9,6 +9,10 @@ Markbase treats an agent as a first-class collaborator on the document itself, n
 - [Quick start](https://markbase.so/p/overview-5ac13a99): Connect Claude Code and Claude Desktop over MCP in under a minute with `npx @markbase/cli@latest mcp install`.
 - [Welcome](https://markbase.so/p/welcome-to-jessie-docs-74cd8aaa): Example published Markbase document.
 
+## Blog
+- [Blog](https://markbase.so/blog): Short notes on what changed in Markbase, newest first. Feed: https://markbase.so/blog/rss.xml. Every post is also served as markdown at its URL plus `.md`.
+- [Markbase can be your default markdown app](https://markbase.so/blog/default-markdown-app.md): The Mac app can open .md files when you double-click them in Finder, and asks once whether to be the default.
+
 ## Product
 - [Homepage](https://markbase.so): Product overview, features, and how it works.
 - [See a live document](https://markbase.so/p/overview-5ac13a99): A real Markbase page, published from a document.

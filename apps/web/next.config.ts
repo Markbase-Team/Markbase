@@ -91,6 +91,11 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async rewrites() {
+    // /blog/<slug>.md is the post as markdown (app/blog/[slug]/markdown).
+    return [{ source: "/blog/:slug.md", destination: "/blog/:slug/markdown" }];
+  },
+
   async redirects() {
     // The root renders the Skills landing per-host (see app/page.tsx). The
     // app's own pages don't belong on the skills host → send them to the app
