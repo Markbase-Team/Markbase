@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import { BlogList } from "@/components/blog-list";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { BLOG_POSTS, blogPath, siteUrl } from "@/lib/blog";
+import {
+  BLOG_IMAGE,
+  BLOG_POSTS,
+  blogOrganization,
+  blogPath,
+  blogPostingData,
+  siteUrl,
+} from "@/lib/blog";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -15,6 +22,7 @@ export const metadata: Metadata = {
     description: "What changed in Markbase, in short notes, newest first.",
     url: blogPath(),
     siteName: "Markbase",
+    images: [{ url: BLOG_IMAGE.path, width: BLOG_IMAGE.width, height: BLOG_IMAGE.height, alt: "Markbase" }],
   },
 };
 
@@ -27,14 +35,8 @@ function structuredData() {
     name: "Markbase blog",
     description: "What changed in Markbase, in short notes.",
     url: `${base}${blogPath()}`,
-    publisher: { "@type": "Organization", name: "Markbase", url: base },
-    blogPost: BLOG_POSTS.map((post) => ({
-      "@type": "BlogPosting",
-      headline: post.title,
-      description: post.summary,
-      datePublished: `${post.date}T00:00:00Z`,
-      url: `${base}${blogPath(post.slug)}`,
-    })),
+    publisher: blogOrganization(),
+    blogPost: BLOG_POSTS.map(blogPostingData),
   };
 }
 

@@ -133,3 +133,42 @@ export function blogPath(slug?: string): string {
 export function blogMarkdownDocument(post: BlogPost, markdown: string): string {
   return `# ${post.title}\n\n_${blogDate(post.date)} · ${post.kind}_\n\n${markdown.trim()}\n`;
 }
+
+/** The image a post is shown with where one is wanted: search results, share cards. */
+export const BLOG_IMAGE = { path: "/markbase-logo.png", width: 1024, height: 1024 };
+
+/** Markbase as schema.org sees it: the author and publisher of every post. */
+export function blogOrganization() {
+  const base = siteUrl();
+  return {
+    "@type": "Organization",
+    name: "Markbase",
+    url: base,
+    logo: { "@type": "ImageObject", url: `${base}${BLOG_IMAGE.path}` },
+  };
+}
+
+/**
+ * One post as a schema.org BlogPosting — used on the post's own page and for
+ * each entry of the list's Blog, so both carry the same fields (Google's
+ * article result wants an image and an author on every one).
+ */
+export function blogPostingData(post: BlogPost) {
+  const base = siteUrl();
+  const url = `${base}${blogPath(post.slug)}`;
+  const markbase = blogOrganization();
+  return {
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.summary,
+    image: [`${base}${BLOG_IMAGE.path}`],
+    datePublished: `${post.date}T00:00:00Z`,
+    dateModified: `${post.date}T00:00:00Z`,
+    articleSection: post.kind,
+    inLanguage: "en",
+    author: markbase,
+    publisher: markbase,
+    url,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+  };
+}
