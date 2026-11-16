@@ -10,11 +10,13 @@ import {
 } from "@markbase/ui/dialog";
 import { DisplayNameField } from "@markbase/ui/display-name-field";
 import { JoinLinkField } from "@markbase/ui/join-link";
-import type { InstanceBridge } from "../../preload";
+import type { AgentsBridge, InstanceBridge } from "../../preload";
+import { ConnectAgents } from "./connect-agents";
 import type { InstanceStatus } from "../../instance";
 
-// Settings: who this app is signed in as, which instance it is on, and — on a
-// team's instance — how to invite the rest of the team.
+// Settings: who this app is signed in as, which instance it is on, — on a
+// team's instance — how to invite the rest of the team, and connecting the
+// agents on this Mac to the document tools.
 //
 // The instance is shown, not changed, here. Moving the app is what a join
 // link does (markbase://connect, see ../../instance.ts) and what `markbase
@@ -35,6 +37,7 @@ export function SettingsDialog({
   onOpenChange,
   userName,
   instance,
+  agents,
   signOut,
   onSignedOut,
 }: {
@@ -42,6 +45,7 @@ export function SettingsDialog({
   onOpenChange: (open: boolean) => void;
   userName: string;
   instance: InstanceBridge;
+  agents: AgentsBridge;
   signOut: () => Promise<void>;
   onSignedOut: () => void;
 }) {
@@ -86,6 +90,8 @@ export function SettingsDialog({
         </section>
 
         {status && !status.isDefault && <JoinLinkField />}
+
+        <ConnectAgents agents={agents} />
 
         <section>
           <Button

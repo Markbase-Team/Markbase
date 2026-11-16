@@ -25,5 +25,9 @@ you sync into your Shared Vault, beside your own vaults under `~/Markbase`.
 **Settings** shows the account and which instance the app is on and, on a
 team instance, the invite list and the join link.
 
+**Agents › Connect agents** gives Claude Desktop, Claude Code, Codex and
+Cursor the document tools over MCP, with the app's own key; see
+[Agents](/docs/agents#in-a-chat-app-mcp).
+
 Prefer the terminal, or working on a machine that is not a Mac? See the CLI
 path in the [Quick start](/docs/quick-start#with-the-cli).

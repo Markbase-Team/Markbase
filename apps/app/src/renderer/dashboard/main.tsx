@@ -193,6 +193,7 @@ function App() {
         signOut={bridge.auth.signOut}
         onSignedOut={() => void load()}
         instance={bridge.instance}
+        agents={bridge.agents}
         onOpenSettings={bridge.onOpenSettings}
       />
       <SidebarInset className="min-w-0">

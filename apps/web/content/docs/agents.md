@@ -15,6 +15,26 @@ The Markbase MCP server gives Claude Desktop, Claude Code, Codex and Cursor the
 document tools: list, read, create and edit documents, quote a passage to
 change it, and comment.
 
+Connect it from the desktop app, under **Settings › Agents › Connect agents**,
+or from the terminal:
+
+```
+npx @markbase/cli mcp install
+```
+
+Either one adds a server called `markbase-docs` to every one of those agents
+found on the machine (`--desktop`, `--claude-code`, `--codex` or `--cursor`
+picks one from the terminal). Restart the agent afterwards so it loads the
+tools.
+
+| Tool | What it does |
+| --- | --- |
+| `listDocs`, `readDoc` | Find documents and read one as markdown |
+| `createDoc`, `renameDoc`, `deleteDoc` | Create, rename and delete documents |
+| `editDoc` | Replace a passage by quoting it, keeping the rest as written |
+| `addComment`, `listComments`, `resolveComment` | Comment on a passage, read and resolve comments |
+| `history`, `docAt`, `docDiff`, `restoreDoc` | Read past versions, compare them, restore one |
+
 ## Anywhere: the HTTP API and the skill
 
 Every action the browser takes is an HTTP endpoint at `/api/v1`, authorised

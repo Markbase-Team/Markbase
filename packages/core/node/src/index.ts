@@ -17,6 +17,7 @@ export * from "./claude-code";
 export * from "./repo-state";
 export * from "./vercel-preview";
 export * from "./repos";
+export * from "./mcp-install";
 
 export {
   awaitDeviceAuth,
