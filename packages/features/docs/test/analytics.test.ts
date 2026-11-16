@@ -103,6 +103,18 @@ describe("lineCredit", () => {
     expect(writerText(share.writer)).toBe("Jessie + Cursor");
   });
 
+  it("credits a version with no person and no agent named to an agent", () => {
+    const doc = docWith([
+      { text: "a\n", author: "Jessie" },
+      { text: "a\nb\nc\n" },
+    ]);
+    const shares = lineCredit(doc).shares;
+    expect(shares.map((s) => [s.writer.kind, writerText(s.writer), s.lines])).toEqual([
+      ["agent", "Agent", 2],
+      ["person", "Jessie", 1],
+    ]);
+  });
+
   it("marks text newer than the last version as not recorded yet", () => {
     const doc = docWith([{ text: "kept\n", author: "Jessie" }]);
     setMarkdown(doc, "kept\njust typed\n");

@@ -106,7 +106,7 @@ export function DocAnalytics({ docId }: { docId: string }) {
                         "h-full rounded-full",
                         share.writer.kind === "agent" || share.writer.kind === "mixed"
                           ? "bg-[#c7e600]"
-                          : "bg-foreground/40"
+                          : "bg-foreground"
                       )}
                       style={{ width: `${Math.max(percent, 2)}%` }}
                     />
