@@ -23,9 +23,7 @@ The Markbase desktop app for macOS (Apple silicon).
 
 _November 12, 2026_
 
-- Signed with a Developer ID, so macOS knows who built it. Notarisation by
-  Apple is on its way; until then, allow the app once under System Settings →
-  Privacy & Security → Open Anyway.
+- Signed and notarised by Apple: the app opens with a double-click.
 - Settings has a **Display name** field. It is the name shown on your
   versions, invitations and published pages, instead of the one your sign-in
   brought along.
