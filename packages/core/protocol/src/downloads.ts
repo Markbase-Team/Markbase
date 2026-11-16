@@ -20,11 +20,11 @@ export const MAC_DOWNLOAD_URL =
   `https://github.com/${RELEASES_REPO}/releases/latest/download/Markbase-arm64.dmg`;
 
 /**
- * What to do the first time the app is opened, shown wherever it is offered.
- * The build is signed with a Developer ID but not yet notarised, and macOS
- * (Sequoia and later) blocks an app that is not notarised until it is allowed
- * once in System Settings; right-click → Open no longer gets past it. Set to
- * null once a notarised build is the latest release.
+ * What to do the first time the app is opened, shown wherever it is offered;
+ * null when there is nothing to do. The latest build is signed and notarised,
+ * so it opens with a double-click. A build published with
+ * `publish-dmg.sh --unnotarised` needs the Sequoia step instead:
+ * "Not notarised yet: the first time, open the app, then allow it under
+ * System Settings → Privacy & Security → Open Anyway."
  */
-export const MAC_FIRST_OPEN_NOTE: string | null =
-  "Not notarised yet: the first time, open the app, then allow it under System Settings → Privacy & Security → Open Anyway.";
+export const MAC_FIRST_OPEN_NOTE: string | null = null;

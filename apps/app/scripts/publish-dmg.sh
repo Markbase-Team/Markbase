@@ -98,7 +98,10 @@ fi
 # stapled on its own so Gatekeeper accepts it offline too. Then check both the
 # way a downloader's Mac will.
 if [[ "$notarise" == true ]]; then
-echo "==> notarising the disk image"
+echo "==> signing and notarising the disk image"
+# electron-builder signs the app but not the disk image; Gatekeeper's check of
+# the downloaded .dmg wants it signed too, before it is notarised and stapled.
+codesign --force --timestamp --sign "Developer ID Application" "$DMG"
 xcrun notarytool submit "$DMG" --keychain-profile "$APPLE_KEYCHAIN_PROFILE" --wait
 xcrun stapler staple "$DMG"
 xcrun stapler validate "$DMG"
