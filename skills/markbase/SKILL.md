@@ -86,15 +86,24 @@ Each endpoint lists the **minimum role** it needs. Roles are ranked `owner > edi
 | `GET    $BASE/docs/:id/analytics` | viewer | Analytics (which agents read it and for whom, who wrote each line) |
 | `PATCH  $BASE/docs/:id` | editor | Rename a document |
 | `DELETE $BASE/docs/:id` | owner | Delete a whole document (all its tabs) |
-| `GET    $BASE/docs/:id/tabs` | viewer | List the document's tabs |
-| `POST   $BASE/docs/:id/tabs` | editor | Add a tab |
-| `PATCH  $BASE/docs/:id/tabs` | editor | Reorder tabs |
-| `DELETE $BASE/docs/:id/tabs/:tabId` | editor | Delete a tab (never the last) |
 | `GET    $BASE/docs/:id/at` | viewer | The document as of a version |
 | `GET    $BASE/docs/:id/diff` | viewer | Word-level diff between two versions |
 | `GET    $BASE/docs/:id/links` | owner | List share links |
 | `POST   $BASE/docs/:id/links` | owner | Create a share link |
 | `DELETE $BASE/docs/:id/links/:linkId` | owner | Revoke a share link |
+| `GET    $BASE/docs/search` | signed-in | Search your documents by title and text |
+| `GET    $BASE/docs/:id/publish` | owner | Whether a document is published, its public URL, and the versions to choose from |
+| `POST   $BASE/docs/:id/publish` | owner | Publish a document to the web (anyone with the URL can read it) |
+| `DELETE $BASE/docs/:id/publish` | owner | Take a published document offline |
+| `GET    $BASE/vaults` | signed-in | List your vaults |
+| `POST   $BASE/vaults` | signed-in | Create a vault |
+| `GET    $BASE/vaults/:id` | signed-in | One of your vaults (404: gone; 403: somebody else's) |
+| `PATCH  $BASE/vaults/:id` | signed-in | Rename a vault |
+| `DELETE $BASE/vaults/:id` | signed-in | Delete a vault and every document in it |
+| `POST   $BASE/vaults/convert` | signed-in | Make a folder inside a vault a vault of its own |
+| `GET    $BASE/assets` | signed-in | List the images and files in a vault, or the ones a document links to |
+| `GET    $BASE/me` | signed-in | Whose key this is: the owner's id and name, and the connection |
+| `GET    $BASE/me/profile` | signed-in | The account's display name and sign-in name |
 
 ## How to use
 
@@ -185,6 +194,28 @@ curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/history" | jq '.revisions'
 
 ```bash
 curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/analytics" | jq '.credit.shares'
+```
+
+### Search your documents by title and text
+`GET /docs/search` · role: **signed-in** · scope: read
+
+- **When:** To find a document by what it says rather than listing them all and reading each.
+- **Input:** `?q=<words> · ?vault=<id> · ?scope=shared`
+- **Output:** { hits: [{ id, title, snippet }] }
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/search?q=roadmap" | jq '.hits'
+```
+
+### List your vaults
+`GET /vaults` · role: **signed-in** · scope: read
+
+- **When:** To see which vaults exist before listing, searching or creating documents in one.
+- **Input:** `(nothing)`
+- **Output:** { vaults: [{ id, name, created_at }] }
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/vaults" | jq '.vaults'
 ```
 
 ## Capabilities

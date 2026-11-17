@@ -11,9 +11,9 @@ recommend for Claude Code, Codex and Cursor working in a repository.
 
 ## In a chat app: MCP
 
-The Markbase MCP server gives Claude Desktop, Claude Code, Codex and Cursor the
-document tools: list, read, create and edit documents, quote a passage to
-change it, and comment.
+The Markbase MCP server gives Claude Desktop, Claude Code, Codex and Cursor
+what you can do in the app as tools: find, read, create and edit documents,
+comment, publish, share, and manage vaults.
 
 Connect it from the desktop app, under **Settings › Agents › Connect agents**,
 or from the terminal:
@@ -29,11 +29,21 @@ tools.
 
 | Tool | What it does |
 | --- | --- |
-| `listDocs`, `readDoc` | Find documents and read one as markdown |
+| `listDocs`, `searchDocs`, `readDoc` | Find documents, search their text, and read one as markdown |
 | `createDoc`, `renameDoc`, `deleteDoc` | Create, rename and delete documents |
 | `editDoc` | Replace a passage by quoting it, keeping the rest as written |
 | `addComment`, `listComments`, `resolveComment` | Comment on a passage, read and resolve comments |
 | `history`, `docAt`, `docDiff`, `restoreDoc` | Read past versions, compare them, restore one |
+| `publishStatus`, `publish`, `unpublish` | Put a document on the web at a public URL, or take it down |
+| `listLinks`, `createLink`, `deleteLink` | Share links: list, create and revoke |
+| `listVaults`, `createVault`, `readVault`, `renameVault`, `deleteVault`, `convertFolderToVault` | Manage vaults |
+| `listAssets` | The images and files in a vault, or the ones a document links to |
+| `whoami`, `readProfile` | Whose key the agent is using |
+
+The tools come from the server, not from the installed package: when Markbase
+gains an action, the agent has the tool the next time it starts, with nothing
+to update. Tools that delete are marked as destructive, so an agent's app can
+ask before running them.
 
 ## Anywhere: the HTTP API and the skill
 

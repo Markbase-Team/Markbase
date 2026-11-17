@@ -10,7 +10,7 @@ import type { Capability } from "../server/auth";
 //      "when / how / input / output" always match the real endpoints.
 // Change an endpoint here and both the enforced role and the skill follow.
 
-export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type EndpointScope = "read" | "write";
 export type ParamType = "string" | "number" | "boolean" | "json";
 
@@ -53,6 +53,14 @@ export interface DocEndpoint {
    *  skill and from `markbase api` — agents must not see or call these. Routes
    *  still resolve them for the browser editor. */
   humanOnly?: boolean;
+  /**
+   * Why an agent may not call it — required beside `humanOnly`, so leaving an
+   * endpoint out of the MCP server, the skill and `markbase api` is a decision
+   * somebody wrote down, never an omission.
+   */
+  why?: string;
+  /** It removes something that cannot be brought back. Told to the agent's client. */
+  destructive?: boolean;
   /** Present when this endpoint is documented in the agent skill. */
   skill?: EndpointSkillDoc;
 }
@@ -244,6 +252,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     capability: "owner",
     scope: "write",
     summary: "Delete a whole document (all its tabs)",
+    destructive: true,
   },
   // A member's own membership of a shared document — the Shared Vault's
   // plumbing (docs/shared-vault.md). Where the member files the document in
@@ -261,6 +270,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     ],
     summary: "File a shared document in your Shared Vault",
     humanOnly: true,
+    why: "A folder layout is a person's own.",
   },
   {
     id: "docs_leaveShare",
@@ -270,6 +280,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "write",
     summary: "Leave a document someone shared with you",
     humanOnly: true,
+    why: "Leaving a share is the person's decision, not an edit.",
   },
   {
     id: "docs_listTabs",
@@ -278,6 +289,8 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     capability: "viewer",
     scope: "read",
     summary: "List the document's tabs",
+    humanOnly: true,
+    why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
   },
   {
     id: "docs_addTab",
@@ -286,6 +299,8 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     capability: "editor",
     scope: "write",
     summary: "Add a tab",
+    humanOnly: true,
+    why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
   },
   {
     id: "docs_reorderTabs",
@@ -297,6 +312,8 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
       { name: "order", type: "json", required: true, description: "Array of tab ids in the new order." },
     ],
     summary: "Reorder tabs",
+    humanOnly: true,
+    why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
   },
   {
     id: "docs_deleteTab",
@@ -305,6 +322,8 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     capability: "editor",
     scope: "write",
     summary: "Delete a tab (never the last)",
+    humanOnly: true,
+    why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
   },
   // The document's CRDT state — the editor's and the vault daemon's plumbing
   // (security lockdown stage 2). The capability each one requires is what the
@@ -319,6 +338,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "read",
     summary: "The document's CRDT snapshot",
     humanOnly: true,
+    why: "The editor's and the sync daemon's transport. An agent edits through /edits, which lands in the same state.",
   },
   {
     id: "docs_writeCrdt",
@@ -328,6 +348,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "write",
     summary: "Merge a CRDT snapshot into the document",
     humanOnly: true,
+    why: "The editor's and the sync daemon's transport. An agent edits through /edits, which lands in the same state.",
   },
   {
     id: "docs_crdtChanges",
@@ -342,6 +363,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     ],
     summary: "Which of your documents' snapshots changed since a cursor",
     humanOnly: true,
+    why: "The editor's and the sync daemon's transport. An agent edits through /edits, which lands in the same state.",
   },
   // Lower-level endpoints (used by the editor / power users; not in the skill).
   {
@@ -394,15 +416,212 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
     capability: "owner",
     scope: "write",
     summary: "Revoke a share link",
+    destructive: true,
+  },
+  // Search, as the sidebar does it.
+  {
+    id: "docs_searchDocs",
+    method: "GET",
+    path: "/docs/search",
+    capability: null,
+    scope: "read",
+    params: [
+      { name: "q", type: "string", required: true, description: "What to look for, in titles and in the text." },
+      { name: "vault", type: "string", description: "Only the documents in one of your vaults." },
+      { name: "scope", type: "string", description: "`shared`: only documents other people shared with you." },
+    ],
+    summary: "Search your documents by title and text",
+    skill: {
+      whenToUse:
+        "To find a document by what it says rather than listing them all and reading each.",
+      input: "?q=<words> · ?vault=<id> · ?scope=shared",
+      output: "{ hits: [{ id, title, snippet }] }",
+      example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/search?q=roadmap" | jq '.hits'`,
+    },
+  },
+  // Publishing a document to the web: a public page at its own URL, pinned to
+  // a version.
+  {
+    id: "docs_publishStatus",
+    method: "GET",
+    path: "/docs/:id/publish",
+    capability: "owner",
+    scope: "read",
+    summary: "Whether a document is published, its public URL, and the versions to choose from",
+  },
+  {
+    id: "docs_publish",
+    method: "POST",
+    path: "/docs/:id/publish",
+    capability: "owner",
+    scope: "write",
+    params: [
+      { name: "version", type: "number", description: "The version index (from /history) to publish; omitted, the text as it stands." },
+    ],
+    summary: "Publish a document to the web (anyone with the URL can read it)",
+  },
+  {
+    id: "docs_unpublish",
+    method: "DELETE",
+    path: "/docs/:id/publish",
+    capability: "owner",
+    scope: "write",
+    summary: "Take a published document offline",
+  },
+  {
+    id: "docs_replaceContent",
+    method: "PUT",
+    path: "/docs/:id/content",
+    capability: "editor",
+    scope: "write",
+    params: [
+      { name: "content", type: "string", required: true },
+      { name: "version", type: "number", required: true, description: "The version the caller last saw; a newer one answers 409." },
+    ],
+    summary: "Replace a whole document's text",
+    humanOnly: true,
+    why: "The folder mirror's write. An agent replacing a whole document overwrites what people are typing; it edits a quoted passage through /edits instead.",
+  },
+  // Vaults: named collections of documents, each synced to one local folder.
+  {
+    id: "docs_listVaults",
+    method: "GET",
+    path: "/vaults",
+    capability: null,
+    scope: "read",
+    summary: "List your vaults",
+    skill: {
+      whenToUse: "To see which vaults exist before listing, searching or creating documents in one.",
+      input: "(nothing)",
+      output: "{ vaults: [{ id, name, created_at }] }",
+      example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/vaults" | jq '.vaults'`,
+    },
+  },
+  {
+    id: "docs_createVault",
+    method: "POST",
+    path: "/vaults",
+    capability: null,
+    scope: "write",
+    params: [{ name: "name", type: "string", required: true }],
+    summary: "Create a vault",
+  },
+  {
+    id: "docs_readVault",
+    method: "GET",
+    path: "/vaults/:id",
+    capability: null,
+    scope: "read",
+    summary: "One of your vaults (404: gone; 403: somebody else's)",
+  },
+  {
+    id: "docs_renameVault",
+    method: "PATCH",
+    path: "/vaults/:id",
+    capability: null,
+    scope: "write",
+    params: [{ name: "name", type: "string", required: true }],
+    summary: "Rename a vault",
+  },
+  {
+    id: "docs_deleteVault",
+    method: "DELETE",
+    path: "/vaults/:id",
+    capability: null,
+    scope: "write",
+    summary: "Delete a vault and every document in it",
+    destructive: true,
+  },
+  {
+    id: "docs_convertFolderToVault",
+    method: "POST",
+    path: "/vaults/convert",
+    capability: null,
+    scope: "write",
+    params: [
+      { name: "fromVaultId", type: "string", required: true },
+      { name: "folder", type: "string", required: true, description: "The folder inside that vault, vault-relative." },
+      { name: "name", type: "string", required: true, description: "The new vault's name." },
+    ],
+    summary: "Make a folder inside a vault a vault of its own",
+  },
+  // Images and other files a vault's documents link to.
+  {
+    id: "docs_listAssets",
+    method: "GET",
+    path: "/assets",
+    capability: null,
+    scope: "read",
+    params: [
+      { name: "vault", type: "string", description: "One of your vaults: every file in it. Exclusive with doc." },
+      { name: "doc", type: "string", description: "A document you can read: the files it links to. Exclusive with vault." },
+      { name: "urls", type: "string", description: "`0`: leave out the signed download URLs." },
+    ],
+    summary: "List the images and files in a vault, or the ones a document links to",
+  },
+  {
+    id: "docs_uploadAsset",
+    method: "POST",
+    path: "/assets",
+    capability: null,
+    scope: "write",
+    summary: "Upload an image or file into a vault",
+    humanOnly: true,
+    why: "It takes a multipart file upload, which a tool call's JSON arguments cannot carry.",
   },
 ] as const;
 
-// The endpoints agents may see and call — everything except editor-only plumbing.
-export const AGENT_ENDPOINTS: readonly DocEndpoint[] = DOC_ENDPOINTS.filter(
+// ---------------------------------------------------------------------------
+// The account's own endpoints: who a key belongs to, and how an agent's client
+// learns its tools. Served by the web app itself rather than by a feature.
+// ---------------------------------------------------------------------------
+export const ACCOUNT_ENDPOINTS: readonly DocEndpoint[] = [
+  {
+    id: "me_whoami",
+    method: "GET",
+    path: "/me",
+    capability: null,
+    scope: "read",
+    summary: "Whose key this is: the owner's id and name, and the connection",
+  },
+  {
+    id: "me_readProfile",
+    method: "GET",
+    path: "/me/profile",
+    capability: null,
+    scope: "read",
+    summary: "The account's display name and sign-in name",
+  },
+  {
+    id: "me_setProfile",
+    method: "PUT",
+    path: "/me/profile",
+    capability: null,
+    scope: "write",
+    params: [{ name: "display_name", type: "string", required: true, description: "An empty string clears it." }],
+    summary: "Set the account's display name",
+    humanOnly: true,
+    why: "The name edits are credited under is the person's to choose.",
+  },
+  {
+    id: "agent_listTools",
+    method: "GET",
+    path: "/agent/tools",
+    capability: null,
+    scope: "read",
+    summary: "The tools an agent may call, as this server defines them now",
+    humanOnly: true,
+    why: "How the MCP server learns its tools; it is not one of them.",
+  },
+];
+
+// The endpoints agents may see and call — everything a person can do in the
+// app, except what an entry says `why` not.
+export const AGENT_ENDPOINTS: readonly DocEndpoint[] = [...DOC_ENDPOINTS, ...ACCOUNT_ENDPOINTS].filter(
   (e) => !e.humanOnly
 );
 
-const BY_ID = new Map(DOC_ENDPOINTS.map((e) => [e.id, e]));
+const BY_ID = new Map([...DOC_ENDPOINTS, ...ACCOUNT_ENDPOINTS].map((e) => [e.id, e]));
 
 /** Look up an endpoint by id (throws if unknown — ids are checked-in constants). */
 export function docEndpoint(id: string): DocEndpoint {
@@ -422,6 +641,8 @@ export function docEndpoint(id: string): DocEndpoint {
 // jobs) and the owner is always the key's; nothing in a request body names one.
 // apps/web/test/worker-routes.test.ts checks every entry has its route file.
 // ---------------------------------------------------------------------------
+const WORKER_WHY = "The ticket worker's loop, not a tool: a worker claims and reports jobs under its own key.";
+
 export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
   {
     id: "worker_claim",
@@ -435,6 +656,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     ],
     summary: "Claim the next queued job for the key's owner; answers { job, rescan }",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_heartbeat",
@@ -445,6 +667,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     params: [{ name: "jobId", type: "string", required: true }],
     summary: "Keep a running job and its ticket fresh",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_readJob",
@@ -454,6 +677,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "read",
     summary: "One of the owner's jobs, as it is now (cancellation shows here)",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_finishJob",
@@ -467,6 +691,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     ],
     summary: "Mark a job done or failed",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_reportRepos",
@@ -477,6 +702,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     params: [{ name: "repos", type: "json", required: true }],
     summary: "Replace the owner's discovered repos with this machine's scan",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_reportSessions",
@@ -487,6 +713,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     params: [{ name: "sessions", type: "json", required: true }],
     summary: "Replace the owner's discovered Claude sessions, attributed to this key",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_listAgentRequests",
@@ -496,6 +723,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "read",
     summary: "Queued spawn and mention requests waiting for the owner's worker",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_claimAgentRequest",
@@ -506,6 +734,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     params: [{ name: "kind", type: "string", required: true, description: "'spawn' | 'message'" }],
     summary: "Take one request, with what the worker needs to act on it",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_finishAgentRequest",
@@ -520,6 +749,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     ],
     summary: "Mark a spawn or mention request done or failed",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "worker_claudeVersion",
@@ -530,6 +760,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     params: [{ name: "version", type: "string", description: "`claude --version`, or null when not installed." }],
     summary: "Record this machine's Claude Code version on its key",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "tickets_readTicket",
@@ -539,6 +770,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "read",
     summary: "One of the owner's tickets",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "tickets_updateTicket",
@@ -548,6 +780,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "write",
     summary: "Update a ticket, including the run-tracking fields the worker reports",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "tickets_addMessage",
@@ -561,6 +794,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     ],
     summary: "Add a message to a ticket's thread without starting a run",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "me_plan",
@@ -570,6 +804,7 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "read",
     summary: "The caller's plan",
     humanOnly: true,
+    why: WORKER_WHY,
   },
   {
     id: "projects_readProject",
@@ -579,8 +814,13 @@ export const WORKER_ENDPOINTS: readonly DocEndpoint[] = [
     scope: "read",
     summary: "One of the owner's projects",
     humanOnly: true,
+    why: WORKER_WHY,
   },
 ] as const;
 
-/** Every declared endpoint, documents and worker alike. */
-export const ALL_ENDPOINTS: readonly DocEndpoint[] = [...DOC_ENDPOINTS, ...WORKER_ENDPOINTS];
+/** Every declared endpoint: documents, the account, and the worker. */
+export const ALL_ENDPOINTS: readonly DocEndpoint[] = [
+  ...DOC_ENDPOINTS,
+  ...ACCOUNT_ENDPOINTS,
+  ...WORKER_ENDPOINTS,
+];

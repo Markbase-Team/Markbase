@@ -8,7 +8,7 @@ import {
   reorderTabs,
   unpublishDocument,
 } from "../server";
-import { requireDocCapability, requireDocEndpoint } from "./actor";
+import { requireDocEndpoint } from "./actor";
 import { json } from "./respond";
 
 // A document's tabs, and whether it is on the public web.
@@ -94,7 +94,7 @@ async function publishAnswer(req: Request, id: string): Promise<Response> {
 export const docPublishHandler = {
   // GET — current publish status and the versions to choose from (owner only).
   GET: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocCapability(req, id, "owner");
+    const auth = await requireDocEndpoint(req, id, "docs_publishStatus");
     if (!auth.ok) return json({ error: auth.error }, auth.status);
     return publishAnswer(req, id);
   },
@@ -102,7 +102,7 @@ export const docPublishHandler = {
   // POST { version? } — publish to the web (owner only). With no version the
   // text as it stands is published; with one, that version. Keeps the URL.
   POST: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocCapability(req, id, "owner");
+    const auth = await requireDocEndpoint(req, id, "docs_publish");
     if (!auth.ok) return json({ error: auth.error }, auth.status);
     let body: { version?: number } = {};
     try {
@@ -123,7 +123,7 @@ export const docPublishHandler = {
 
   // DELETE — take it offline (owner only).
   DELETE: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocCapability(req, id, "owner");
+    const auth = await requireDocEndpoint(req, id, "docs_unpublish");
     if (!auth.ok) return json({ error: auth.error }, auth.status);
     await unpublishDocument(id);
     return publishAnswer(req, id);

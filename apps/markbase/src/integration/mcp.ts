@@ -7,12 +7,12 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { AGENT_ENDPOINTS } from "@markbase/docs/endpoints";
+import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/docs/agent-tools";
 import { installDocsMcp, type McpTarget } from "@markbase/node";
 import { appUrl, loadConfig } from "../config";
 import { ensureAuthenticated } from "../login";
 import { callEndpoint } from "./call";
-import { mcpTools } from "./mcp-tools";
+import { toolSource } from "./tool-source";
 
 // `markbase mcp install [--desktop] [--claude-code] [--codex] [--cursor]` — wire
 // the doc tools into Claude Desktop, Claude Code, Codex, and/or Cursor. Default:
@@ -75,7 +75,8 @@ export async function runMcpInstall(argv: string[] = []): Promise<void> {
 }
 
 // `markbase mcp` — an MCP stdio server that exposes each agent document endpoint as
-// a tool, generated from the same registry that drives the routes/skill/CLI.
+// a tool. The tools are the server's own list (GET /agent/tools), generated
+// there from the registry that drives the routes and the skill.
 // Point Claude Desktop at it via claude_desktop_config.json (command: npx -y
 // @markbase/cli mcp; env: MARKBASE_API_KEY). humanOnly endpoints are excluded.
 
@@ -88,16 +89,37 @@ function version(): string {
   }
 }
 
+/** Ask the server for its tools; null when it has no answer. */
+async function fetchServedTools(): Promise<string | null> {
+  const key = loadConfig().apiKey;
+  if (!key) return null;
+  const base = process.env.MARKBASE_API_BASE ?? `${appUrl()}/api/v1`;
+  const res = await fetch(base + AGENT_TOOLS_PATH, {
+    headers: { Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(5_000),
+  });
+  return res.ok ? res.text() : null;
+}
+
 export async function runMcp(): Promise<void> {
   const server = new Server(
     { name: "markbase-docs", version: version() },
     { capabilities: { tools: {} } }
   );
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: mcpTools() }));
+  const tools = toolSource(fetchServedTools);
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: (await tools()).map((t) => ({
+      name: t.name,
+      description: t.description,
+      inputSchema: toolInputSchema(t),
+      annotations: { readOnlyHint: t.readOnly, destructiveHint: t.destructive },
+    })),
+  }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const e = AGENT_ENDPOINTS.find((x) => x.id === req.params.name);
+    const e = (await tools()).find((t) => t.name === req.params.name);
     if (!e) {
       return {
         isError: true,

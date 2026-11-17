@@ -1,22 +1,50 @@
 import { describe, it, expect } from "vitest";
-import { AGENT_ENDPOINTS } from "@markbase/docs/endpoints";
-import { mcpTools } from "../src/integration/mcp-tools";
+import { agentTools } from "@markbase/docs/agent-tools";
+import { toolSource } from "../src/integration/tool-source";
 
-// The MCP server's tools are the endpoint registry, not a list kept here: an
-// endpoint the API serves to agents is a tool, by the same id.
-describe("mcp tools", () => {
-  it("offers one tool per agent endpoint", () => {
-    expect(mcpTools().map((t) => t.name)).toEqual(AGENT_ENDPOINTS.map((e) => e.id));
+// Where the MCP server's tools come from: the server it talks to, so they follow
+// a deploy rather than a release of this CLI — and the list this build shipped
+// with whenever the server has no answer.
+
+const served = (names: string[]) =>
+  JSON.stringify({
+    tools: names.map((name) => ({ name, description: name, method: "GET", path: `/x/${name}`, params: [] })),
   });
 
-  it("offers a document's analytics, taking the document's id", () => {
-    const tool = mcpTools().find((t) => t.name === "docs_analytics");
-    expect(tool).toBeDefined();
-    expect(tool?.description).toContain("which agents read");
-    expect(tool?.inputSchema).toEqual({
-      type: "object",
-      properties: { id: { type: "string", description: "path parameter" } },
-      required: ["id"],
+describe("toolSource", () => {
+  it("offers the server's tools, including ones this build never had", async () => {
+    const tools = toolSource(async () => served(["docs_listDocs", "docs_brandNew"]));
+    expect((await tools()).map((t) => t.name)).toEqual(["docs_listDocs", "docs_brandNew"]);
+  });
+
+  it("falls back to the built-in list when the server has no answer, and asks again", async () => {
+    let calls = 0;
+    const tools = toolSource(async () => {
+      calls++;
+      if (calls === 1) throw new Error("offline");
+      if (calls === 2) return "<html>404</html>";
+      return served(["docs_fromServer"]);
     });
+    expect(await tools()).toEqual(agentTools());
+    expect(await tools()).toEqual(agentTools());
+    expect((await tools()).map((t) => t.name)).toEqual(["docs_fromServer"]);
+  });
+
+  it("asks once while the list is fresh, then again, keeping the last good list through a failure", async () => {
+    let now = 0;
+    let calls = 0;
+    const tools = toolSource(
+      async () => {
+        calls++;
+        return calls === 2 ? null : served([`docs_v${calls}`]);
+      },
+      () => now
+    );
+    await tools();
+    await tools();
+    expect(calls).toBe(1);
+    now = 6 * 60_000;
+    expect((await tools()).map((t) => t.name)).toEqual(["docs_v1"]); // the failed refresh
+    expect((await tools()).map((t) => t.name)).toEqual(["docs_v3"]);
   });
 });
