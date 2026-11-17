@@ -74,24 +74,24 @@ Each endpoint lists the **minimum role** it needs. Roles are ranked `owner > edi
 
 | Method & path | Role | Purpose |
 | --- | --- | --- |
+| `GET    $BASE/docs/search` | signed-in | Search your documents by title and text |
+| `GET    $BASE/docs/:id/history` | viewer | Version history (who changed what, +added/−removed) |
+| `GET    $BASE/docs/:id/analytics` | viewer | Analytics (which agents read it and for whom, who wrote each line) |
+| `GET    $BASE/docs/:id/at` | viewer | The document as of a version |
+| `GET    $BASE/docs/:id/diff` | viewer | Word-level diff between two versions |
 | `GET    $BASE/docs` | signed-in | List your documents |
 | `POST   $BASE/docs` | signed-in | Create a document |
 | `GET    $BASE/docs/:id` | viewer | Read one document (markdown + current version) |
+| `PATCH  $BASE/docs/:id` | editor | Rename a document |
+| `DELETE $BASE/docs/:id` | owner | Delete a whole document (all its tabs) |
 | `POST   $BASE/docs/:id/edits` | editor | Edit a passage (quote → insert) — the only way to change a doc |
 | `POST   $BASE/docs/:id/restore` | editor | Restore a past version (appended as a new edit) |
 | `GET    $BASE/docs/:id/comments` | viewer | List comments |
 | `POST   $BASE/docs/:id/comments` | commenter | Comment on a passage / ask the human a question |
 | `PATCH  $BASE/docs/:id/comments/:cid` | commenter | Resolve / unresolve a comment |
-| `GET    $BASE/docs/:id/history` | viewer | Version history (who changed what, +added/−removed) |
-| `GET    $BASE/docs/:id/analytics` | viewer | Analytics (which agents read it and for whom, who wrote each line) |
-| `PATCH  $BASE/docs/:id` | editor | Rename a document |
-| `DELETE $BASE/docs/:id` | owner | Delete a whole document (all its tabs) |
-| `GET    $BASE/docs/:id/at` | viewer | The document as of a version |
-| `GET    $BASE/docs/:id/diff` | viewer | Word-level diff between two versions |
 | `GET    $BASE/docs/:id/links` | owner | List share links |
 | `POST   $BASE/docs/:id/links` | owner | Create a share link |
 | `DELETE $BASE/docs/:id/links/:linkId` | owner | Revoke a share link |
-| `GET    $BASE/docs/search` | signed-in | Search your documents by title and text |
 | `GET    $BASE/docs/:id/publish` | owner | Whether a document is published, its public URL, and the versions to choose from |
 | `POST   $BASE/docs/:id/publish` | owner | Publish a document to the web (anyone with the URL can read it) |
 | `DELETE $BASE/docs/:id/publish` | owner | Take a published document offline |
@@ -106,6 +106,37 @@ Each endpoint lists the **minimum role** it needs. Roles are ranked `owner > edi
 | `GET    $BASE/me/profile` | signed-in | The account's display name and sign-in name |
 
 ## How to use
+
+### Search your documents by title and text
+`GET /docs/search` · role: **signed-in** · scope: read
+
+- **When:** To find a document by what it says rather than listing them all and reading each.
+- **Input:** `?q=<words> · ?vault=<id> · ?scope=shared`
+- **Output:** { hits: [{ id, title, snippet }] }
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/search?q=roadmap" | jq '.hits'
+```
+
+### Version history (who changed what, +added/−removed)
+`GET /docs/:id/history` · role: **viewer** · scope: read
+
+- **When:** To see how a document evolved or find a version to restore.
+- **Output:** { version, revisions: [{ from_version, to_version, author, added, removed }] }
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/history" | jq '.revisions'
+```
+
+### Analytics (which agents read it and for whom, who wrote each line)
+`GET /docs/:id/analytics` · role: **viewer** · scope: read
+
+- **When:** To see which agents read a document and on whose behalf, or who wrote what is in it now — a person, or an agent and whose agent.
+- **Output:** { reads: [{ agent, owner, count, lastAt, text }], credit: { lines, shares: [{ writer, text, lines }], ranges: [{ from, to, writer, text, preview }] } } — text is the writer in words ("Jessie's Claude"); writer.kind is agent, person, mixed or unrecorded; credit is null when the history cannot be read
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/analytics" | jq '.credit.shares'
+```
 
 ### List your documents
 `GET /docs` · role: **signed-in** · scope: read
@@ -174,37 +205,6 @@ curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
 ```bash
 curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
   -d '{"body":"X or Y?","quotedText":"the passage"}' "$BASE/docs/$ID/comments"
-```
-
-### Version history (who changed what, +added/−removed)
-`GET /docs/:id/history` · role: **viewer** · scope: read
-
-- **When:** To see how a document evolved or find a version to restore.
-- **Output:** { version, revisions: [{ from_version, to_version, author, added, removed }] }
-
-```bash
-curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/history" | jq '.revisions'
-```
-
-### Analytics (which agents read it and for whom, who wrote each line)
-`GET /docs/:id/analytics` · role: **viewer** · scope: read
-
-- **When:** To see which agents read a document and on whose behalf, or who wrote what is in it now — a person, or an agent and whose agent.
-- **Output:** { reads: [{ agent, owner, count, lastAt, text }], credit: { lines, shares: [{ writer, text, lines }], ranges: [{ from, to, writer, text, preview }] } } — text is the writer in words ("Jessie's Claude"); writer.kind is agent, person, mixed or unrecorded; credit is null when the history cannot be read
-
-```bash
-curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/analytics" | jq '.credit.shares'
-```
-
-### Search your documents by title and text
-`GET /docs/search` · role: **signed-in** · scope: read
-
-- **When:** To find a document by what it says rather than listing them all and reading each.
-- **Input:** `?q=<words> · ?vault=<id> · ?scope=shared`
-- **Output:** { hits: [{ id, title, snippet }] }
-
-```bash
-curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/search?q=roadmap" | jq '.hits'
 ```
 
 ### List your vaults

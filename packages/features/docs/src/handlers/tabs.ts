@@ -8,69 +8,94 @@ import {
   reorderTabs,
   unpublishDocument,
 } from "../server";
-import { requireDocEndpoint } from "./actor";
+import { endpoint } from "./define";
 import { json } from "./respond";
 
 // A document's tabs, and whether it is on the public web.
 
-export const docTabsHandler = {
-  // GET — the tabs of this document's group.
-  GET: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocEndpoint(req, id, "docs_listTabs");
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
-    return json({ tabs: await listTabs(auth.doc.tab_group_id) });
-  },
+// GET — the tabs of this document's group.
+export const listTabsEndpoint = endpoint({
+  id: "docs_listTabs",
+  method: "GET",
+  path: "/docs/:id/tabs",
+  capability: "viewer",
+  scope: "read",
+  summary: "List the document's tabs",
+  humanOnly: true,
+  why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
+}, async (_req, _params, auth) => {
+  return json({ tabs: await listTabs(auth.doc.tab_group_id) });
+});
 
-  // POST — add a new (empty) tab to this document's group.
-  POST: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocEndpoint(req, id, "docs_addTab");
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
-    return json({ tab: await createTab(id) }, 201);
-  },
+// POST — add a new (empty) tab to this document's group.
+export const addTabEndpoint = endpoint({
+  id: "docs_addTab",
+  method: "POST",
+  path: "/docs/:id/tabs",
+  capability: "editor",
+  scope: "write",
+  summary: "Add a tab",
+  humanOnly: true,
+  why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
+}, async (_req, { id }) => {
+  return json({ tab: await createTab(id) }, 201);
+});
 
-  // PATCH — reorder this document's tabs. Body: { order: [tabId, …] }, the
-  // tabs' new left-to-right order. Editors+.
-  PATCH: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocEndpoint(req, id, "docs_reorderTabs");
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
+// PATCH — reorder this document's tabs. Body: { order: [tabId, …] }, the
+// tabs' new left-to-right order. Editors+.
+export const reorderTabsEndpoint = endpoint({
+  id: "docs_reorderTabs",
+  method: "PATCH",
+  path: "/docs/:id/tabs",
+  capability: "editor",
+  scope: "write",
+  params: [
+    { name: "order", type: "json", required: true, description: "Array of tab ids in the new order." },
+  ],
+  summary: "Reorder tabs",
+  humanOnly: true,
+  why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
+}, async (req, _params, auth) => {
+  let body: { order?: string[] } = {};
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON" }, 400);
+  }
+  if (
+    !Array.isArray(body.order) ||
+    body.order.some((x) => typeof x !== "string")
+  ) {
+    return json({ error: "order (string[]) is required" }, 400);
+  }
+  await reorderTabs(auth.doc.tab_group_id, body.order);
+  return json({ tabs: await listTabs(auth.doc.tab_group_id) });
+});
 
-    let body: { order?: string[] } = {};
-    try {
-      body = await req.json();
-    } catch {
-      return json({ error: "Invalid JSON" }, 400);
-    }
-    if (
-      !Array.isArray(body.order) ||
-      body.order.some((x) => typeof x !== "string")
-    ) {
-      return json({ error: "order (string[]) is required" }, 400);
-    }
-    await reorderTabs(auth.doc.tab_group_id, body.order);
-    return json({ tabs: await listTabs(auth.doc.tab_group_id) });
-  },
-};
-
-export const docTabHandler = {
-  // DELETE — remove a tab from this document's group. The last remaining tab
-  // can't be deleted. Editors+.
-  DELETE: async (req: Request, id: string, tabId: string): Promise<Response> => {
-    const auth = await requireDocEndpoint(req, id, "docs_deleteTab");
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
-
-    const tab = await getDocument(tabId);
-    if (!tab || tab.tab_group_id !== auth.doc.tab_group_id) {
-      return json({ error: "Tab not found in this document" }, 404);
-    }
-    const tabs = await listTabs(auth.doc.tab_group_id);
-    if (tabs.length <= 1) {
-      return json({ error: "Can't delete the last tab" }, 400);
-    }
-    await deleteDocument(tabId);
-    // Return the remaining tabs so the client can pick the next one to show.
-    return json({ tabs: tabs.filter((t) => t.id !== tabId) });
-  },
-};
+// DELETE — remove a tab from this document's group. The last remaining tab
+// can't be deleted. Editors+.
+export const deleteTabEndpoint = endpoint({
+  id: "docs_deleteTab",
+  method: "DELETE",
+  path: "/docs/:id/tabs/:tabId",
+  capability: "editor",
+  scope: "write",
+  summary: "Delete a tab (never the last)",
+  humanOnly: true,
+  why: "Tabs were removed from the app; the endpoints stay for documents that still have them.",
+}, async (_req, { id, tabId }, auth) => {
+  const tab = await getDocument(tabId);
+  if (!tab || tab.tab_group_id !== auth.doc.tab_group_id) {
+    return json({ error: "Tab not found in this document" }, 404);
+  }
+  const tabs = await listTabs(auth.doc.tab_group_id);
+  if (tabs.length <= 1) {
+    return json({ error: "Can't delete the last tab" }, 400);
+  }
+  await deleteDocument(tabId);
+  // Return the remaining tabs so the client can pick the next one to show.
+  return json({ tabs: tabs.filter((t) => t.id !== tabId) });
+});
 
 /** Where a published document is read. Built from the request, so it follows the host. */
 const publicUrl = (req: Request, slug: string): string =>
@@ -91,41 +116,59 @@ async function publishAnswer(req: Request, id: string): Promise<Response> {
   });
 }
 
-export const docPublishHandler = {
-  // GET — current publish status and the versions to choose from (owner only).
-  GET: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocEndpoint(req, id, "docs_publishStatus");
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
-    return publishAnswer(req, id);
-  },
+// GET — current publish status and the versions to choose from (owner only).
+// Publishing a document to the web: a public page at its own URL, pinned to
+// a version.
+export const publishStatusEndpoint = endpoint({
+  id: "docs_publishStatus",
+  method: "GET",
+  path: "/docs/:id/publish",
+  capability: "owner",
+  scope: "read",
+  summary: "Whether a document is published, its public URL, and the versions to choose from",
+}, async (req, { id }) => {
+  return publishAnswer(req, id);
+});
 
-  // POST { version? } — publish to the web (owner only). With no version the
-  // text as it stands is published; with one, that version. Keeps the URL.
-  POST: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocEndpoint(req, id, "docs_publish");
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
-    let body: { version?: number } = {};
-    try {
-      body = (await req.json()) as { version?: number };
-    } catch {
-      // No body: publish the text as it stands.
-    }
-    if (body.version !== undefined && !Number.isInteger(body.version)) {
-      return json({ error: "version must be a whole number" }, 400);
-    }
-    try {
-      await publishDocument(id, body.version);
-    } catch (e) {
-      return json({ error: e instanceof Error ? e.message : "Could not publish" }, 400);
-    }
-    return publishAnswer(req, id);
-  },
+// POST { version? } — publish to the web (owner only). With no version the
+// text as it stands is published; with one, that version. Keeps the URL.
+export const publishEndpoint = endpoint({
+  id: "docs_publish",
+  method: "POST",
+  path: "/docs/:id/publish",
+  capability: "owner",
+  scope: "write",
+  params: [
+    { name: "version", type: "number", description: "The version index (from /history) to publish; omitted, the text as it stands." },
+  ],
+  summary: "Publish a document to the web (anyone with the URL can read it)",
+}, async (req, { id }) => {
+  let body: { version?: number } = {};
+  try {
+    body = (await req.json()) as { version?: number };
+  } catch {
+    // No body: publish the text as it stands.
+  }
+  if (body.version !== undefined && !Number.isInteger(body.version)) {
+    return json({ error: "version must be a whole number" }, 400);
+  }
+  try {
+    await publishDocument(id, body.version);
+  } catch (e) {
+    return json({ error: e instanceof Error ? e.message : "Could not publish" }, 400);
+  }
+  return publishAnswer(req, id);
+});
 
-  // DELETE — take it offline (owner only).
-  DELETE: async (req: Request, id: string): Promise<Response> => {
-    const auth = await requireDocEndpoint(req, id, "docs_unpublish");
-    if (!auth.ok) return json({ error: auth.error }, auth.status);
-    await unpublishDocument(id);
-    return publishAnswer(req, id);
-  },
-};
+// DELETE — take it offline (owner only).
+export const unpublishEndpoint = endpoint({
+  id: "docs_unpublish",
+  method: "DELETE",
+  path: "/docs/:id/publish",
+  capability: "owner",
+  scope: "write",
+  summary: "Take a published document offline",
+}, async (req, { id }) => {
+  await unpublishDocument(id);
+  return publishAnswer(req, id);
+});

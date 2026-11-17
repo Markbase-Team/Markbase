@@ -33,7 +33,9 @@ vi.mock("@markbase/protocol", async (importOriginal) => ({
   claimAgentSession: async () => null,
 }));
 
-const { docAnalyticsHandler } = await import("../src/handlers/history");
+const { analyticsEndpoint } = await import("../src/handlers/history");
+// Called the way a route calls it: its `handle`, with the path's parameters.
+const docAnalyticsHandler = (r: Request, id: string) => analyticsEndpoint.handle(r, { id });
 
 const DOC = { id: "doc_1", owner_id: "owner_1", content: "# seed\n" };
 const OWNER: Caller = { via: "session", ownerId: "owner_1", email: "o@example.com" };

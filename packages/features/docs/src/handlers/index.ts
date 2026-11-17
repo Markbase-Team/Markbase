@@ -6,4 +6,4 @@ export * from "./tabs";
 export * from "./vaults";
 export * from "./assets";
 export * from "./crdt";
-export * from "./endpoint-handlers";
+export { definedEndpoints, endpointRoute, type Endpoint, type RouteParams } from "./define";

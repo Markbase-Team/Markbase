@@ -73,5 +73,9 @@ npm test
 > phantom type errors in files nobody touched, plus a rewritten lockfile.
 > `npm ci` installs the committed tree exactly.
 
+**Changing the API?** An endpoint is defined once and its MCP tool, skill
+entry and route file are generated from it. Run `npm run gen:endpoints` and
+commit what it writes; see [docs/adding-an-endpoint.md](docs/adding-an-endpoint.md).
+
 Keep the change focused on what it is for. If you find something else worth
 fixing, that is a second pull request.
