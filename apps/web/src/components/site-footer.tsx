@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { MAC_DOWNLOAD_URL, REPO_URL } from "@markbase/protocol/downloads";
 
 // The site's footer — the landing's and the blog's, so they end the same way:
 // the brand line, the Product and Company links, and how to stay in touch. Set
@@ -11,11 +10,8 @@ const STAY_IN_TOUCH_HREF = "/#stay-in-touch";
 
 const PRODUCT: [string, string][] = [
   ["Docs", "/docs"],
-  ["GitHub", REPO_URL],
-  ["Download for Mac", MAC_DOWNLOAD_URL],
   ["Releases", "/releases"],
   ["Blog", "/blog"],
-  ["Sign in", "/login"],
   ["Get started", "/login"],
 ];
 
