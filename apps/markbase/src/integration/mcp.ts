@@ -7,11 +7,12 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { AGENT_ENDPOINTS, type DocEndpoint } from "@markbase/docs/endpoints";
+import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/docs/agent-tools";
 import { installDocsMcp, type McpTarget } from "@markbase/node";
 import { appUrl, loadConfig } from "../config";
 import { ensureAuthenticated } from "../login";
-import { callEndpoint, pathParams } from "./call";
+import { callEndpoint } from "./call";
+import { toolSource } from "./tool-source";
 
 // `markbase mcp install [--desktop] [--claude-code] [--codex] [--cursor]` — wire
 // the doc tools into Claude Desktop, Claude Code, Codex, and/or Cursor. Default:
@@ -74,7 +75,8 @@ export async function runMcpInstall(argv: string[] = []): Promise<void> {
 }
 
 // `markbase mcp` — an MCP stdio server that exposes each agent document endpoint as
-// a tool, generated from the same registry that drives the routes/skill/CLI.
+// a tool. The tools are the server's own list (GET /agent/tools), generated
+// there from the registry that drives the routes and the skill.
 // Point Claude Desktop at it via claude_desktop_config.json (command: npx -y
 // @markbase/cli mcp; env: MARKBASE_API_KEY). humanOnly endpoints are excluded.
 
@@ -87,22 +89,16 @@ function version(): string {
   }
 }
 
-// JSON Schema for a tool: path params (required strings) + declared params.
-function inputSchema(e: DocEndpoint): Record<string, unknown> {
-  const properties: Record<string, unknown> = {};
-  const required: string[] = [];
-  for (const name of pathParams(e.path)) {
-    properties[name] = { type: "string", description: "path parameter" };
-    required.push(name);
-  }
-  for (const p of e.params ?? []) {
-    properties[p.name] =
-      p.type === "json"
-        ? { description: p.description ?? "JSON value" }
-        : { type: p.type, description: p.description };
-    if (p.required) required.push(p.name);
-  }
-  return { type: "object", properties, required };
+/** Ask the server for its tools; null when it has no answer. */
+async function fetchServedTools(): Promise<string | null> {
+  const key = loadConfig().apiKey;
+  if (!key) return null;
+  const base = process.env.MARKBASE_API_BASE ?? `${appUrl()}/api/v1`;
+  const res = await fetch(base + AGENT_TOOLS_PATH, {
+    headers: { Authorization: `Bearer ${key}` },
+    signal: AbortSignal.timeout(5_000),
+  });
+  return res.ok ? res.text() : null;
 }
 
 export async function runMcp(): Promise<void> {
@@ -111,16 +107,19 @@ export async function runMcp(): Promise<void> {
     { capabilities: { tools: {} } }
   );
 
+  const tools = toolSource(fetchServedTools);
+
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: AGENT_ENDPOINTS.map((e) => ({
-      name: e.id,
-      description: e.skill ? `${e.summary} — ${e.skill.whenToUse}` : e.summary,
-      inputSchema: inputSchema(e),
+    tools: (await tools()).map((t) => ({
+      name: t.name,
+      description: t.description,
+      inputSchema: toolInputSchema(t),
+      annotations: { readOnlyHint: t.readOnly, destructiveHint: t.destructive },
     })),
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const e = AGENT_ENDPOINTS.find((x) => x.id === req.params.name);
+    const e = (await tools()).find((t) => t.name === req.params.name);
     if (!e) {
       return {
         isError: true,

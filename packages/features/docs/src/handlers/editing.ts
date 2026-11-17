@@ -1,6 +1,6 @@
 import { applyAnchoredEdit, checkpoint, restoreVersion, type VersionCredit } from "../logic";
 import { editDocCrdt, setDocContent, type Actor } from "../server";
-import { requireDocCapability, requireDocEndpoint } from "./actor";
+import { requireDocEndpoint } from "./actor";
 import { json } from "./respond";
 
 // The three write paths into a document's CRDT: replace the whole thing,
@@ -15,7 +15,7 @@ import { json } from "./respond";
 // mirror turns that into a conflict file. Omitting `version` is not allowed
 // for exactly that reason.
 export const docContentHandler = async (req: Request, id: string): Promise<Response> => {
-  const auth = await requireDocCapability(req, id, "editor");
+  const auth = await requireDocEndpoint(req, id, "docs_replaceContent");
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
   let body: { content?: string; version?: number } = {};
