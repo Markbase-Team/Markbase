@@ -1,8 +1,11 @@
-import { docsHandler } from "@markbase/docs/handlers";
+// GENERATED from the endpoint registry — do not edit.
+//
+// An endpoint is its entry in packages/features/docs/src/logic/endpoints.ts and
+// its handler in packages/features/docs/src/handlers/endpoint-handlers.ts.
+// Change those, then run: npm run gen:api -w @markbase/web
+import { endpointRoute } from "@markbase/docs/handlers";
 
-// Authentication and CORS happen in the proxy — /api/v1/docs is in its
-// GUARDED list. These files are the URL, and nothing else.
 export const runtime = "nodejs";
 
-export const GET = docsHandler.GET;
-export const POST = docsHandler.POST;
+export const GET = endpointRoute("docs_listDocs");
+export const POST = endpointRoute("docs_createDoc");
