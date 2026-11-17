@@ -47,7 +47,7 @@ describe("personName", () => {
 
 describe("toolName", () => {
   it("names each provider the way its users would recognise it", () => {
-    expect(toolName("claude_code")).toBe("Claude Code");
+    expect(toolName("claude_code")).toBe("Claude");
     expect(toolName("claude_desktop")).toBe("Claude Desktop");
     expect(toolName("codex")).toBe("Codex");
     expect(toolName("cursor")).toBe("Cursor");
@@ -73,7 +73,7 @@ describe("toolName", () => {
 describe("agentLabel", () => {
   // The requirement in one line: an agent edit must say whose agent it was.
   it("names the owner and the tool", () => {
-    expect(agentLabel("Jessie", "claude_code")).toBe("Jessie's Claude Code");
+    expect(agentLabel("Jessie", "claude_code")).toBe("Jessie's Claude");
     expect(agentLabel("Jessie", "codex")).toBe("Jessie's Codex");
   });
 
@@ -88,13 +88,13 @@ describe("agentLabel", () => {
   // for names ending in s) is a style debate that would make the label depend on
   // spelling, and "Chris' Claude Code" reads as a typo to most people.
   it("uses the same possessive for a name already ending in s", () => {
-    expect(agentLabel("Chris", "claude_code")).toBe("Chris's Claude Code");
+    expect(agentLabel("Chris", "claude_code")).toBe("Chris's Claude");
   });
 
   // Attribution must never be the thing that breaks: an owner we could not
   // resolve still produces a readable label.
   it("degrades to a generic owner rather than rendering \"'s Claude Code\"", () => {
-    expect(agentLabel("", "claude_code")).toBe("Someone's Claude Code");
+    expect(agentLabel("", "claude_code")).toBe("Someone's Claude");
     expect(agentLabel("   ", "unknown")).toBe("Someone's agent");
   });
 

@@ -74,7 +74,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
         "To find a document or see what you can access. `?scope=shared` lists what others shared with you, with your capability on each.",
       input: "?scope=shared · ?vault=<id> · (nothing: your own documents)",
       output: '{ docs: [{ id, title, version, updated_at, capability? }] }',
-      example: `curl -s -H "$AUTH" "$BASE/docs" | jq '.docs'`,
+      example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs" | jq '.docs'`,
     },
   },
   {
@@ -99,7 +99,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
         "To start a new document. Seed the first version with `content` markdown; edit it afterwards with /edits.",
       input: '{ title?: string, content?: markdown }',
       output: '{ doc: { id, title, version, … } }',
-      example: `curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \\
+      example: `curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \\
   -d '{"title":"My doc","content":"# My doc\\n"}' "$BASE/docs"`,
     },
   },
@@ -115,7 +115,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
         "Always read before you edit — you quote from the current text.",
       input: "",
       output: '{ doc: { id, title, content: markdown, version }, capability }',
-      example: `curl -s -H "$AUTH" "$BASE/docs/$ID" | jq -r '.doc.content'`,
+      example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID" | jq -r '.doc.content'`,
     },
   },
   {
@@ -134,7 +134,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
         "Every change to an existing document. `quote` matches the rendered text (no markdown syntax — `ready`, not `**ready**`); `insert` is markdown whose structure is preserved (inline marks merge; headings/lists become real blocks). To add, quote an anchor line and repeat it at the start of `insert`.",
       input: '{ quote: string (rendered text), insert: markdown }',
       output: '{ version: number }  ·  422 if the quote didn’t match  ·  409 on conflict',
-      example: `curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \\
+      example: `curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \\
   -d '{"quote":"Status: draft","insert":"Status: **ready**"}' "$BASE/docs/$ID/edits"`,
     },
   },
@@ -152,7 +152,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
       whenToUse: "To undo back to a known-good version; history is preserved.",
       input: '{ version: number }',
       output: '{ version: number }',
-      example: `curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \\
+      example: `curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \\
   -d '{"version":N}' "$BASE/docs/$ID/restore"`,
     },
   },
@@ -181,7 +181,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
         "When you have a real question or a suggestion you shouldn’t just apply. Anchor it to text with `quotedText`.",
       input: '{ body: markdown, quotedText?: string, parentId?: uuid }',
       output: '{ comment: { … } }',
-      example: `curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \\
+      example: `curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \\
   -d '{"body":"X or Y?","quotedText":"the passage"}' "$BASE/docs/$ID/comments"`,
     },
   },
@@ -207,7 +207,7 @@ export const DOC_ENDPOINTS: readonly DocEndpoint[] = [
       whenToUse: "To see how a document evolved or find a version to restore.",
       input: "",
       output: '{ version, revisions: [{ from_version, to_version, author, added, removed }] }',
-      example: `curl -s -H "$AUTH" "$BASE/docs/$ID/history" | jq '.revisions'`,
+      example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/history" | jq '.revisions'`,
     },
   },
   {

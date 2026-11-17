@@ -60,15 +60,16 @@ beforeEach(() => {
 });
 
 describe("credentialsFrom — the request, read once", () => {
-  it("reads the four headers and nothing else", () => {
+  it("reads its headers and nothing else", () => {
     expect(
       creds(SESSION, { "x-mcp-session": "tok", "x-share-token": "share_1", "x-guest-name": "Ada" })
-    ).toEqual({ caller: SESSION, sessionToken: "tok", shareToken: "share_1", guestName: "Ada" });
+    ).toEqual({ caller: SESSION, sessionToken: "tok", shareToken: "share_1", guestName: "Ada", client: null });
     expect(creds(null)).toEqual({
       caller: null,
       sessionToken: null,
       shareToken: null,
       guestName: null,
+      client: null,
     });
   });
 
@@ -101,8 +102,9 @@ describe("resolveActor — the caller, as an author", () => {
         kind: "agent",
         id: "owner_1",
         userId: "owner_1",
-        name: "name-of(owner_1)'s Claude Code",
+        name: "name-of(owner_1)'s Claude",
         capabilityCap: "commenter",
+        agent: { owner: "name-of(owner_1)", tool: "claude" },
       },
     });
   });

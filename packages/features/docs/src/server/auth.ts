@@ -25,6 +25,12 @@ export function atLeast(have: Capability | null, need: Capability): boolean {
 export type Actor = Author & {
   userId?: string;
   capabilityCap?: Capability | null;
+  /**
+   * For an agent that named no session: whose it is and which tool, apart, so
+   * a version can record the two the way an agent's hook does ("claude", and
+   * the person). `tool` is null when the request did not say.
+   */
+  agent?: { owner: string; tool: string | null };
 };
 
 /** The lower of two capabilities (a ceiling never raises access). */
