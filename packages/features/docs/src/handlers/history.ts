@@ -1,5 +1,6 @@
 import {
   diffSegments,
+  docAnalytics,
   listVersions,
   markdownToDoc,
   versionContent,
@@ -9,8 +10,8 @@ import { readDocCrdt, searchDocuments } from "../server";
 import { endpoint } from "./define";
 import { json } from "./respond";
 
-// The read-only half of the docs API: search, and the three version views that
-// read a document's CRDT without changing it.
+// The read-only half of the docs API: search, the three version views and the
+// analytics, all of which read a document's CRDT without changing it.
 
 // GET ?q=…&vault=… (or ?scope=shared) — search the caller's documents by
 // title + markdown content, scoped like the sidebar that calls it.
@@ -67,6 +68,28 @@ export const historyEndpoint = endpoint({
     listVersions(doc)
   );
   return json({ version: versions.length, revisions: versions });
+});
+
+// GET — the document's analytics from its CRDT: which agents read it and for
+// whom, and who wrote each line that is in it now. The one place every surface
+// asks — the Analytics panel on the web and the desktop, and an agent's tool.
+export const analyticsEndpoint = endpoint({
+  id: "docs_analytics",
+  method: "GET",
+  path: "/docs/:id/analytics",
+  capability: "viewer",
+  scope: "read",
+  summary: "Analytics (which agents read it and for whom, who wrote each line)",
+  skill: {
+    whenToUse:
+      "To see which agents read a document and on whose behalf, or who wrote what is in it now — a person, or an agent and whose agent.",
+    input: "",
+    output:
+      '{ reads: [{ agent, owner, count, lastAt, text }], credit: { lines, shares: [{ writer, text, lines }], ranges: [{ from, to, writer, text, preview }] } } — text is the writer in words ("Jessie\'s Claude"); writer.kind is agent, person, mixed or unrecorded; credit is null when the history cannot be read',
+    example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/analytics" | jq '.credit.shares'`,
+  },
+}, async (_req, { id }, auth) => {
+  return json(await readDocCrdt(id, auth.doc.content, docAnalytics));
 });
 
 // GET ?version=V — the document as of CRDT version index V, for previewing a

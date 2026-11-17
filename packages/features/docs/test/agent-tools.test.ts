@@ -26,6 +26,19 @@ describe("agentTools", () => {
     }
   });
 
+  // Analytics is an API call, so it is a tool: the same answer the Analytics
+  // panel shows, for the document the agent names.
+  it("offers a document's analytics as a read-only tool taking the document's id", () => {
+    const tool = agentTools().find((t) => t.name === "docs_analytics");
+    expect(tool).toMatchObject({ method: "GET", path: "/docs/:id/analytics", readOnly: true, destructive: false });
+    expect(tool?.description).toContain("which agents read");
+    expect(tool && toolInputSchema(tool)).toEqual({
+      type: "object",
+      properties: { id: { type: "string", description: "path parameter" } },
+      required: ["id"],
+    });
+  });
+
   it("marks what only reads and what cannot be undone", () => {
     const by = new Map(agentTools().map((t) => [t.name, t]));
     expect([by.get("docs_readDoc")?.readOnly, by.get("docs_readDoc")?.destructive]).toEqual([true, false]);

@@ -56,6 +56,20 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
     }
   },
   {
+    "id": "docs_analytics",
+    "method": "GET",
+    "path": "/docs/:id/analytics",
+    "capability": "viewer",
+    "scope": "read",
+    "summary": "Analytics (which agents read it and for whom, who wrote each line)",
+    "skill": {
+      "whenToUse": "To see which agents read a document and on whose behalf, or who wrote what is in it now — a person, or an agent and whose agent.",
+      "input": "",
+      "output": "{ reads: [{ agent, owner, count, lastAt, text }], credit: { lines, shares: [{ writer, text, lines }], ranges: [{ from, to, writer, text, preview }] } } — text is the writer in words (\"Jessie's Claude\"); writer.kind is agent, person, mixed or unrecorded; credit is null when the history cannot be read",
+      "example": "curl -s -H \"$AUTH\" -H \"$CLIENT\" \"$BASE/docs/$ID/analytics\" | jq '.credit.shares'"
+    }
+  },
+  {
     "id": "docs_docAt",
     "method": "GET",
     "path": "/docs/:id/at",
