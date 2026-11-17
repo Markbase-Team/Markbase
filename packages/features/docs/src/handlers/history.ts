@@ -1,5 +1,6 @@
 import {
   diffSegments,
+  docAnalytics,
   listVersions,
   markdownToDoc,
   versionContent,
@@ -9,8 +10,8 @@ import { readDocCrdt, searchDocuments } from "../server";
 import { accountActor, requireDocEndpoint } from "./actor";
 import { json } from "./respond";
 
-// The read-only half of the docs API: search, and the three version views that
-// read a document's CRDT without changing it.
+// The read-only half of the docs API: search, the three version views and the
+// analytics, all of which read a document's CRDT without changing it.
 
 // GET ?q=…&vault=… (or ?scope=shared) — search the caller's documents by
 // title + markdown content, scoped like the sidebar that calls it.
@@ -40,6 +41,16 @@ export const docHistoryHandler = async (req: Request, id: string): Promise<Respo
     listVersions(doc)
   );
   return json({ version: versions.length, revisions: versions });
+};
+
+// GET — the document's analytics from its CRDT: which agents read it and for
+// whom, and who wrote each line that is in it now. The one place every surface
+// asks — the Analytics panel on the web and the desktop, and an agent's tool.
+export const docAnalyticsHandler = async (req: Request, id: string): Promise<Response> => {
+  const auth = await requireDocEndpoint(req, id, "docs_analytics");
+  if (!auth.ok) return json({ error: auth.error }, auth.status);
+
+  return json(await readDocCrdt(id, auth.doc.content, docAnalytics));
 };
 
 // GET ?version=V — the document as of CRDT version index V, for previewing a

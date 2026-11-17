@@ -8,8 +8,9 @@ import { agentLabel, listVersions, versionContents, type VersionMeta } from "./v
 // agent, and whose agent.
 //
 // Both live in the document's own Y.Doc, beside its content and its versions,
-// so every surface that opens the document (the web app, the desktop app)
-// shows the same numbers with no table and no endpoint of their own:
+// so there is no table of their own: whoever holds the Y.Doc can work them out.
+// The server does, for GET /docs/:id/analytics (`docAnalytics` below), which is
+// what the web app, the desktop app and an agent's MCP tool all ask:
 //
 //   - reads are a tally the sync daemon adds to, from what agents' hooks
 //     reported (the vault's agent audit, `markbase read-audit`);
@@ -236,4 +237,61 @@ export function lineCredit(doc: Y.Doc): LineCredit {
     else shown.push(range);
   }
   return { ranges: shown, shares, lines: written };
+}
+
+/** An agent's reads, with who it is in words. */
+export interface AgentReadReport extends AgentReadTally {
+  /** "Jessie's Claude"; the agent alone when nobody is known to own it. */
+  text: string;
+}
+
+/** A writer's share, with the writer in words. */
+export interface WriterShareReport extends WriterShare {
+  text: string;
+}
+
+/** A run of lines, with its writer in words. */
+export interface CreditedRangeReport extends CreditedRange {
+  text: string;
+}
+
+/**
+ * A document's analytics as one answer — what GET /docs/:id/analytics returns.
+ * Every writer comes with its wording, so a caller shows "Jessie's Claude"
+ * without knowing how that is put together.
+ */
+export interface DocAnalyticsReport {
+  /** Every agent's reads, most first. */
+  reads: AgentReadReport[];
+  /** Null when a version cannot be rebuilt: nothing, rather than a guess. */
+  credit: {
+    ranges: CreditedRangeReport[];
+    shares: WriterShareReport[];
+    lines: number;
+  } | null;
+}
+
+/** Whose agent read it, in words: "Jessie's Claude", or "Claude". */
+export function readerText(read: AgentReadTally): string {
+  const agent = agentLabel(read.agent);
+  return read.owner ? `${read.owner}'s ${agent}` : agent;
+}
+
+/** The document's analytics: `listAgentReads` and `lineCredit`, worded. */
+export function docAnalytics(doc: Y.Doc): DocAnalyticsReport {
+  const reads = listAgentReads(doc).map((read) => ({ ...read, text: readerText(read) }));
+  let credit: LineCredit;
+  try {
+    credit = lineCredit(doc);
+  } catch {
+    return { reads, credit: null };
+  }
+  return {
+    reads,
+    credit: {
+      ranges: credit.ranges.map((range) => ({ ...range, text: writerText(range.writer) })),
+      shares: credit.shares.map((share) => ({ ...share, text: writerText(share.writer) })),
+      lines: credit.lines,
+    },
+  };
 }
