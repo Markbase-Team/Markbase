@@ -74,6 +74,12 @@ export interface ApiCrdtTransportOptions {
    * for a caller with no account to list changes for (a share-link guest).
    */
   perDoc?: boolean;
+  /**
+   * Hear of changes from a feed shared with other transports instead of
+   * polling for them. A process syncing seven vaults then asks what moved
+   * once per tick, not seven times. Exclusive with `perDoc`.
+   */
+  feed?: CrdtChangesFeed;
   pollMs?: number;
   /** Told about each retry, so a degraded link is visible rather than silent. */
   onRetry?: (attempt: number, message: string) => void;
@@ -100,6 +106,125 @@ async function asDbResult<T>(res: Response): Promise<DbResult<T>> {
   return { data: (text ? JSON.parse(text) : {}) as T, error: null, status: res.status };
 }
 
+/** What a feed hands each listener: every document that moved since the last ask. */
+type ChangesListener = (changes: CrdtChangesResponse["changes"]) => Promise<void>;
+
+/**
+ * One change feed for a whole process.
+ *
+ * Asks `GET /docs/crdt/changes` with no scope — everything the caller can
+ * see, their own vaults and what is shared with them — and hands the answer to
+ * every transport listening. Each transport keeps only the documents it has
+ * subscribers for, so the scope a transport used to ask with was only ever
+ * about how much came back; one unscoped ask replaces one ask per vault.
+ *
+ * It polls while anything listens and is silent otherwise. The cursor is the
+ * server's clock and outlives a quiet spell: the next ask simply reports more.
+ */
+export class CrdtChangesFeed {
+  private readonly listeners = new Set<ChangesListener>();
+  private cursor: string | null = null;
+  private cursorInit: Promise<void> | null = null;
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private polling = false;
+  private failures = 0;
+  private closed = false;
+
+  constructor(
+    private readonly request: CrdtRequest,
+    private readonly opts: Pick<ApiCrdtTransportOptions, "pollMs" | "onRetry" | "log"> = {}
+  ) {}
+
+  /** Stop polling for good. */
+  close(): void {
+    this.closed = true;
+    if (this.timer !== null) clearTimeout(this.timer);
+    this.timer = null;
+    this.listeners.clear();
+  }
+
+  /**
+   * Establish where "since" starts — the server's clock, not ours. Done once,
+   * before the first load of any transport on this feed, and shared by every
+   * load that overlaps it.
+   */
+  ensureCursor(): Promise<void> {
+    if (this.cursor !== null) return Promise.resolve();
+    if (!this.cursorInit) {
+      this.cursorInit = retryingDb(
+        "starting the change feed",
+        async () => asDbResult<CrdtChangesResponse>(await this.request(CHANGES_PATH)),
+        this.opts.onRetry
+      ).then(
+        (body) => {
+          this.cursor = body.cursor;
+        },
+        (e) => {
+          this.cursorInit = null; // next load tries again
+          throw e;
+        }
+      );
+    }
+    return this.cursorInit;
+  }
+
+  /** Hear of every change from now on; returns the way to stop. */
+  listen(listener: ChangesListener): () => void {
+    this.listeners.add(listener);
+    this.schedule(this.opts.pollMs ?? CRDT_POLL_MS);
+    return () => {
+      this.listeners.delete(listener);
+      if (this.listeners.size === 0 && this.timer !== null) {
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
+    };
+  }
+
+  private schedule(delayMs: number): void {
+    if (this.closed || this.timer !== null || this.listeners.size === 0) return;
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      void this.poll();
+    }, delayMs);
+  }
+
+  /** Ask now rather than at the next tick. */
+  async poll(): Promise<void> {
+    if (this.closed || this.polling) return;
+    this.polling = true;
+    let ok = true;
+    try {
+      await this.ensureCursor();
+      const res = await asDbResult<CrdtChangesResponse>(
+        await this.request(`${CHANGES_PATH}?since=${encodeURIComponent(this.cursor ?? "")}`)
+      );
+      if (res.error) throw new Error(res.error.message);
+      this.cursor = res.data.cursor;
+      // One listener failing to fetch its document must not keep the others
+      // from theirs.
+      for (const listener of [...this.listeners]) {
+        try {
+          await listener(res.data.changes);
+        } catch (e) {
+          ok = false;
+          this.opts.log?.(`poll failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+    } catch (e) {
+      ok = false;
+      this.opts.log?.(`poll failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      this.polling = false;
+    }
+    this.failures = ok ? 0 : this.failures + 1;
+    const base = this.opts.pollMs ?? CRDT_POLL_MS;
+    this.schedule(this.failures === 0 ? base : backoff(base, this.failures));
+  }
+}
+
+const CHANGES_PATH = "/api/v1/docs/crdt/changes";
+
 /**
  * The store and the pub/sub, sharing what they know: a save learns the new
  * version, and the poller skips a change it already holds.
@@ -117,6 +242,8 @@ export class ApiCrdtTransport {
   private polling = false;
   private failures = 0;
   private closed = false;
+  /** Stops listening to the shared feed; null while not listening. */
+  private leaveFeed: (() => void) | null = null;
 
   constructor(
     private readonly request: CrdtRequest,
@@ -124,6 +251,9 @@ export class ApiCrdtTransport {
   ) {
     if (opts.scope && opts.vaultId) {
       throw new Error("a changes feed is scoped to one vault or to the shared documents, not both");
+    }
+    if (opts.feed && opts.perDoc) {
+      throw new Error("a transport hears of changes from a shared feed or polls each document, not both");
     }
     this.store = {
       load: (docId) => this.load(docId),
@@ -144,6 +274,8 @@ export class ApiCrdtTransport {
     this.closed = true;
     if (this.timer !== null) clearTimeout(this.timer);
     this.timer = null;
+    this.leaveFeed?.();
+    this.leaveFeed = null;
     this.subs.clear();
   }
 
@@ -185,13 +317,17 @@ export class ApiCrdtTransport {
     let set = this.subs.get(docId);
     if (!set) this.subs.set(docId, (set = new Set()));
     set.add(onUpdate);
-    this.schedule(this.opts.pollMs ?? CRDT_POLL_MS);
+    if (this.opts.feed) this.leaveFeed ??= this.opts.feed.listen((changes) => this.deliver(changes));
+    else this.schedule(this.opts.pollMs ?? CRDT_POLL_MS);
     return () => {
       const s = this.subs.get(docId);
       if (!s) return;
       s.delete(onUpdate);
       if (s.size === 0) this.subs.delete(docId);
-      if (this.subs.size === 0 && this.timer !== null) {
+      if (this.subs.size > 0) return;
+      this.leaveFeed?.();
+      this.leaveFeed = null;
+      if (this.timer !== null) {
         clearTimeout(this.timer);
         this.timer = null;
       }
@@ -212,6 +348,7 @@ export class ApiCrdtTransport {
    * every load that overlaps it.
    */
   private ensureCursor(): Promise<void> {
+    if (this.opts.feed) return this.opts.feed.ensureCursor();
     if (this.cursor !== null) return Promise.resolve();
     if (!this.cursorInit) {
       this.cursorInit = retryingDb(
@@ -243,6 +380,7 @@ export class ApiCrdtTransport {
   /** Ask now rather than at the next tick. Exposed for tests and for a host
    *  that knows something moved. */
   async poll(): Promise<void> {
+    if (this.opts.feed) return this.opts.feed.poll();
     if (this.closed || this.polling) return;
     this.polling = true;
     let ok = true;
@@ -266,7 +404,13 @@ export class ApiCrdtTransport {
     const body = (await asDbResult<CrdtChangesResponse>(res));
     if (body.error) throw new Error(body.error.message);
     this.cursor = body.data.cursor;
-    for (const change of body.data.changes) {
+    await this.deliver(body.data.changes);
+  }
+
+  /** Fetch and hand on each change that is news to a subscriber here. */
+  private async deliver(changes: CrdtChangesResponse["changes"]): Promise<void> {
+    if (this.closed) return;
+    for (const change of changes) {
       if (!this.subs.has(change.doc_id)) continue;
       if (change.version <= (this.versions.get(change.doc_id) ?? -1)) continue;
       await this.fetchAndDeliver(change.doc_id);

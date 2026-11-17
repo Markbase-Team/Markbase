@@ -137,12 +137,35 @@ export async function deleteApiKey(id: string, ownerId: string): Promise<void> {
     .eq("id", id)
     .eq("owner_id", ownerId);
   if (error) throw error;
+  forgetVerifiedKeys();
+}
+
+/**
+ * How long a verified key is trusted without asking the database again. A
+ * daemon sends several requests a second under one key, and each used to cost
+ * a lookup; this makes it one lookup per window per server instance. The price
+ * is that a revoked key, or a lowered capability, can keep working for up to
+ * this long on an instance that had it cached. Only valid keys are cached.
+ */
+export const KEY_CACHE_MS = 30_000;
+/** `last_used_at` says roughly when, not exactly: written at most this often. */
+export const LAST_USED_EVERY_MS = 5 * 60_000;
+
+const verified = new Map<string, { key: ApiKey; at: number }>();
+
+/** Forget every cached key — after a change made through this instance. */
+export function forgetVerifiedKeys(): void {
+  verified.clear();
 }
 
 // Look up a key by its plaintext token. Returns the metadata if valid, else
 // null. Best-effort updates last_used_at (never blocks the request).
-export async function verifyApiKey(token: string): Promise<ApiKey | null> {
+export async function verifyApiKey(token: string, now: number = Date.now()): Promise<ApiKey | null> {
   if (!token) return null;
+  const hash = hashToken(token);
+  const hit = verified.get(hash);
+  if (hit && now - hit.at < KEY_CACHE_MS) return hit.key;
+  verified.delete(hash);
   const { data, error } = await supabase
     .from("api_keys")
     .select("*")
@@ -150,21 +173,24 @@ export async function verifyApiKey(token: string): Promise<ApiKey | null> {
     // or a browser tab nobody came back to. It authenticates nothing until
     // confirmApiKey says it arrived, and the sweep removes it.
     .not("confirmed_at", "is", null)
-    .eq("key_hash", hashToken(token))
+    .eq("key_hash", hash)
     .maybeSingle();
   if (error || !data) return null;
   const row = data as ApiKey & { key_hash: string };
-  void supabase
-    .from("api_keys")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("id", row.id)
-    .then(
-      () => {},
-      () => {}
-    );
+  const usedAt = row.last_used_at ? Date.parse(row.last_used_at) : 0;
+  if (!(now - usedAt < LAST_USED_EVERY_MS)) {
+    void supabase
+      .from("api_keys")
+      .update({ last_used_at: new Date(now).toISOString() })
+      .eq("id", row.id)
+      .then(
+        () => {},
+        () => {}
+      );
+  }
   // Return only public metadata — never the hash. owner_id identifies whose
   // data this key may reach (the worker + agent API scope by it).
-  return {
+  const key: ApiKey = {
     id: row.id,
     name: row.name,
     key_prefix: row.key_prefix,
@@ -176,6 +202,8 @@ export async function verifyApiKey(token: string): Promise<ApiKey | null> {
     provider: isProvider(row.provider) ? row.provider : "unknown",
     claude_version: row.claude_version ?? null,
   };
+  verified.set(hash, { key, at: now });
+  return key;
 }
 
 // Record (or clear) a connection's Claude Code version. The worker reports it

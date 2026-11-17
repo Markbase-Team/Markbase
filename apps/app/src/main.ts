@@ -11,6 +11,8 @@ import {
   session,
   type IpcMainEvent,
 } from "electron";
+import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/docs/crdt-api";
+import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
 import type { MenuItemConstructorOptions } from "electron";
 import { startTicketWorkerHost, type TicketWorkerHost, type TicketWorkerStatus } from "./ticket-worker";
 import { reportClaudeRun } from "@markbase/runner";
@@ -206,7 +208,11 @@ function instanceLabel(): string {
 if (process.env.MARKBASE_USER_DATA) app.setPath("userData", process.env.MARKBASE_USER_DATA);
 // And a smoke run syncs a vault; it must not also claim the account's tickets
 // and run them with this build's Claude.
-const TICKETS_OFF = process.env.MARKBASE_TICKETS === "off";
+//
+// Off unless asked for: the website this app talks to no longer serves the
+// worker endpoints, so a worker would only poll for 404s. MARKBASE_TICKETS=on
+// turns it back on against an instance that has them.
+const TICKETS_OFF = process.env.MARKBASE_TICKETS !== "on";
 
 /**
  * Daemon output, to a file as well as the console.
@@ -358,6 +364,16 @@ function saveSettings(s: Settings): void {
  * account someone signed into here must not be overridden by whatever a shell
  * happens to export for those.
  */
+/**
+ * The one change feed of this process: every vault's sync and every window's
+ * documents hear of cloud changes from it, so the app asks what moved once per
+ * tick however many vaults are mounted.
+ */
+const changesFeed = new CrdtChangesFeed(
+  bearerCrdtRequest(APP_URL, () => readApiKey(), (url, init) => fetchWithTimeout(url, init)),
+  { log: (m) => logVault(`change feed: ${m}`) }
+);
+
 function readApiKey(): string | null {
   const own = readOwnKey();
   if (own) return own;
@@ -1126,6 +1142,7 @@ async function startVaultDaemon(v: MountedVault): Promise<() => Promise<void>> {
       onProgress: (p) => sendVaultProgress(v.vaultId, p),
       onDocsChanged: () => sendVaultDocsChanged(v.vaultId),
       onForeignVault: (found) => void offerRepoint(found, v.name),
+      changesFeed,
       sharedHost: isShared ? sharedVaultHost() : undefined,
     });
     if (!isShared) return stop;
@@ -3410,7 +3427,7 @@ app.whenReady().then(async () => {
   // machine's key (security lockdown stage 2). The project in SUPABASE_URL /
   // SUPABASE_KEY above is handed to the windows alone (windowArgs), for the
   // renderer's live document channel.
-  configureCrdtHost(APP_URL, readApiKey, logVault);
+  configureCrdtHost(APP_URL, readApiKey, logVault, changesFeed);
 
   // An install from before the registries merged kept its mounts in the app's
   // own settings. Move them across once, then forget them — the shared registry
@@ -3753,7 +3770,7 @@ app.whenReady().then(async () => {
   // Tickets, under the same key the vaults sync under. The host loop runs for
   // the life of the process; a missing key or binary is a state it waits in,
   // not an error it stops on.
-  if (TICKETS_OFF) logVault("tickets: off (MARKBASE_TICKETS=off) — vault sync only");
+  if (TICKETS_OFF) logVault("tickets: off (set MARKBASE_TICKETS=on to run them) — vault sync only");
   else ticketWorker = startTicketWorkerHost({
     appUrl: APP_URL,
     readApiKey,
@@ -3890,7 +3907,7 @@ function trayItems(): MenuItemConstructorOptions[] {
       : []),
     {
       label: TICKETS_OFF
-        ? "Tickets: off (MARKBASE_TICKETS=off)"
+        ? "Tickets: off"
         : ticketsLine(ticketWorker?.status() ?? { kind: "signed-out" }),
       enabled: false,
     },

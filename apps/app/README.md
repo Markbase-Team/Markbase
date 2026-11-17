@@ -29,7 +29,7 @@ plus `MARKBASE_USER_DATA` for Electron's own folder, so no CLI config, no
 settings, no shared locks — and checks that a file in a vault folder reaches
 the cloud and that an API edit comes back down to disk. It needs a TEST
 account's API key: it creates a vault named "smoke …" there and deletes it
-afterwards. Tickets are off for the run (`MARKBASE_TICKETS=off`).
+afterwards. Tickets are off unless `MARKBASE_TICKETS=on`.
 
 ```bash
 npm run dist

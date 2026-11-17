@@ -29,7 +29,7 @@ import { app } from "electron";
 import type { WebContents } from "electron";
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { ApiCrdtTransport, bearerCrdtRequest } from "@markbase/docs/crdt-api";
+import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/docs/crdt-api";
 import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
 
 let transport: ApiCrdtTransport | null = null;
@@ -54,13 +54,16 @@ let log: (message: string) => void = () => {};
 export function configureCrdtHost(
   appUrl: string,
   apiKey: () => string | null,
-  onLog?: (message: string) => void
+  onLog?: (message: string) => void,
+  feed?: CrdtChangesFeed
 ): void {
   if (onLog) log = onLog;
   transport?.close();
   transport = new ApiCrdtTransport(
     bearerCrdtRequest(appUrl, apiKey, (url, init) => fetchWithTimeout(url, init)),
     {
+      // The windows' documents hear of changes on the same feed the vaults do.
+      ...(feed ? { feed } : {}),
       onRetry: (attempt, message) =>
         log(`crdt: retrying the cloud snapshot (attempt ${attempt}): ${message}`),
       log: (m) => log(`crdt: ${m}`),
