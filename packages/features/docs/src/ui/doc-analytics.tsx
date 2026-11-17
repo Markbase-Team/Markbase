@@ -1,13 +1,14 @@
 "use client";
 
 import { Bot, UserRound } from "lucide-react";
-import { agentLabel, writerText, type AgentReadTally, type LineWriter } from "@markbase/docs";
+import type { AgentReadReport, LineWriter } from "@markbase/docs";
 import { cn } from "@markbase/ui/utils";
 import { useDocAnalytics } from "./use-doc-analytics";
 
 // The Analytics panel: which agents read this document and for whom, and who
 // wrote what is in it now — a person, or an agent, and whose agent. Both come
-// from the document's own CRDT (see use-doc-analytics). What agents do is
+// from GET /docs/:id/analytics (see use-doc-analytics), the call an agent's
+// tool makes too, already worded ("Jessie's Claude"). What agents do is
 // known only where their hooks report it (`markbase audit install`), which
 // the empty states say.
 //
@@ -35,16 +36,14 @@ function when(at: number): string {
   return new Date(at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-function ReadRow({ read }: { read: AgentReadTally }) {
+function ReadRow({ read }: { read: AgentReadReport }) {
   return (
     <li className="flex items-center gap-2 rounded-lg bg-muted/60 px-2.5 py-2">
       <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#e5ff6e] text-zinc-900">
         <Bot className="size-3" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium">
-          {read.owner ? `${read.owner}'s ${agentLabel(read.agent)}` : agentLabel(read.agent)}
-        </span>
+        <span className="block truncate font-medium">{read.text}</span>
         <span className="block truncate text-muted-foreground">last {when(read.lastAt)}</span>
       </span>
       <span className="shrink-0 text-sm font-semibold tabular-nums">{read.count}</span>
@@ -53,8 +52,10 @@ function ReadRow({ read }: { read: AgentReadTally }) {
 }
 
 export function DocAnalytics({ docId }: { docId: string }) {
-  const { reads, credit, loading } = useDocAnalytics(docId, true);
-  if (loading) return <p className="text-xs text-muted-foreground">Loading analytics…</p>;
+  const { analytics, loading } = useDocAnalytics(docId, true);
+  if (loading && !analytics) return <p className="text-xs text-muted-foreground">Loading analytics…</p>;
+  const reads = analytics?.reads ?? [];
+  const credit = analytics?.credit ?? null;
 
   const totalReads = reads.reduce((sum, r) => sum + r.count, 0);
   return (
@@ -91,10 +92,10 @@ export function DocAnalytics({ docId }: { docId: string }) {
             {credit.shares.map((share) => {
               const percent = Math.round((share.lines / credit.lines) * 100);
               return (
-                <li key={writerText(share.writer)} className="space-y-1">
+                <li key={share.text} className="space-y-1">
                   <div className="flex items-center gap-2">
                     <WriterMark writer={share.writer} />
-                    <span className="min-w-0 flex-1 truncate font-medium">{writerText(share.writer)}</span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{share.text}</span>
                     <span className="shrink-0 text-muted-foreground tabular-nums">
                       {percent}% · {share.lines} {share.lines === 1 ? "line" : "lines"}
                     </span>
@@ -126,7 +127,7 @@ export function DocAnalytics({ docId }: { docId: string }) {
                 <WriterMark writer={range.writer} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-2">
-                    <span className="truncate font-medium">{writerText(range.writer)}</span>
+                    <span className="truncate font-medium">{range.text}</span>
                     <span className="shrink-0 text-muted-foreground tabular-nums">
                       {range.from === range.to ? `line ${range.from}` : `lines ${range.from}–${range.to}`}
                     </span>

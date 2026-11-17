@@ -1,6 +1,6 @@
 import { applyAnchoredEdit, checkpoint, restoreVersion, type VersionCredit } from "../logic";
 import { editDocCrdt, setDocContent, type Actor } from "../server";
-import { requireDocCapability, requireDocEndpoint } from "./actor";
+import { endpoint } from "./define";
 import { json } from "./respond";
 
 // The three write paths into a document's CRDT: replace the whole thing,
@@ -14,10 +14,20 @@ import { json } from "./respond";
 // caller's text is stale. We report the conflict instead of clobbering — the
 // mirror turns that into a conflict file. Omitting `version` is not allowed
 // for exactly that reason.
-export const docContentHandler = async (req: Request, id: string): Promise<Response> => {
-  const auth = await requireDocCapability(req, id, "editor");
-  if (!auth.ok) return json({ error: auth.error }, auth.status);
-
+export const replaceContentEndpoint = endpoint({
+  id: "docs_replaceContent",
+  method: "PUT",
+  path: "/docs/:id/content",
+  capability: "editor",
+  scope: "write",
+  params: [
+    { name: "content", type: "string", required: true },
+    { name: "version", type: "number", required: true, description: "The version the caller last saw; a newer one answers 409." },
+  ],
+  summary: "Replace a whole document's text",
+  humanOnly: true,
+  why: "The folder mirror's write. An agent replacing a whole document overwrites what people are typing; it edits a quoted passage through /edits instead.",
+}, async (req, { id }, auth) => {
   let body: { content?: string; version?: number } = {};
   try {
     body = await req.json();
@@ -47,17 +57,33 @@ export const docContentHandler = async (req: Request, id: string): Promise<Respo
     );
   }
   return json({ version: res.version });
-};
+});
 
 // POST — the agent-friendly edit path. Body: { quote, insert } — "replace the
 // text matching `quote` with `insert`". We resolve the anchor and apply the
 // edit to the SAME CRDT Y.Doc the browser editor and vault daemon sync, so
 // agent and human edits converge. No whole-document diff; no version CAS
 // (concurrent edits merge in the CRDT rather than conflict).
-export const docEditsHandler = async (req: Request, id: string): Promise<Response> => {
-  const auth = await requireDocEndpoint(req, id, "docs_editDoc");
-  if (!auth.ok) return json({ error: auth.error }, auth.status);
-
+export const editDocEndpoint = endpoint({
+  id: "docs_editDoc",
+  method: "POST",
+  path: "/docs/:id/edits",
+  capability: "editor",
+  scope: "write",
+  params: [
+    { name: "quote", type: "string", required: true, description: "Exact rendered text to replace (no markdown syntax)." },
+    { name: "insert", type: "string", required: true, description: "Replacement markdown (structure preserved)." },
+  ],
+  summary: "Edit a passage (quote → insert) — the only way to change a doc",
+  skill: {
+    whenToUse:
+      "Every change to an existing document. `quote` matches the rendered text (no markdown syntax — `ready`, not `**ready**`); `insert` is markdown whose structure is preserved (inline marks merge; headings/lists become real blocks). To add, quote an anchor line and repeat it at the start of `insert`.",
+    input: '{ quote: string (rendered text), insert: markdown }',
+    output: '{ version: number }  ·  422 if the quote didn’t match  ·  409 on conflict',
+    example: `curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \\
+  -d '{"quote":"Status: draft","insert":"Status: **ready**"}' "$BASE/docs/$ID/edits"`,
+  },
+}, async (req, { id }, auth) => {
   let body: { quote?: string; insert?: string } = {};
   try {
     body = await req.json();
@@ -89,7 +115,7 @@ export const docEditsHandler = async (req: Request, id: string): Promise<Respons
     return json({ error: message }, /anchor not found/i.test(message) ? 422 : 500);
   }
   return json({ ok: true });
-};
+});
 
 /**
  * Who a version written through the API is credited to. An agent's edit is
@@ -109,10 +135,24 @@ export function versionCredit(actor: Actor): VersionCredit {
 // content back as a normal edit (editor+). Nothing is rewound; history stays
 // intact and the restore itself becomes a version. `version` is the 0-based
 // index from /history.
-export const docRestoreHandler = async (req: Request, id: string): Promise<Response> => {
-  const auth = await requireDocEndpoint(req, id, "docs_restoreDoc");
-  if (!auth.ok) return json({ error: auth.error }, auth.status);
-
+export const restoreDocEndpoint = endpoint({
+  id: "docs_restoreDoc",
+  method: "POST",
+  path: "/docs/:id/restore",
+  capability: "editor",
+  scope: "write",
+  params: [
+    { name: "version", type: "number", required: true, description: "The version to restore." },
+  ],
+  summary: "Restore a past version (appended as a new edit)",
+  skill: {
+    whenToUse: "To undo back to a known-good version; history is preserved.",
+    input: '{ version: number }',
+    output: '{ version: number }',
+    example: `curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \\
+  -d '{"version":N}' "$BASE/docs/$ID/restore"`,
+  },
+}, async (req, { id }, auth) => {
   let body: { version?: number } = {};
   try {
     body = await req.json();
@@ -134,4 +174,4 @@ export const docRestoreHandler = async (req: Request, id: string): Promise<Respo
     const message = e instanceof Error ? e.message : "Restore failed";
     return json({ error: message }, /no version/i.test(message) ? 422 : 500);
   }
-};
+});

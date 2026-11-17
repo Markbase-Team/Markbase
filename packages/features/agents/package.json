@@ -10,7 +10,7 @@
     "./app/*/page": "./src/app/*/page.tsx",
     "./app/*/layout": "./src/app/*/layout.tsx"
   },
-  "scripts": { "typecheck": "tsc --noEmit" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
   "dependencies": {
     "@markbase/node": "*",
     "@markbase/protocol": "*",

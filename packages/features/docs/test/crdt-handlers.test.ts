@@ -37,7 +37,14 @@ vi.mock("@markbase/protocol", async (importOriginal) => ({
   claimAgentSession: async () => null,
 }));
 
-const { docCrdtHandler, docCrdtChangesHandler } = await import("../src/handlers/crdt");
+const { readCrdtEndpoint, writeCrdtEndpoint, crdtChangesEndpoint } = await import("../src/handlers/crdt");
+// The tests below call an endpoint the way a route does: its `handle`, with the
+// path's parameters. These keep the call sites reading as method-on-resource.
+const docCrdtHandler = {
+  GET: (r: Request, id: string) => readCrdtEndpoint.handle(r, { id }),
+  POST: (r: Request, id: string) => writeCrdtEndpoint.handle(r, { id }),
+};
+const docCrdtChangesHandler = { GET: (r: Request) => crdtChangesEndpoint.handle(r, {}) };
 
 const DOC = { id: "doc_1", owner_id: "owner_1", content: "# seed\n" };
 const OWNER: Caller = { via: "session", ownerId: "owner_1", email: "o@example.com" };

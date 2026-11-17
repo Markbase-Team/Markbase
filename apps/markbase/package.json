@@ -1,7 +1,13 @@
 {
   "name": "@markbase/cli",
   "version": "0.9.1",
-  "description": "Run a Markbase ticket worker on your machine — claims your tickets and executes them with Claude Code.",
+  "homepage": "https://markbase.so",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Markbase-Team/Markbase.git",
+    "directory": "apps/markbase"
+  },
+  "bugs": "https://github.com/Markbase-Team/Markbase/issues",
   "keywords": [
     "markbase",
     "markdown",
@@ -18,8 +24,12 @@
     "crdt",
     "vault",
     "sync",
-    "cli"
+    "cli",
+    "knowledge-base",
+    "agents",
+    "docs"
   ],
+  "description": "Run a Markbase ticket worker on your machine — claims your tickets and executes them with Claude Code.",
   "type": "module",
   "bin": {
     "markbase": "dist/cli.js"

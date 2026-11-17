@@ -44,7 +44,17 @@ vi.mock("@markbase/protocol", async (importOriginal) => ({
   claimAgentSession: async () => null,
 }));
 
-const { vaultHandler, vaultsHandler } = await import("../src/handlers/vaults");
+const { createVaultEndpoint, readVaultEndpoint, renameVaultEndpoint, deleteVaultEndpoint } = await import(
+  "../src/handlers/vaults"
+);
+// The tests below call an endpoint the way a route does: its `handle`, with the
+// path's parameters. These keep the call sites reading as method-on-resource.
+const vaultsHandler = { POST: (r: Request) => createVaultEndpoint.handle(r, {}) };
+const vaultHandler = {
+  GET: (r: Request, id: string) => readVaultEndpoint.handle(r, { id }),
+  PATCH: (r: Request, id: string) => renameVaultEndpoint.handle(r, { id }),
+  DELETE: (r: Request, id: string) => deleteVaultEndpoint.handle(r, { id }),
+};
 
 const OWNER: Caller = { via: "session", ownerId: "owner_1", email: "o@example.com" };
 const OTHER: Caller = {
