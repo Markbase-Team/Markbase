@@ -10,6 +10,7 @@ import {
   type AssetRow,
 } from "../server";
 import { accountActor, requireDocCapability } from "./actor";
+import { endpoint, selfCheckedEndpoint } from "./define";
 import { json, empty } from "./respond";
 
 // Media in a vault (roadmap A6).
@@ -67,96 +68,113 @@ function referencedBy(docPath: string | null, markdown: string, vaultAssets: Ass
   return vaultAssets.filter((a) => wanted.has(a.path));
 }
 
-export const assetsHandler = {
-  // GET ?vault=<id> — every asset in the vault, each with a signed URL.
-  // `urls=0` leaves the URLs out (url: null) for callers that only diff the
-  // list. Honors If-None-Match: an unchanged list is a 304.
-  //
-  // GET ?doc=<id> — the assets one document references, for anyone who may
-  // READ that document (a member of a shared document, say, who owns no part
-  // of its vault). Same shape, same tag, same 304.
-  GET: async (req: Request): Promise<Response> => {
-    const params = new URL(req.url).searchParams;
-    const vaultId = params.get("vault");
-    const docId = params.get("doc");
-    if (vaultId && docId) return json({ error: "vault and doc are exclusive" }, 400);
-    if (!vaultId && !docId) return json({ error: "vault or doc is required" }, 400);
+// GET ?vault=<id> — every asset in the vault, each with a signed URL.
+// `urls=0` leaves the URLs out (url: null) for callers that only diff the
+// list. Honors If-None-Match: an unchanged list is a 304.
+//
+// GET ?doc=<id> — the assets one document references, for anyone who may
+// READ that document (a member of a shared document, say, who owns no part
+// of its vault). Same shape, same tag, same 304.
+// Images and other files a vault's documents link to.
+export const listAssetsEndpoint = selfCheckedEndpoint({
+  id: "docs_listAssets",
+  method: "GET",
+  path: "/assets",
+  capability: null,
+  scope: "read",
+  params: [
+    { name: "vault", type: "string", description: "One of your vaults: every file in it. Exclusive with doc." },
+    { name: "doc", type: "string", description: "A document you can read: the files it links to. Exclusive with vault." },
+    { name: "urls", type: "string", description: "`0`: leave out the signed download URLs." },
+  ],
+  summary: "List the images and files in a vault, or the ones a document links to",
+}, "Asked about a document, anyone who may read that document may list its images, a member it was shared with included; asked about a vault, only the vault's owner. Which rule applies depends on the query, so the handler decides.", async (req) => {
+  const params = new URL(req.url).searchParams;
+  const vaultId = params.get("vault");
+  const docId = params.get("doc");
+  if (vaultId && docId) return json({ error: "vault and doc are exclusive" }, 400);
+  if (!vaultId && !docId) return json({ error: "vault or doc is required" }, 400);
 
-    let assets: AssetRow[];
-    if (docId) {
-      // Viewer, like reading the document: an image is part of the text. Not a
-      // registry endpoint of its own — it is /assets, scoped by a query, and the
-      // registry keys per-document routes by path.
-      const auth = await requireDocCapability(req, docId, "viewer");
-      if (!auth.ok) return json({ error: auth.error }, auth.status);
-      // A document with no vault has no media to list — never an error.
-      assets = auth.doc.vault_id
-        ? referencedBy(auth.doc.path, auth.doc.content, await listAssets(auth.doc.vault_id))
-        : [];
-    } else {
-      const a = await accountActor(req);
-      if ("error" in a) return a.error;
-      if (!(await ownedVault(vaultId as string, a.userId))) {
-        return json({ error: "Vault not found" }, 404);
-      }
-      assets = await listAssets(vaultId as string);
-    }
-
-    const withUrls = params.get("urls") !== "0";
-    const etag = listTag(assets, withUrls);
-    const headers = { ETag: etag, "Cache-Control": "private, no-cache" };
-    if (req.headers.get("if-none-match") === etag) {
-      return empty(304, headers);
-    }
-    const body = withUrls
-      ? await Promise.all(assets.map(withUrl))
-      : assets.map((row) => summary(row, null));
-    return json({ assets: body }, 200, headers);
-  },
-
-  // POST — store an upload. multipart/form-data: file, vault_id, and an
-  // optional path (omit it and we file the image under assets/ for you).
-  POST: async (req: Request): Promise<Response> => {
+  let assets: AssetRow[];
+  if (docId) {
+    // Viewer, like reading the document: an image is part of the text. Not a
+    // registry endpoint of its own — it is /assets, scoped by a query, and the
+    // registry keys per-document routes by path.
+    const auth = await requireDocCapability(req, docId, "viewer");
+    if (!auth.ok) return json({ error: auth.error }, auth.status);
+    // A document with no vault has no media to list — never an error.
+    assets = auth.doc.vault_id
+      ? referencedBy(auth.doc.path, auth.doc.content, await listAssets(auth.doc.vault_id))
+      : [];
+  } else {
     const a = await accountActor(req);
     if ("error" in a) return a.error;
-
-    let form: FormData;
-    try {
-      form = await req.formData();
-    } catch {
-      return json({ error: "Expected multipart/form-data" }, 400);
-    }
-
-    const file = form.get("file");
-    const vaultId = form.get("vault_id");
-    if (!(file instanceof File)) return json({ error: "file is required" }, 400);
-    if (typeof vaultId !== "string" || !vaultId) {
-      return json({ error: "vault_id is required" }, 400);
-    }
-    if (!(await ownedVault(vaultId, a.userId))) {
+    if (!(await ownedVault(vaultId as string, a.userId))) {
       return json({ error: "Vault not found" }, 404);
     }
+    assets = await listAssets(vaultId as string);
+  }
 
-    // A caller-supplied path is honoured (the daemon uploading a file the user
-    // already filed); otherwise we pick a free name under assets/, which is
-    // the convention Obsidian and most markdown tooling expect.
-    const wanted = form.get("path");
-    const existing = (await listAssets(vaultId)).map((x) => x.path);
-    const path =
-      typeof wanted === "string" && wanted.trim()
-        ? normalizePath(wanted)
-        : assetPathFor(file.name, existing);
+  const withUrls = params.get("urls") !== "0";
+  const etag = listTag(assets, withUrls);
+  const headers = { ETag: etag, "Cache-Control": "private, no-cache" };
+  if (req.headers.get("if-none-match") === etag) {
+    return empty(304, headers);
+  }
+  const body = withUrls
+    ? await Promise.all(assets.map(withUrl))
+    : assets.map((row) => summary(row, null));
+  return json({ assets: body }, 200, headers);
+});
 
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const asset = await putAsset({
-      vaultId,
-      ownerId: a.userId,
-      path,
-      bytes,
-      contentType: file.type || undefined,
-    });
+// POST — store an upload. multipart/form-data: file, vault_id, and an
+// optional path (omit it and we file the image under assets/ for you).
+export const uploadAssetEndpoint = endpoint({
+  id: "docs_uploadAsset",
+  method: "POST",
+  path: "/assets",
+  capability: null,
+  scope: "write",
+  summary: "Upload an image or file into a vault",
+  humanOnly: true,
+  why: "It takes a multipart file upload, which a tool call's JSON arguments cannot carry.",
+}, async (req, _params, a) => {
+  let form: FormData;
+  try {
+    form = await req.formData();
+  } catch {
+    return json({ error: "Expected multipart/form-data" }, 400);
+  }
 
-    // `path` is what the caller writes into the markdown — never the URL.
-    return json({ asset: await withUrl(asset) }, 201);
-  },
-};
+  const file = form.get("file");
+  const vaultId = form.get("vault_id");
+  if (!(file instanceof File)) return json({ error: "file is required" }, 400);
+  if (typeof vaultId !== "string" || !vaultId) {
+    return json({ error: "vault_id is required" }, 400);
+  }
+  if (!(await ownedVault(vaultId, a.userId))) {
+    return json({ error: "Vault not found" }, 404);
+  }
+
+  // A caller-supplied path is honoured (the daemon uploading a file the user
+  // already filed); otherwise we pick a free name under assets/, which is
+  // the convention Obsidian and most markdown tooling expect.
+  const wanted = form.get("path");
+  const existing = (await listAssets(vaultId)).map((x) => x.path);
+  const path =
+    typeof wanted === "string" && wanted.trim()
+      ? normalizePath(wanted)
+      : assetPathFor(file.name, existing);
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const asset = await putAsset({
+    vaultId,
+    ownerId: a.userId,
+    path,
+    bytes,
+    contentType: file.type || undefined,
+  });
+
+  // `path` is what the caller writes into the markdown — never the URL.
+  return json({ asset: await withUrl(asset) }, 201);
+});

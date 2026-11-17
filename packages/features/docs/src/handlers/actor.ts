@@ -1,7 +1,6 @@
 import { callerFromHeaders } from "@markbase/protocol/auth";
 import {
   requireDocCapability as requireDocCapabilityFor,
-  requireDocEndpoint as requireDocEndpointFor,
   resolveActor,
   type Capability,
   type Credentials,
@@ -28,15 +27,6 @@ export function credentialsFrom(req: Request): Credentials {
     guestName: req.headers.get("x-guest-name"),
     client: req.headers.get("x-mcp-client"),
   };
-}
-
-/** Enforce a per-document route by its registry id. */
-export function requireDocEndpoint(
-  req: Request,
-  docId: string,
-  endpointId: string
-): Promise<DocAuth> {
-  return requireDocEndpointFor(credentialsFrom(req), docId, endpointId);
 }
 
 /** Resolve the actor and check they hold at least `need` on the document. */

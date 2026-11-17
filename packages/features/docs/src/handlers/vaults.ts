@@ -8,7 +8,7 @@ import {
   seedWelcomeDoc,
   type VaultRow,
 } from "../server";
-import { accountActor } from "./actor";
+import { endpoint } from "./define";
 import { json } from "./respond";
 
 /**
@@ -35,115 +35,144 @@ async function ownVault(id: string, userId: string): Promise<{ vault: VaultRow }
 // Work and Personal can be kept apart. The vault→folder mapping is NOT here: a
 // local path is per-machine, so the CLI/desktop hold it.
 
-export const vaultsHandler = {
-  // GET — the caller's vaults, oldest first (the first is default).
-  GET: async (req: Request): Promise<Response> => {
-    const a = await accountActor(req);
-    if ("error" in a) return a.error;
-    // No auto-seed: a user with no vault gets an empty list, which the UI
-    // turns into the "create your first vault" onboarding. (A document created
-    // without a vault_id still resolves a default in POST /docs, so the
-    // invariant that every document lives in a vault holds.)
-    return json({ vaults: await listVaultsForUser(a.userId) });
+// GET — the caller's vaults, oldest first (the first is default).
+// Vaults: named collections of documents, each synced to one local folder.
+export const listVaultsEndpoint = endpoint({
+  id: "docs_listVaults",
+  method: "GET",
+  path: "/vaults",
+  capability: null,
+  scope: "read",
+  summary: "List your vaults",
+  skill: {
+    whenToUse: "To see which vaults exist before listing, searching or creating documents in one.",
+    input: "(nothing)",
+    output: "{ vaults: [{ id, name, created_at }] }",
+    example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/vaults" | jq '.vaults'`,
   },
+}, async (_req, _params, a) => {
+  // No auto-seed: a user with no vault gets an empty list, which the UI
+  // turns into the "create your first vault" onboarding. (A document created
+  // without a vault_id still resolves a default in POST /docs, so the
+  // invariant that every document lives in a vault holds.)
+  return json({ vaults: await listVaultsForUser(a.userId) });
+});
 
-  // POST — create a vault. { name }
-  POST: async (req: Request): Promise<Response> => {
-    const a = await accountActor(req);
-    if ("error" in a) return a.error;
+// POST — create a vault. { name }
+export const createVaultEndpoint = endpoint({
+  id: "docs_createVault",
+  method: "POST",
+  path: "/vaults",
+  capability: null,
+  scope: "write",
+  params: [{ name: "name", type: "string", required: true }],
+  summary: "Create a vault",
+}, async (req, _params, a) => {
+  let body: { name?: string } = {};
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON" }, 400);
+  }
+  const name = body.name?.trim();
+  if (!name) return json({ error: "name is required" }, 400);
 
-    let body: { name?: string } = {};
+  // An account's first vault arrives with a Welcome document in it — the
+  // first thing a new person sees in the folder they just mounted. Only the
+  // first: a second vault's owner has seen it. Best-effort: a vault without
+  // its welcome is a vault; a failed welcome must not fail the vault.
+  const first = (await listVaultsForUser(a.userId)).length === 0;
+  const vault = await createVault({ name, owner_id: a.userId });
+  if (first) {
     try {
-      body = await req.json();
+      await seedWelcomeDoc(a.userId, vault.id);
     } catch {
-      return json({ error: "Invalid JSON" }, 400);
+      // the vault exists; the welcome is a nicety
     }
-    const name = body.name?.trim();
-    if (!name) return json({ error: "name is required" }, 400);
+  }
+  return json({ vault }, 201);
+});
 
-    // An account's first vault arrives with a Welcome document in it — the
-    // first thing a new person sees in the folder they just mounted. Only the
-    // first: a second vault's owner has seen it. Best-effort: a vault without
-    // its welcome is a vault; a failed welcome must not fail the vault.
-    const first = (await listVaultsForUser(a.userId)).length === 0;
-    const vault = await createVault({ name, owner_id: a.userId });
-    if (first) {
-      try {
-        await seedWelcomeDoc(a.userId, vault.id);
-      } catch {
-        // the vault exists; the welcome is a nicety
-      }
-    }
-    return json({ vault }, 201);
-  },
-};
+/**
+ * GET — does this vault still exist, and is it yours?
+ *
+ * Exists so a client can ASK about one vault rather than infer from a list.
+ * The desktop app unmounts a vault it believes was deleted in the cloud, and
+ * moves that folder's files to .trash — so "absent from the list" is far too
+ * weak a basis: a 200 carrying a short or malformed list looks exactly like
+ * a deletion of everything it omits. It has already cost a vault, which sat
+ * unmounted for five days with nobody able to say why.
+ *
+ * A 404 here is an answer about THAT vault: it is gone. A 403 is a different
+ * answer: it exists and is not the caller's (see ownVault) — a daemon holding
+ * its folder must not sync it, and must not retire it either. Anything else
+ * — 200, a timeout, a 500 — is not an answer, and the caller is expected to
+ * do nothing.
+ */
+export const readVaultEndpoint = endpoint({
+  id: "docs_readVault",
+  method: "GET",
+  path: "/vaults/:id",
+  capability: null,
+  scope: "read",
+  summary: "One of your vaults (404: gone; 403: somebody else's)",
+}, async (_req, { id }, a) => {
+  const own = await ownVault(id, a.userId);
+  if ("error" in own) return own.error;
+  return json({ vault: own.vault });
+});
 
-export const vaultHandler = {
-  /**
-   * GET — does this vault still exist, and is it yours?
-   *
-   * Exists so a client can ASK about one vault rather than infer from a list.
-   * The desktop app unmounts a vault it believes was deleted in the cloud, and
-   * moves that folder's files to .trash — so "absent from the list" is far too
-   * weak a basis: a 200 carrying a short or malformed list looks exactly like
-   * a deletion of everything it omits. It has already cost a vault, which sat
-   * unmounted for five days with nobody able to say why.
-   *
-   * A 404 here is an answer about THAT vault: it is gone. A 403 is a different
-   * answer: it exists and is not the caller's (see ownVault) — a daemon holding
-   * its folder must not sync it, and must not retire it either. Anything else
-   * — 200, a timeout, a 500 — is not an answer, and the caller is expected to
-   * do nothing.
-   */
-  GET: async (req: Request, id: string): Promise<Response> => {
-    const a = await accountActor(req);
-    if ("error" in a) return a.error;
-    const own = await ownVault(id, a.userId);
-    if ("error" in own) return own.error;
-    return json({ vault: own.vault });
-  },
+// PATCH — rename a vault. { name }
+export const renameVaultEndpoint = endpoint({
+  id: "docs_renameVault",
+  method: "PATCH",
+  path: "/vaults/:id",
+  capability: null,
+  scope: "write",
+  params: [{ name: "name", type: "string", required: true }],
+  summary: "Rename a vault",
+}, async (req, { id }, a) => {
+  let body: { name?: string } = {};
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON" }, 400);
+  }
+  const name = body.name?.trim();
+  if (!name) return json({ error: "name is required" }, 400);
 
-  // PATCH — rename a vault. { name }
-  PATCH: async (req: Request, id: string): Promise<Response> => {
-    const a = await accountActor(req);
-    if ("error" in a) return a.error;
+  const own = await ownVault(id, a.userId);
+  if ("error" in own) return own.error;
 
-    let body: { name?: string } = {};
-    try {
-      body = await req.json();
-    } catch {
-      return json({ error: "Invalid JSON" }, 400);
-    }
-    const name = body.name?.trim();
-    if (!name) return json({ error: "name is required" }, 400);
+  await renameVault(id, name);
+  return json({ vault: { ...own.vault, name } });
+});
 
-    const own = await ownVault(id, a.userId);
-    if ("error" in own) return own.error;
+// DELETE — delete a vault and all its documents (cloud side). The
+// desktop/CLI daemon moves the local files to the folder's .trash/ when it
+// sees the vault vanish from the list.
+export const deleteVaultEndpoint = endpoint({
+  id: "docs_deleteVault",
+  method: "DELETE",
+  path: "/vaults/:id",
+  capability: null,
+  scope: "write",
+  summary: "Delete a vault and every document in it",
+  destructive: true,
+}, async (_req, { id }, a) => {
+  // Settled here, with the same two answers as GET and PATCH; deleteVault's
+  // own check (one "not found" for both) stays as the belt to these braces.
+  const own = await ownVault(id, a.userId);
+  if ("error" in own) return own.error;
 
-    await renameVault(id, name);
-    return json({ vault: { ...own.vault, name } });
-  },
-
-  // DELETE — delete a vault and all its documents (cloud side). The
-  // desktop/CLI daemon moves the local files to the folder's .trash/ when it
-  // sees the vault vanish from the list.
-  DELETE: async (req: Request, id: string): Promise<Response> => {
-    const a = await accountActor(req);
-    if ("error" in a) return a.error;
-    // Settled here, with the same two answers as GET and PATCH; deleteVault's
-    // own check (one "not found" for both) stays as the belt to these braces.
-    const own = await ownVault(id, a.userId);
-    if ("error" in own) return own.error;
-
-    try {
-      await deleteVault(id, a.userId);
-      return json({ ok: true });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      return json({ error: message }, /not found/i.test(message) ? 404 : 500);
-    }
-  },
-};
+  try {
+    await deleteVault(id, a.userId);
+    return json({ ok: true });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return json({ error: message }, /not found/i.test(message) ? 404 : 500);
+  }
+});
 
 // POST — promote a folder inside a vault to a vault of its own.
 // { fromVaultId, folder, name }
@@ -153,10 +182,19 @@ export const vaultHandler = {
 // is what that refusal points at. The documents under the folder move into the
 // new vault and their paths are re-based, because a path is vault-relative and
 // the folder is now the root.
-export const vaultConvertHandler = async (req: Request): Promise<Response> => {
-  const a = await accountActor(req);
-  if ("error" in a) return a.error;
-
+export const convertFolderToVaultEndpoint = endpoint({
+  id: "docs_convertFolderToVault",
+  method: "POST",
+  path: "/vaults/convert",
+  capability: null,
+  scope: "write",
+  params: [
+    { name: "fromVaultId", type: "string", required: true },
+    { name: "folder", type: "string", required: true, description: "The folder inside that vault, vault-relative." },
+    { name: "name", type: "string", required: true, description: "The new vault's name." },
+  ],
+  summary: "Make a folder inside a vault a vault of its own",
+}, async (req, _params, a) => {
   let body: { fromVaultId?: string; folder?: string; name?: string } = {};
   try {
     body = await req.json();
@@ -184,4 +222,4 @@ export const vaultConvertHandler = async (req: Request): Promise<Response> => {
     // caller learns nothing about vaults that aren't theirs.
     return json({ error: message }, /not found|root/i.test(message) ? 400 : 500);
   }
-};
+});

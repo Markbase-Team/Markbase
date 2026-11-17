@@ -3,9 +3,10 @@ import { DOC_ENDPOINTS, type DocEndpoint } from "@markbase/docs/endpoints";
 // The route files of the documents API, worked out from the endpoint registry.
 //
 // One file per path, one export per method, each a single line naming the
-// endpoint it serves. Nothing else: who may call it is the registry's, what
-// runs is the handler table's (@markbase/docs/handlers, endpoint-handlers.ts),
-// and authentication is the gate's (src/proxy.ts).
+// endpoint it serves. Nothing else: what the endpoint is, who may call it and
+// what runs are all in its one definition (`endpoint(def, run)` in
+// packages/features/docs/src/handlers), and authentication is the gate's
+// (src/proxy.ts).
 
 /** The directories under src/app/api/v1 whose every route file is generated. */
 export const GENERATED_API_DIRS = ["docs", "vaults", "assets"] as const;
@@ -20,9 +21,9 @@ const METHOD_ORDER = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
 const HEADER = `// GENERATED from the endpoint registry — do not edit.
 //
-// An endpoint is its entry in packages/features/docs/src/logic/endpoints.ts and
-// its handler in packages/features/docs/src/handlers/endpoint-handlers.ts.
-// Change those, then run: npm run gen:api -w @markbase/web
+// An endpoint is defined once, with its handler, in
+// packages/features/docs/src/handlers: endpoint({ id, method, path, … }, run).
+// Change it there, then run: npm run gen:endpoints (see docs/adding-an-endpoint.md)
 import { endpointRoute } from "@markbase/docs/handlers";
 
 export const runtime = "nodejs";
