@@ -62,6 +62,8 @@ export { diffCounts, diffSegments, type DiffSegment } from "./diff";
 export { docReplaceSteps } from "./restore";
 export {
   DOC_ENDPOINTS,
+  ACCOUNT_ENDPOINTS,
+  ALL_ENDPOINTS,
   AGENT_ENDPOINTS,
   docEndpoint,
   type DocEndpoint,
@@ -71,6 +73,14 @@ export {
   type ParamType,
 } from "./endpoints";
 export { renderEndpointsDoc } from "./skill-doc";
+export {
+  AGENT_TOOLS_PATH,
+  agentTools,
+  parseAgentTools,
+  toolInputSchema,
+  type AgentTool,
+  type ToolInputSchema,
+} from "./agent-tools";
 export type { Author, Anchor, DocJSON, StepJSON, JSONValue } from "./types";
 export * from "./mentions";
 export {
