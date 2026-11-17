@@ -1,8 +1,11 @@
-import { vaultsHandler } from "@markbase/docs/handlers";
+// GENERATED from the endpoint registry — do not edit.
+//
+// An endpoint is its entry in packages/features/docs/src/logic/endpoints.ts and
+// its handler in packages/features/docs/src/handlers/endpoint-handlers.ts.
+// Change those, then run: npm run gen:api -w @markbase/web
+import { endpointRoute } from "@markbase/docs/handlers";
 
-// Authentication and CORS happen in the proxy — /api/v1/vaults is in its
-// GUARDED list. These files are the URL, and nothing else.
 export const runtime = "nodejs";
 
-export const GET = vaultsHandler.GET;
-export const POST = vaultsHandler.POST;
+export const GET = endpointRoute("docs_listVaults");
+export const POST = endpointRoute("docs_createVault");

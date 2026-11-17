@@ -6,6 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "gen:slots": "tsx scripts/gen-feature-slots.ts",
+    "gen:api": "tsx scripts/gen-api-routes.ts",
     "lint": "eslint",
     "prebuild": "npm run gen:slots && npm run gen:docs",
     "predev": "npm run gen:slots && npm run gen:docs",
