@@ -776,7 +776,12 @@ async function claimLoop(
     claudeBin: opts.claudeBin,
     signal,
   };
-  const pollMs = opts.pollMs ?? 3000;
+  // Ten seconds, not three. Every idle tick is one API request, and on a
+  // hosted API each request is a billed function invocation: at three
+  // seconds one quiet worker was 29k requests a day, a third of what paused
+  // the Vercel account on 2026-11-17. Nothing pushes work to a worker, so
+  // this is also the longest a queued ticket or an @mention waits.
+  const pollMs = opts.pollMs ?? 10_000;
 
   const { ownerId, connectionId } = await resolveIdentity(ctx);
   ctx.connectionId = connectionId;
@@ -865,7 +870,7 @@ async function claimLoop(
         // folders.
         if (rescan) await sweepRepos(ctx);
         // Drain one agent auto-spawn request and one @mention delivery per idle
-        // tick (~3s responsiveness).
+        // tick (so ~10 s responsiveness).
         await drainAgentRequests(ctx);
         await sleep(pollMs, signal);
         continue;
