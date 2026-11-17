@@ -26,6 +26,7 @@ export {
 // the merge the server performs on each save.
 export {
   ApiCrdtTransport,
+  CrdtChangesFeed,
   bearerCrdtRequest,
   CRDT_POLL_MS,
   type CrdtRequest,

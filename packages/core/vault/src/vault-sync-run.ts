@@ -20,7 +20,7 @@ import { normalizePath, folderOf } from "@markbase/protocol/folders";
 import { nextPollDelay } from "@markbase/protocol/poll-backoff";
 import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/protocol/timeout-fetch";
 import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
-import { ApiCrdtTransport, bearerCrdtRequest } from "@markbase/docs/crdt-api";
+import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
 import { agentCredit, takeAgentReads } from "./agent-audit";
 import {
@@ -182,6 +182,12 @@ export interface SharedVaultHost {
 export interface VaultSyncOptions {
   /** The vault folder to sync. */
   dir: string;
+  /**
+   * A change feed shared by every vault this process syncs, so it asks the
+   * cloud what moved once per tick rather than once per vault. Omitted, the
+   * vault polls its own.
+   */
+  changesFeed?: CrdtChangesFeed;
   /**
    * Which vault this folder holds. A document's path is vault-relative, so
    * without this the daemon would pour every document you can see into one
@@ -1066,9 +1072,14 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
       fetchWithTimeout(url, init)
     ),
     {
-      // The Shared Vault polls the feed of documents shared with the user; an
-      // owned vault polls its own. One or the other, never both.
-      ...(shared ? { scope: "shared" as const } : { vaultId: opts.vaultId }),
+      // A feed the host shares between its vaults covers both kinds. Without
+      // one: the Shared Vault polls the feed of documents shared with the user;
+      // an owned vault polls its own. One or the other, never both.
+      ...(opts.changesFeed
+        ? { feed: opts.changesFeed }
+        : shared
+          ? { scope: "shared" as const }
+          : { vaultId: opts.vaultId }),
       onRetry: (attempt, message) =>
         log(`retrying the cloud snapshot (attempt ${attempt}): ${message}`),
       log: (m) => log(`change feed: ${m}`),

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { ApiCrdtTransport, bearerCrdtRequest, type CrdtRequest } from "../src/logic/crdt-api";
+import { ApiCrdtTransport, CrdtChangesFeed, bearerCrdtRequest, type CrdtRequest } from "../src/logic/crdt-api";
 import { bytesToBase64 } from "../src/logic/crdt-supabase";
 
 // The client half of the stage-2 transport, against a scripted API. What the
@@ -217,6 +217,82 @@ describe("ApiCrdtTransport pub/sub (the change feed)", () => {
     await new Promise((r) => setTimeout(r, 30));
     expect(api.calls.filter((c) => c.path.includes("since=")).length).toBe(polled);
     t.close();
+  });
+});
+
+describe("CrdtChangesFeed (one feed for a process)", () => {
+  const changesAsks = (api: FakeApi) => api.calls.filter((c) => /\/docs\/crdt\/changes/.test(c.path));
+
+  it("asks what moved once for every transport on it, and each hears of its own documents", async () => {
+    const api = new FakeApi();
+    const feed = new CrdtChangesFeed(api.request, { pollMs: 60_000 });
+    const a = new ApiCrdtTransport(api.request, { feed });
+    const b = new ApiCrdtTransport(api.request, { feed });
+    api.bump("d1", bytes(1));
+    api.bump("d2", bytes(1));
+    await a.store.load("d1");
+    await b.store.load("d2");
+    const gotA: Uint8Array[] = [];
+    const gotB: Uint8Array[] = [];
+    a.pubsub.subscribe("d1", (u) => gotA.push(u));
+    b.pubsub.subscribe("d2", (u) => gotB.push(u));
+
+    api.bump("d1", bytes(2));
+    api.bump("d2", bytes(3));
+    const before = changesAsks(api).length;
+    await feed.poll();
+    expect(changesAsks(api).length - before).toBe(1);
+    // Unscoped: one ask covers every vault and what is shared.
+    expect(changesAsks(api).every((c) => !/vault=|scope=/.test(c.path))).toBe(true);
+    expect([gotA, gotB]).toEqual([[bytes(2)], [bytes(3)]]);
+    a.close();
+    b.close();
+    feed.close();
+  });
+
+  it("one transport failing to fetch does not keep another from its document", async () => {
+    const api = new FakeApi();
+    const logs: string[] = [];
+    const feed = new CrdtChangesFeed(api.request, { pollMs: 60_000, log: (m) => logs.push(m) });
+    const a = new ApiCrdtTransport(api.request, { feed });
+    const b = new ApiCrdtTransport(api.request, { feed });
+    api.bump("d1", bytes(1));
+    api.bump("d2", bytes(1));
+    await a.store.load("d1");
+    await b.store.load("d2");
+    const gotB: Uint8Array[] = [];
+    a.pubsub.subscribe("d1", () => {});
+    b.pubsub.subscribe("d2", (u) => gotB.push(u));
+    api.bump("d1", bytes(2));
+    api.bump("d2", bytes(3));
+    api.failNext.push({ match: /\/d1\/crdt$/, status: 500 });
+    await feed.poll();
+    expect(gotB).toEqual([bytes(3)]);
+    expect(logs.join("\n")).toMatch(/poll failed/);
+    a.close();
+    b.close();
+    feed.close();
+  });
+
+  it("a transport that closed hears nothing more", async () => {
+    const api = new FakeApi();
+    const feed = new CrdtChangesFeed(api.request, { pollMs: 60_000 });
+    const a = new ApiCrdtTransport(api.request, { feed });
+    api.bump("d1", bytes(1));
+    await a.store.load("d1");
+    const got: Uint8Array[] = [];
+    a.pubsub.subscribe("d1", (u) => got.push(u));
+    a.close();
+    api.bump("d1", bytes(2));
+    await feed.poll();
+    expect(got).toEqual([]);
+    feed.close();
+  });
+
+  it("refuses a feed together with per-document polling", () => {
+    const api = new FakeApi();
+    const feed = new CrdtChangesFeed(api.request);
+    expect(() => new ApiCrdtTransport(api.request, { feed, perDoc: true })).toThrow(/not both/);
   });
 });
 
