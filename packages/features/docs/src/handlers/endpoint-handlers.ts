@@ -2,7 +2,7 @@ import { assetsHandler } from "./assets";
 import { docCrdtChangesHandler, docCrdtHandler } from "./crdt";
 import { docMembershipHandler, docsHandler, documentHandler } from "./documents";
 import { docContentHandler, docEditsHandler, docRestoreHandler } from "./editing";
-import { docAtHandler, docDiffHandler, docHistoryHandler, docsSearchHandler } from "./history";
+import { docAnalyticsHandler, docAtHandler, docDiffHandler, docHistoryHandler, docsSearchHandler } from "./history";
 import { docCommentHandler, docCommentsHandler, docLinkHandler, docLinksHandler } from "./sharing";
 import { docPublishHandler, docTabHandler, docTabsHandler } from "./tabs";
 import { vaultConvertHandler, vaultHandler, vaultsHandler } from "./vaults";
@@ -38,6 +38,7 @@ export const ENDPOINT_HANDLERS: { [endpointId: string]: EndpointHandler } = {
   docs_replaceContent: (req, p) => docContentHandler(req, p.id),
   docs_restoreDoc: (req, p) => docRestoreHandler(req, p.id),
   docs_history: (req, p) => docHistoryHandler(req, p.id),
+  docs_analytics: (req, p) => docAnalyticsHandler(req, p.id),
   docs_docAt: (req, p) => docAtHandler(req, p.id),
   docs_docDiff: (req, p) => docDiffHandler(req, p.id),
   docs_listComments: (req, p) => docCommentsHandler.GET(req, p.id),
