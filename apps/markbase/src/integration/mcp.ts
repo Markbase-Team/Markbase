@@ -7,11 +7,12 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { AGENT_ENDPOINTS, type DocEndpoint } from "@markbase/docs/endpoints";
+import { AGENT_ENDPOINTS } from "@markbase/docs/endpoints";
 import { installDocsMcp, type McpTarget } from "@markbase/node";
 import { appUrl, loadConfig } from "../config";
 import { ensureAuthenticated } from "../login";
-import { callEndpoint, pathParams } from "./call";
+import { callEndpoint } from "./call";
+import { mcpTools } from "./mcp-tools";
 
 // `markbase mcp install [--desktop] [--claude-code] [--codex] [--cursor]` — wire
 // the doc tools into Claude Desktop, Claude Code, Codex, and/or Cursor. Default:
@@ -87,37 +88,13 @@ function version(): string {
   }
 }
 
-// JSON Schema for a tool: path params (required strings) + declared params.
-function inputSchema(e: DocEndpoint): Record<string, unknown> {
-  const properties: Record<string, unknown> = {};
-  const required: string[] = [];
-  for (const name of pathParams(e.path)) {
-    properties[name] = { type: "string", description: "path parameter" };
-    required.push(name);
-  }
-  for (const p of e.params ?? []) {
-    properties[p.name] =
-      p.type === "json"
-        ? { description: p.description ?? "JSON value" }
-        : { type: p.type, description: p.description };
-    if (p.required) required.push(p.name);
-  }
-  return { type: "object", properties, required };
-}
-
 export async function runMcp(): Promise<void> {
   const server = new Server(
     { name: "markbase-docs", version: version() },
     { capabilities: { tools: {} } }
   );
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: AGENT_ENDPOINTS.map((e) => ({
-      name: e.id,
-      description: e.skill ? `${e.summary} — ${e.skill.whenToUse}` : e.summary,
-      inputSchema: inputSchema(e),
-    })),
-  }));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: mcpTools() }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
     const e = AGENT_ENDPOINTS.find((x) => x.id === req.params.name);

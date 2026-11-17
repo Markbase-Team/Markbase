@@ -141,6 +141,7 @@ doc-scoped; they just need a signed-in user (not a guest).
 | `GET /docs/:id/at` | ✓ | ✓ | ✓ | ✓ |
 | `GET /docs/:id/diff` | ✓ | ✓ | ✓ | ✓ |
 | `GET /docs/:id/history` | ✓ | ✓ | ✓ | ✓ |
+| `GET /docs/:id/analytics` | ✓ | ✓ | ✓ | ✓ |
 | `GET /docs/:id/comments` | ✓ | ✓ | ✓ | ✓ |
 | `POST /docs/:id/comments` | ✗ | ✓ | ✓ | ✓ |
 | `PATCH /docs/:id/comments/:cid` | ✗ | ✓ | ✓ | ✓ |
@@ -236,6 +237,21 @@ Catch up: steps committed after version `N`.
 Revisions grouped by editing session, with author and `+added/−removed` counts.
 ```json
 { "version": 43, "revisions": [ { "from_version", "to_version", "author", "added", "removed", "session_id" } ] }
+```
+
+#### `GET /api/v1/docs/:id/analytics` — capability `viewer`
+Which agents read the document and for whom, and who wrote each line that is in
+it now. `text` is the reader or writer in words ("Jessie's Claude"). The
+Analytics panel and the `docs_analytics` MCP tool both read this.
+```json
+{
+  "reads": [ { "agent", "owner", "count", "lastAt", "text" } ],
+  "credit": {
+    "lines": 12,
+    "shares": [ { "writer": { "kind", "agents", "person" }, "text", "lines" } ],
+    "ranges": [ { "from", "to", "writer", "text", "preview" } ]
+  }
+}
 ```
 
 #### `GET /api/v1/docs/:id/at?version=N` — capability `viewer`

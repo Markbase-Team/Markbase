@@ -28,6 +28,7 @@ export function GET(req: Request) {
       edit_doc: `POST ${base}/api/v1/docs/{id}/edits  { quote, insert }  (replace a passage)`,
       comment_on_doc: `POST ${base}/api/v1/docs/{id}/comments  { body, quotedText? }`,
       doc_history: `GET ${base}/api/v1/docs/{id}/history`,
+      doc_analytics: `GET ${base}/api/v1/docs/{id}/analytics  (agents' reads, and who wrote each line)`,
       list_vaults: `GET ${base}/api/v1/vaults`,
       list_secrets: `GET ${base}/api/v1/secrets  (names only)`,
       get_secret: `GET ${base}/api/v1/secrets/{name}  (encrypted blob; decrypt client-side)`,

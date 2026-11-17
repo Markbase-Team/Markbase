@@ -16,6 +16,17 @@ describe("endpoint registry", () => {
     expect(() => docEndpoint("nope")).toThrow();
   });
 
+  // Analytics is an API call, so every consumer of the registry gets it: the
+  // route's capability, the skill's how-to, and the MCP server's tool.
+  it("registers a document's analytics as a viewer read that agents may call", async () => {
+    const { AGENT_ENDPOINTS } = await import("../src/logic/endpoints");
+    const e = docEndpoint("docs_analytics");
+    expect(e).toMatchObject({ method: "GET", path: "/docs/:id/analytics", capability: "viewer", scope: "read" });
+    expect(e.humanOnly).toBeFalsy();
+    expect(AGENT_ENDPOINTS.map((x) => x.id)).toContain("docs_analytics");
+    expect(e.skill?.example).toContain('-H "$AUTH" -H "$CLIENT"');
+  });
+
   // The ids became the namespaced form in one step, with no aliases. A caller
   // still passing the old bare id must fail loudly rather than resolve to
   // undefined and be read as "no capability required".

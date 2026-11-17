@@ -83,6 +83,7 @@ Each endpoint lists the **minimum role** it needs. Roles are ranked `owner > edi
 | `POST   $BASE/docs/:id/comments` | commenter | Comment on a passage / ask the human a question |
 | `PATCH  $BASE/docs/:id/comments/:cid` | commenter | Resolve / unresolve a comment |
 | `GET    $BASE/docs/:id/history` | viewer | Version history (who changed what, +added/−removed) |
+| `GET    $BASE/docs/:id/analytics` | viewer | Analytics (which agents read it and for whom, who wrote each line) |
 | `PATCH  $BASE/docs/:id` | editor | Rename a document |
 | `DELETE $BASE/docs/:id` | owner | Delete a whole document (all its tabs) |
 | `GET    $BASE/docs/:id/tabs` | viewer | List the document's tabs |
@@ -174,6 +175,16 @@ curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
 
 ```bash
 curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/history" | jq '.revisions'
+```
+
+### Analytics (which agents read it and for whom, who wrote each line)
+`GET /docs/:id/analytics` · role: **viewer** · scope: read
+
+- **When:** To see which agents read a document and on whose behalf, or who wrote what is in it now — a person, or an agent and whose agent.
+- **Output:** { reads: [{ agent, owner, count, lastAt, text }], credit: { lines, shares: [{ writer, text, lines }], ranges: [{ from, to, writer, text, preview }] } } — text is the writer in words ("Jessie's Claude"); writer.kind is agent, person, mixed or unrecorded; credit is null when the history cannot be read
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/analytics" | jq '.credit.shares'
 ```
 
 ## Capabilities
