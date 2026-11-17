@@ -1,10 +1,12 @@
 import type { Capability } from "../server/auth";
+import type { EndpointDef } from "@markbase/protocol/endpoint";
 import { GENERATED_DOC_ENDPOINTS } from "./endpoints.generated";
 
 // What an endpoint is, and the list of them all.
 //
 // A documents endpoint is WRITTEN in one place: beside the code that answers
-// it, as `endpoint({ id, method, path, capability, … }, run)` in src/handlers.
+// it, as `endpoint({ id, method, path, capability, … }, run)` in src/handlers
+// (the machinery is every feature's: @markbase/protocol/endpoint).
 // That one definition is its description, its access rule (`capability`, which
 // the wrapper enforces before `run` is called — owner > editor > commenter >
 // viewer, any role at or above the declared one is allowed) and its code.
@@ -15,59 +17,22 @@ import { GENERATED_DOC_ENDPOINTS } from "./endpoints.generated";
 // and `markbase api` all come from here, so they follow a definition without
 // anyone touching them.
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-export type EndpointScope = "read" | "write";
-export type ParamType = "string" | "number" | "boolean" | "json";
+export type {
+  HttpMethod,
+  EndpointScope,
+  ParamType,
+  EndpointParam,
+  EndpointSkillDoc,
+} from "@markbase/protocol/endpoint";
 
-// A body/query parameter (path params like :id are derived from `path`, not
-// listed here). Drives the MCP tool's JSON input schema.
-export interface EndpointParam {
-  name: string;
-  type: ParamType;
-  required?: boolean;
-  description?: string;
-}
-
-// How an agent should use an endpoint — rendered into the skill verbatim.
-export interface EndpointSkillDoc {
-  /** When to reach for this endpoint. */
-  whenToUse: string;
-  /** The request body / query it expects (one line). "" for none. */
-  input: string;
-  /** What it returns (one line). */
-  output: string;
-  /** Optional copy-pasteable example (a JSON body or a curl one-liner). */
-  example?: string;
-}
-
-export interface DocEndpoint {
-  /** Stable id used by routes to look up their capability. */
-  id: string;
-  method: HttpMethod;
-  /** Path under /api/v1, e.g. "/docs/:id/edits". */
-  path: string;
+/**
+ * A documents endpoint: what every endpoint says (@markbase/protocol/endpoint),
+ * plus the one thing that is this feature's own — the role a caller needs on
+ * the document the path names.
+ */
+export interface DocEndpoint extends EndpointDef {
   /** Minimum per-doc capability. null = account-level (auth + scope only). */
   capability: Capability | null;
-  /** OAuth-style scope the API key must carry. */
-  scope: EndpointScope;
-  /** Body/query parameters (path params are derived from `path`). */
-  params?: readonly EndpointParam[];
-  /** One-line summary (endpoints table). */
-  summary: string;
-  /** Editor-only plumbing (the real-time collab protocol). Hidden from the agent
-   *  skill and from `markbase api` — agents must not see or call these. Routes
-   *  still resolve them for the browser editor. */
-  humanOnly?: boolean;
-  /**
-   * Why an agent may not call it — required beside `humanOnly`, so leaving an
-   * endpoint out of the MCP server, the skill and `markbase api` is a decision
-   * somebody wrote down, never an omission.
-   */
-  why?: string;
-  /** It removes something that cannot be brought back. Told to the agent's client. */
-  destructive?: boolean;
-  /** Present when this endpoint is documented in the agent skill. */
-  skill?: EndpointSkillDoc;
 }
 
 // The documents endpoints. Each is written once, beside the code that answers

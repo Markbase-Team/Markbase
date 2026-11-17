@@ -5,7 +5,7 @@
 // This is the description half of each, as plain data, for everything that
 // must not import server code: the CLI, the MCP server, the skill, the browser.
 // Change the definition, then run:
-//   npx tsx packages/features/docs/scripts/gen-endpoints.ts
+//   npm run gen:endpoints
 import type { DocEndpoint } from "./endpoints";
 
 export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [

@@ -1,13 +1,22 @@
 # Adding an endpoint (and its MCP tool)
 
-A documents endpoint is written once. That one definition is the API route, the
-access rule, the MCP tool, the entry in the agent skill and the `markbase api`
-command. You do not write any of those separately, and you cannot ship one
-without the others.
+An endpoint is written once. That one definition is the API route, the access
+rule and, unless it says otherwise, the MCP tool, the entry in the agent skill
+and the `markbase api` command. You do not write any of those separately, and
+you cannot ship one without the others.
 
-This covers everything under `/api/v1/docs`, `/api/v1/vaults` and
-`/api/v1/assets`. The few routes the web app serves itself (`/me`,
-`/agent/tools`) are covered at the end.
+The machinery is shared by every feature and lives in the core:
+`@markbase/protocol/endpoint`. Two features use it today:
+
+| Feature | Endpoints | Agents get them as tools |
+| --- | --- | --- |
+| documents (`/docs`, `/vaults`, `/assets`) | `packages/features/docs/src/handlers` | yes, unless one says why not |
+| agents (`/agent-sessions`) | `packages/features/agents/src/handlers` | no, all hidden for now |
+
+The other features still have hand-written route files. Most of this page is
+about documents, where nearly all endpoints live; [using it in another
+feature](#using-it-in-another-feature) covers the rest. The few routes the web
+app serves itself (`/me`, `/agent/tools`) are at the end.
 
 ## The short version
 
@@ -130,7 +139,48 @@ const res = await wordCountEndpoint.handle(req(VIEWER), { id: "doc_1" });
 viewer cannot edit" needs nothing extra. See
 `packages/features/docs/test/crdt-handlers.test.ts` for the mocks.
 
-## Routes outside the documents feature
+## Using it in another feature
+
+A feature keeps its own set of endpoints and names its own access checks. The
+agents feature is the smallest example (`packages/features/agents/src/handlers/sessions.ts`):
+
+```ts
+import { endpointSet, signedIn, type EndpointDef } from "@markbase/protocol/endpoint";
+
+const agents = endpointSet<EndpointDef>("agents");   // every id starts agents_
+export const agentsRoute = agents.route;
+
+export const listSessionsEndpoint = agents.define(
+  { id: "agents_listSessions", method: "GET", path: "/agent-sessions", scope: "read",
+    summary: "List your agent sessions",
+    humanOnly: true, why: "Not offered to agents yet: sessions are created by the person handing out the work." },
+  signedIn,                                           // who may call it
+  async (_req, _params, caller) => Response.json({ sessions: await listAgentSessions(caller.ownerId) })
+);
+```
+
+- **`endpointSet(feature)`** holds the feature's endpoints. It refuses an id
+  that does not start with the feature's name, a duplicate, and a `humanOnly`
+  with no `why`.
+- **The second argument is the access check.** `signedIn` admits the caller the
+  gate attached (a session or an API key) and hands your code the `Caller`.
+  Anything else is an `Access` function of your own: it answers what the code
+  is handed, or the refusal to send. Documents' "role on a document" is one
+  (`packages/features/docs/src/handlers/define.ts`), wrapped so its
+  `endpoint(def, run)` picks the check from `capability`.
+- **Route files are generated** with `routeFiles` from
+  `@markbase/protocol/endpoint-gen`, into the feature's own `src/app/api/v1`
+  where its manifest contributes them. Copy
+  `packages/features/agents/src/handlers/routes.ts` and
+  `packages/features/agents/scripts/gen-endpoints.ts`, add the script to
+  `gen:endpoints` in the root `package.json`, and copy its test.
+- **Tools.** A feature whose endpoints agents may call also needs its
+  descriptions in the list the tools are built from (`AGENT_ENDPOINTS` in
+  `packages/features/docs/src/logic/endpoints.ts`), as a generated copy like
+  documents'. Agents does not, because all of its endpoints are hidden. The
+  first feature that does should move that list to the core as well.
+
+## Routes the web app serves itself
 
 `/me`, `/me/profile` and `/agent/tools` are hand-written route files in
 `apps/web`, described in `ACCOUNT_ENDPOINTS` in
@@ -149,5 +199,7 @@ that test's `NOT_REGISTERED` list with its reason.
   something other than what it advertises.
 - **A generated copy, not an import,** because the description ships to npm
   and to browsers and the handler must not.
+- **In the core, not in a feature,** so every feature's API is defined, checked
+  and generated the same way, and converting one is a mechanical change.
 - **Tools from the server, not the package,** so the tools match the backend
   that will answer them, whatever version of the CLI someone has installed.

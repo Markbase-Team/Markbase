@@ -1,3 +1,4 @@
+import { descriptionModule } from "@markbase/protocol/endpoint-gen";
 import { definedEndpoints } from "./index";
 
 // The text of logic/endpoints.generated.ts: every defined endpoint's
@@ -11,12 +12,17 @@ const HEADER = `// GENERATED from the endpoints defined in src/handlers — do n
 // This is the description half of each, as plain data, for everything that
 // must not import server code: the CLI, the MCP server, the skill, the browser.
 // Change the definition, then run:
-//   npx tsx packages/features/docs/scripts/gen-endpoints.ts
-import type { DocEndpoint } from "./endpoints";
-
-export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = `;
+//   npm run gen:endpoints
+`;
 
 export function endpointsModule(): string {
-  const defs = definedEndpoints().map((e) => e.def);
-  return `${HEADER}${JSON.stringify(defs, null, 2)};\n`;
+  return descriptionModule(
+    definedEndpoints().map((e) => e.def),
+    {
+      header: HEADER,
+      typeImport: 'import type { DocEndpoint } from "./endpoints";',
+      typeName: "DocEndpoint",
+      exportName: "GENERATED_DOC_ENDPOINTS",
+    }
+  );
 }
