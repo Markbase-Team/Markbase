@@ -1,7 +1,7 @@
 import type { Caller } from "@markbase/protocol/auth";
 import { ownerDisplayName } from "./owner-name";
 import { agentLabel } from "@markbase/protocol/attribution";
-import { claimAgentSession } from "@markbase/protocol";
+import { claimAgentSession, providerFromClient, type Provider } from "@markbase/protocol";
 import { docEndpoint } from "../logic/endpoints";
 import {
   atLeast,
@@ -45,6 +45,14 @@ export interface Credentials {
   shareToken?: string | null;
   /** `X-Guest-Name`: what that guest asked to be called. */
   guestName?: string | null;
+  /** `X-MCP-Client`: the tool making this request ("claude-code", "codex"). */
+  client?: string | null;
+}
+
+/** A tool as a version records it — the names agents' hooks use. */
+function toolId(provider: Provider): string | null {
+  if (provider === "unknown") return null;
+  return provider === "claude_code" ? "claude" : provider;
 }
 
 export type ResolvedActor =
@@ -98,8 +106,17 @@ export async function resolveActor(creds: Credentials): Promise<ResolvedActor> {
   // No named session: say whose agent this is — "Jessie's Claude Code". Built
   // from the OWNER plus the connection's stamped provider, never the key's
   // stored name, which for older keys is the approving browser's User-Agent.
+  //
+  // The tool is what this request says it is, else what the key was stamped
+  // with: one key is often shared by several tools (the desktop app's is), and
+  // a plain bearer token is stamped with none.
+  let agent: Actor["agent"];
   if (name === null) {
-    name = agentLabel(await ownerDisplayName(caller.ownerId), caller.key.provider);
+    const said = providerFromClient(creds.client);
+    const provider = said === "unknown" ? caller.key.provider : said;
+    const owner = await ownerDisplayName(caller.ownerId);
+    name = agentLabel(owner, provider);
+    agent = { owner, tool: toolId(provider) };
   }
 
   return {
@@ -111,6 +128,7 @@ export async function resolveActor(creds: Credentials): Promise<ResolvedActor> {
       name,
       // A key may carry a capability ceiling (agent access control).
       capabilityCap: caller.key.capability,
+      ...(agent ? { agent } : {}),
     },
   };
 }

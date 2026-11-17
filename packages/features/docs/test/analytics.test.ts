@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
 import { setMarkdown } from "../src/logic/crdt";
-import { appendVersion } from "../src/logic/versions";
+import { appendVersion, checkpoint } from "../src/logic/versions";
 import { addAgentReads, lineCredit, listAgentReads, writerText } from "../src/logic/analytics";
 
 // A document's analytics: the agents' read tally, and who wrote each line —
@@ -53,11 +53,11 @@ describe("lineCredit", () => {
     expect(credit.ranges.map((r) => [r.from, r.to, writerText(r.writer), r.preview])).toEqual([
       [1, 3, "Jessie", "# Plan"],
       // The blank line before its paragraph came in with the agent's version.
-      [4, 6, "Claude Code · Jessie’s", "Risks: none known."],
+      [4, 6, "Jessie's Claude", "Risks: none known."],
     ]);
     expect(credit.shares.map((s) => [writerText(s.writer), s.lines])).toEqual([
       ["Jessie", 2],
-      ["Claude Code · Jessie’s", 2],
+      ["Jessie's Claude", 2],
     ]);
   });
 
@@ -68,7 +68,7 @@ describe("lineCredit", () => {
     ]);
     expect(lineCredit(doc).ranges.map((r) => [r.from, r.to, writerText(r.writer)])).toEqual([
       [1, 1, "Jessie"],
-      [2, 2, "Codex · Sam’s"],
+      [2, 2, "Sam's Codex"],
       [3, 3, "Jessie"],
     ]);
   });
@@ -80,7 +80,7 @@ describe("lineCredit", () => {
       { text: "one\nby the agent\nby the person\n", author: "Jessie" },
     ]);
     expect(lineCredit(doc).ranges.map((r) => [r.from, r.to, writerText(r.writer)])).toEqual([
-      [1, 2, "Claude Code · Jessie’s"],
+      [1, 2, "Jessie's Claude"],
       [3, 3, "Jessie"],
     ]);
   });
@@ -91,8 +91,8 @@ describe("lineCredit", () => {
       { text: "a\nb\n", author: "Sam", agents: ["claude"] },
     ]);
     expect(lineCredit(doc).shares.map((s) => writerText(s.writer)).sort()).toEqual([
-      "Claude Code · Jessie’s",
-      "Claude Code · Sam’s",
+      "Jessie's Claude",
+      "Sam's Claude",
     ]);
   });
 
@@ -126,5 +126,27 @@ describe("lineCredit", () => {
 
   it("has nothing to say about an empty document", () => {
     expect(lineCredit(new Y.Doc())).toEqual({ ranges: [], shares: [], lines: 0 });
+  });
+
+  it("leaves a table an editor re-spaced with whoever wrote it", () => {
+    const doc = new Y.Doc();
+    const table = "| Tool | Use |\n| --- | --- |\n| A | b |\n";
+    setMarkdown(doc, table);
+    checkpoint(doc, { author: "Jessie", agents: ["claude"] });
+    setMarkdown(doc, "|Tool|Use|\n|------|-----|\n|A|b|\n\nnew\n");
+    checkpoint(doc, { author: "Jessie" });
+    expect(lineCredit(doc).ranges.map((r) => [r.from, r.to, writerText(r.writer)])).toEqual([
+      [1, 3, "Jessie's Claude"],
+      [4, 5, "Jessie"],
+    ]);
+  });
+
+  it("joins two runs by one writer that only blank lines by another kept apart", () => {
+    const doc = new Y.Doc();
+    setMarkdown(doc, "a\nb\n");
+    checkpoint(doc, { author: "Jessie" });
+    setMarkdown(doc, "a\n\nb\n");
+    checkpoint(doc, { author: "Sam" });
+    expect(lineCredit(doc).ranges.map((r) => [r.from, r.to, writerText(r.writer)])).toEqual([[1, 3, "Jessie"]]);
   });
 });

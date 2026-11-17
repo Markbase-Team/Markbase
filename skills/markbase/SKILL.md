@@ -1,6 +1,6 @@
 ---
 name: markbase
-version: 0.7.8
+version: 0.9.0
 description: Read and write Markbase collaborative markdown documents over the HTTP API — list/create docs, edit a passage by quoting it, comment, and read version history. Use when the user shares a Markbase doc link (markbase.so/dashboard/documents/…) or asks to work with a Markbase document, or mentions MARKBASE_API_KEY.
 ---
 
@@ -21,12 +21,17 @@ edits appear live in any open editor.
   `/api/v1`). Paths below append to `$BASE` — do **not** add `/api/v1` again.
 - **Auth:** send `Authorization: Bearer $MARKBASE_API_KEY` on every request.
   Create a key in the dashboard → API keys. **Never print the key.**
+- **Say which tool you are:** send `X-MCP-Client: <tool>` on every request —
+  `claude-code`, `codex` or `cursor`. Your edits are then credited as
+  "Jessie's Claude" in the document's history and analytics; without it they
+  read "Jessie's agent".
 
 Every recipe below assumes:
 
 ```bash
 BASE="${MARKBASE_API_BASE:-https://markbase.so/api/v1}"
 AUTH="Authorization: Bearer $MARKBASE_API_KEY"
+CLIENT="X-MCP-Client: claude-code"   # the tool you are: claude-code, codex, cursor
 ```
 
 ## Editing → always use `/edits`
@@ -100,7 +105,7 @@ Each endpoint lists the **minimum role** it needs. Roles are ranked `owner > edi
 - **Output:** { docs: [{ id, title, version, updated_at, capability? }] }
 
 ```bash
-curl -s -H "$AUTH" "$BASE/docs" | jq '.docs'
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs" | jq '.docs'
 ```
 
 ### Create a document
@@ -111,7 +116,7 @@ curl -s -H "$AUTH" "$BASE/docs" | jq '.docs'
 - **Output:** { doc: { id, title, version, … } }
 
 ```bash
-curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
+curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
   -d '{"title":"My doc","content":"# My doc\n"}' "$BASE/docs"
 ```
 
@@ -122,7 +127,7 @@ curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
 - **Output:** { doc: { id, title, content: markdown, version }, capability }
 
 ```bash
-curl -s -H "$AUTH" "$BASE/docs/$ID" | jq -r '.doc.content'
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID" | jq -r '.doc.content'
 ```
 
 ### Edit a passage (quote → insert) — the only way to change a doc
@@ -133,7 +138,7 @@ curl -s -H "$AUTH" "$BASE/docs/$ID" | jq -r '.doc.content'
 - **Output:** { version: number }  ·  422 if the quote didn’t match  ·  409 on conflict
 
 ```bash
-curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
+curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
   -d '{"quote":"Status: draft","insert":"Status: **ready**"}' "$BASE/docs/$ID/edits"
 ```
 
@@ -145,7 +150,7 @@ curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
 - **Output:** { version: number }
 
 ```bash
-curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
+curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
   -d '{"version":N}' "$BASE/docs/$ID/restore"
 ```
 
@@ -157,7 +162,7 @@ curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
 - **Output:** { comment: { … } }
 
 ```bash
-curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
+curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
   -d '{"body":"X or Y?","quotedText":"the passage"}' "$BASE/docs/$ID/comments"
 ```
 
@@ -168,7 +173,7 @@ curl -s -X POST -H "$AUTH" -H 'content-type: application/json' \
 - **Output:** { version, revisions: [{ from_version, to_version, author, added, removed }] }
 
 ```bash
-curl -s -H "$AUTH" "$BASE/docs/$ID/history" | jq '.revisions'
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/history" | jq '.revisions'
 ```
 
 ## Capabilities

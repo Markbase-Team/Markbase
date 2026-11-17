@@ -84,7 +84,7 @@ describe("VaultSync agent credit", () => {
     const v = listVersions(vs.doc)[1];
     expect(v).toMatchObject({ author: "Jessie", agents: ["claude"] });
     expect(v.mixed).toBeUndefined();
-    expect(versionCreditText(v)).toBe("Claude Code");
+    expect(versionCreditText(v)).toBe("Jessie's Claude");
     vs.close();
   });
 
@@ -95,7 +95,7 @@ describe("VaultSync agent credit", () => {
     vs.maybeCheckpoint(settled());
 
     const versions = listVersions(vs.doc);
-    expect(versions.map((v) => versionCreditText(v))).toEqual(["Jessie", "Claude Code"]);
+    expect(versions.map((v) => versionCreditText(v))).toEqual(["Jessie", "Jessie's Claude"]);
     expect(versionContent(vs.doc, 0)).toBe("# Note\n");
     vs.close();
   });
@@ -119,7 +119,7 @@ describe("VaultSync agent credit", () => {
     vs.maybeCheckpoint(settled());
 
     const versions = listVersions(vs.doc);
-    expect(versions.map((v) => versionCreditText(v))).toEqual(["Jessie", "Claude Code", "Jessie", "Codex"]);
+    expect(versions.map((v) => versionCreditText(v))).toEqual(["Jessie", "Jessie's Claude", "Jessie", "Jessie's Codex"]);
     expect(versionContent(vs.doc, 1)).toBe(BY_CLAUDE);
     expect(versionContent(vs.doc, 2)).toBe(BY_JESSIE);
     expect(versionContent(vs.doc, 3)).toBe(BY_CODEX);
@@ -132,7 +132,7 @@ describe("VaultSync agent credit", () => {
     edit(vs, fs, BY_CLAUDE);
 
     vs.maybeCheckpoint(settled());
-    expect(versionCreditText(listVersions(vs.doc)[0])).toBe("Cursor");
+    expect(versionCreditText(listVersions(vs.doc)[0])).toBe("Jessie's Cursor");
     vs.close();
   });
 
@@ -151,6 +151,6 @@ describe("VaultSync agent credit", () => {
 
   it("names an agent it has no label for as it was given", () => {
     expect(agentLabel("aider")).toBe("aider");
-    expect(agentLabel("Claude")).toBe("Claude Code");
+    expect(agentLabel("Claude")).toBe("Claude");
   });
 });

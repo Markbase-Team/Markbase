@@ -1,5 +1,5 @@
-import { applyAnchoredEdit, checkpoint, restoreVersion, type Author, type VersionCredit } from "../logic";
-import { editDocCrdt, setDocContent } from "../server";
+import { applyAnchoredEdit, checkpoint, restoreVersion, type VersionCredit } from "../logic";
+import { editDocCrdt, setDocContent, type Actor } from "../server";
 import { requireDocCapability, requireDocEndpoint } from "./actor";
 import { json } from "./respond";
 
@@ -93,11 +93,16 @@ export const docEditsHandler = async (req: Request, id: string): Promise<Respons
 
 /**
  * Who a version written through the API is credited to. An agent's edit is
- * credited as an agent's ("Jessie's Claude Code"), so history and line credit
+ * credited as an agent's ("Jessie's Claude"), so history and line credit
  * show it as one; a person's edit, to the person.
  */
-export function versionCredit(actor: Author): VersionCredit {
-  return actor.kind === "agent" ? { agents: [actor.name] } : { author: actor.name };
+export function versionCredit(actor: Actor): VersionCredit {
+  if (actor.kind !== "agent") return { author: actor.name };
+  // Whose agent and which tool, apart — the shape an agent's hook records, so
+  // "Jessie's Claude" is one writer however the edit arrived. An agent that
+  // did not say which tool it is, is "agent".
+  if (actor.agent) return { author: actor.agent.owner, agents: [actor.agent.tool ?? "agent"] };
+  return { agents: [actor.name] };
 }
 
 // POST { version } — make a past CRDT version the new head by writing its

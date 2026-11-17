@@ -13,7 +13,7 @@ import { json } from "./respond";
 //
 // The gate attached the caller as a header; a request may also carry an agent
 // session token and, for a share-link guest, a share token and a name. Those
-// four headers are read here, once, into a `Credentials` value, and the
+// headers are read here, once, into a `Credentials` value, and the
 // server layer — the database's, which knows no HTTP — is handed that. The
 // caller header is read through @markbase/protocol/auth, never as a raw
 // string: the names have one definition and one writer, and a feature
@@ -26,6 +26,7 @@ export function credentialsFrom(req: Request): Credentials {
     sessionToken: req.headers.get("x-mcp-session"),
     shareToken: req.headers.get("x-share-token"),
     guestName: req.headers.get("x-guest-name"),
+    client: req.headers.get("x-mcp-client"),
   };
 }
 

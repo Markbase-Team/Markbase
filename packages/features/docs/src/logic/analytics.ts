@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { diffLines } from "diff";
+import { diffArrays } from "diff";
 import { getMarkdown } from "./crdt";
 import { agentLabel, listVersions, versionContents, type VersionMeta } from "./versions";
 
@@ -107,10 +107,10 @@ function writerOf(version: VersionMeta): LineWriter {
   return { kind: version.mixed ? "mixed" : "agent", agents, person };
 }
 
-/** A writer in words: "Claude Code · Jessie's", "Jessie", "Jessie + Cursor", "Agent". */
+/** A writer in words: "Jessie's Claude", "Jessie", "Jessie + Cursor". */
 export function writerText(writer: LineWriter): string {
   const agents = writer.agents.map(agentLabel).join(" + ") || "Agent";
-  if (writer.kind === "agent") return writer.person ? `${agents} · ${writer.person}’s` : agents;
+  if (writer.kind === "agent") return writer.person ? `${writer.person}'s ${agents}` : agents;
   if (writer.kind === "mixed") return writer.person ? `${writer.person} + ${agents}` : agents;
   if (writer.kind === "person") return writer.person ?? "Agent";
   return "Not recorded yet";
@@ -124,9 +124,14 @@ function linesOf(text: string): string[] {
   return lines;
 }
 
-/** The text, ending in a newline if it has anything in it. */
-function closed(text: string): string {
-  return text === "" || text.endsWith("\n") ? text : `${text}\n`;
+/**
+ * A line as it counts for credit: without its spacing, and with a table's
+ * rule (`| --- | :---: |`) reduced to its shortest spelling. An editor that
+ * saves a document re-spaces its tables and re-draws their rules; a line that
+ * changed only that way was not rewritten, and keeps its writer.
+ */
+function essence(line: string): string {
+  return line.replace(/\s+/g, "").replace(/-{3,}/g, "---");
 }
 
 /**
@@ -136,10 +141,13 @@ function closed(text: string): string {
 function carry(owners: LineWriter[], before: string, after: string, writer: LineWriter): LineWriter[] {
   const next: LineWriter[] = [];
   let at = 0;
-  // Compared with a newline at the end of both: a last line that only gained
-  // one (someone wrote below it) was not rewritten, and keeps its writer.
-  for (const part of diffLines(closed(before), closed(after))) {
-    const count = part.count ?? linesOf(part.value).length;
+  // Compared line by line, by what each says (essence): a last line that only
+  // gained a newline, or a table an editor re-spaced, was not rewritten.
+  const parts = diffArrays(linesOf(before), linesOf(after), {
+    comparator: (a, b) => essence(a) === essence(b),
+  });
+  for (const part of parts) {
+    const count = part.value.length;
     if (part.removed) {
       at += count;
     } else if (part.added) {
@@ -220,10 +228,11 @@ export function lineCredit(doc: Y.Doc): LineCredit {
   }
   shares.sort((a, b) => b.lines - a.lines);
   // A run of nothing but blank lines says nothing; fold it into the run above.
+  // That can leave two runs by one writer touching: they are one run.
   const shown: CreditedRange[] = [];
   for (const range of ranges) {
     const above = shown[shown.length - 1];
-    if (range.preview === "" && above) above.to = range.to;
+    if (above && (range.preview === "" || sameWriter(above.writer, range.writer))) above.to = range.to;
     else shown.push(range);
   }
   return { ranges: shown, shares, lines: written };

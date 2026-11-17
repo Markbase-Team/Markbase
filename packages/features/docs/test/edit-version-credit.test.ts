@@ -15,6 +15,16 @@ describe("versionCredit", () => {
     });
   });
 
+  it("records whose agent and which tool apart, as an agent's hook does", () => {
+    expect(
+      versionCredit({ kind: "agent", name: "Jessie's Claude", agent: { owner: "Jessie", tool: "claude" } })
+    ).toEqual({ author: "Jessie", agents: ["claude"] });
+    const doc = new Y.Doc();
+    setMarkdown(doc, "a\n");
+    checkpoint(doc, versionCredit({ kind: "agent", name: "Jessie's agent", agent: { owner: "Jessie", tool: null } }));
+    expect(writerText(lineCredit(doc).shares[0].writer)).toBe("Jessie's agent");
+  });
+
   it("credits a person's edit to the person", () => {
     expect(versionCredit({ kind: "user", name: "Jessie" })).toEqual({ author: "Jessie" });
   });

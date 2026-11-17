@@ -154,9 +154,14 @@ export interface VersionCredit {
   at?: number;
 }
 
-/** An agent's name as people know it: "claude" is Claude Code. */
+/** An agent's name as people know it. */
 export function agentLabel(agent: string): string {
-  const known: Record<string, string> = { claude: "Claude Code", codex: "Codex", cursor: "Cursor" };
+  const known: Record<string, string> = {
+    claude: "Claude",
+    claude_desktop: "Claude Desktop",
+    codex: "Codex",
+    cursor: "Cursor",
+  };
   return known[agent.toLowerCase()] ?? agent;
 }
 
@@ -169,7 +174,8 @@ export function versionCreditText(v: { author?: string; agents?: string[]; mixed
   const agents = (v.agents ?? []).map(agentLabel);
   if (agents.length === 0) return v.author ?? null;
   if (v.mixed) return [v.author ?? "You", ...agents].join(" + ");
-  return agents.join(" + ");
+  // Whose agent, when the version says: "Jessie's Claude".
+  return v.author ? `${v.author}'s ${agents.join(" + ")}` : agents.join(" + ");
 }
 
 /**

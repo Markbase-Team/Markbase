@@ -21,12 +21,17 @@ edits appear live in any open editor.
   `/api/v1`). Paths below append to `$BASE` — do **not** add `/api/v1` again.
 - **Auth:** send `Authorization: Bearer $MARKBASE_API_KEY` on every request.
   Create a key in the dashboard → API keys. **Never print the key.**
+- **Say which tool you are:** send `X-MCP-Client: <tool>` on every request —
+  `claude-code`, `codex` or `cursor`. Your edits are then credited as
+  "Jessie's Claude" in the document's history and analytics; without it they
+  read "Jessie's agent".
 
 Every recipe below assumes:
 
 ```bash
 BASE="${MARKBASE_API_BASE:-https://markbase.so/api/v1}"
 AUTH="Authorization: Bearer $MARKBASE_API_KEY"
+CLIENT="X-MCP-Client: claude-code"   # the tool you are: claude-code, codex, cursor
 ```
 
 ## Editing → always use `/edits`

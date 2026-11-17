@@ -48,7 +48,7 @@ export function personName(user: { name: string | null; email: string | null }):
 export function toolName(provider: Provider): string | null {
   switch (provider) {
     case "claude_code":
-      return "Claude Code";
+      return "Claude";
     case "claude_desktop":
       return "Claude Desktop";
     case "codex":

@@ -43,8 +43,7 @@ function ReadRow({ read }: { read: AgentReadTally }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">
-          {agentLabel(read.agent)}
-          {read.owner && <span className="font-normal text-muted-foreground"> · {read.owner}’s</span>}
+          {read.owner ? `${read.owner}'s ${agentLabel(read.agent)}` : agentLabel(read.agent)}
         </span>
         <span className="block truncate text-muted-foreground">last {when(read.lastAt)}</span>
       </span>
