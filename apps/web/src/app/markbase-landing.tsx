@@ -30,6 +30,8 @@ import { latestMacVersion } from "@/lib/latest-release";
 const DOCS_HREF = "/docs";
 const STAY_IN_TOUCH_HREF = "/#stay-in-touch";
 const SITE_URL = "https://markbase.so";
+const ORG_URL = "https://github.com/Markbase-Team";
+const NPM_CLI_URL = "https://www.npmjs.com/package/@markbase/cli";
 
 // Organization + WebSite + SoftwareApplication + SiteNavigationElement for rich
 // results: the logo Google shows next to the result, the app's facts, and the
@@ -49,8 +51,9 @@ const structuredData = (version: string | null) => ({
         height: 1024,
       },
       description: "One markdown folder for your team and its agents.",
-      // Owned profiles, so search and AI models can tell this "Markbase" apart.
-      sameAs: [REPO_URL],
+      // Profiles we own, so search and AI models can tell this "Markbase" apart
+      // from the other projects that share the name.
+      sameAs: [REPO_URL, ORG_URL, NPM_CLI_URL],
     },
     {
       "@type": "WebSite",
