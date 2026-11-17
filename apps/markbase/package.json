@@ -2,6 +2,24 @@
   "name": "@markbase/cli",
   "version": "0.9.0",
   "description": "Run a Markbase ticket worker on your machine — claims your tickets and executes them with Claude Code.",
+  "keywords": [
+    "markbase",
+    "markdown",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "claude",
+    "claude-code",
+    "codex",
+    "cursor",
+    "ai-agents",
+    "documents",
+    "collaboration",
+    "crdt",
+    "vault",
+    "sync",
+    "cli"
+  ],
   "type": "module",
   "bin": {
     "markbase": "dist/cli.js"
