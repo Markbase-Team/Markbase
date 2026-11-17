@@ -1,13 +1,11 @@
-import { docCommentsHandler } from "@markbase/docs/handlers";
+// GENERATED from the endpoint registry — do not edit.
+//
+// An endpoint is its entry in packages/features/docs/src/logic/endpoints.ts and
+// its handler in packages/features/docs/src/handlers/endpoint-handlers.ts.
+// Change those, then run: npm run gen:api -w @markbase/web
+import { endpointRoute } from "@markbase/docs/handlers";
 
 export const runtime = "nodejs";
 
-type Ctx = { params: Promise<{ id: string }> };
-
-export async function GET(req: Request, { params }: Ctx) {
-  return docCommentsHandler.GET(req, (await params).id);
-}
-
-export async function POST(req: Request, { params }: Ctx) {
-  return docCommentsHandler.POST(req, (await params).id);
-}
+export const GET = endpointRoute("docs_listComments");
+export const POST = endpointRoute("docs_addComment");
