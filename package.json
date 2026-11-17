@@ -13,7 +13,7 @@
     "start": "npm run start --workspace @markbase/web",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "gen:endpoints": "tsx packages/features/docs/scripts/gen-endpoints.ts && tsx packages/features/docs/scripts/gen-skill.ts && npm run gen:api -w @markbase/web"
+    "gen:endpoints": "tsx packages/features/docs/scripts/gen-endpoints.ts && tsx packages/features/docs/scripts/gen-skill.ts && npm run gen:api -w @markbase/web && tsx packages/features/agents/scripts/gen-endpoints.ts"
   },
   "overrides": {
     "@tiptap/core": "3.27.1",
