@@ -13,8 +13,9 @@ import { BLOG_MARKDOWN } from "@/generated/blog-posts";
 //   - a section with a numbered list becomes the dark "steps" block: the
 //     text before the list beside its heading, the steps numbered in lime.
 
-/** What a post is: a change to the product, or a desktop release. */
-export type BlogKind = "Update" | "Release";
+/** What a post is: a change to the product, a desktop release, or a note on
+ * something around it, such as a look at the tools nearby. */
+export type BlogKind = "Update" | "Release" | "Note";
 
 export interface BlogPost {
   slug: string;
@@ -27,6 +28,14 @@ export interface BlogPost {
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: "ai-sre-tools-late-2026",
+    kind: "Note",
+    title: "AI SRE tools in late 2026: who keeps what your agent learned",
+    date: "2026-11-17",
+    summary:
+      "The AI SRE tools of late 2026, grouped like the r/sre list, with one question most comparisons skip: after the incident, where does what the agent learned live, and what leaves with you if you cancel.",
+  },
   {
     slug: "default-markdown-app",
     kind: "Update",

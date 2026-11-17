@@ -16,6 +16,7 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "All", label: "All" },
   { value: "Update", label: "Updates" },
   { value: "Release", label: "Releases" },
+  { value: "Note", label: "Notes" },
 ];
 
 export function BlogList({ posts }: { posts: BlogPost[] }) {
