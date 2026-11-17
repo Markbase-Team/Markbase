@@ -76,7 +76,8 @@ packages/features/   Things that live in the kernel
 
 supabase/        Migrations and database tests. The schema is built from these.
 docs/            Design notes: the shared vault, the workspace layout, how
-                 features plug in.
+                 features plug in, and how to add an API endpoint so agents
+                 get it as a tool (docs/adding-an-endpoint.md).
 ```
 
 The vault is core and documents are a feature, so the dependency points from
