@@ -191,16 +191,14 @@ export const createDocEndpoint = endpoint({
     doc_json: doc.toJSON(),
     content: docToMarkdown(doc),
     owner_id: a.userId,
+    // The seed is the creator's: the first version says so.
+    by: a.actor,
     // A file adopted from a vault folder keeps its path, so it stays put on
     // the next sync instead of being pulled back to the root.
     path: body.path,
     // Every document must live in a vault or it syncs to no folder at all.
     vault_id: body.vault_id ?? (await ensureDefaultVault(a.userId)).id,
   });
-  // The seed is the creator's. Written through the seam so the document's
-  // first version says so — without it, the text sat unrecorded until the
-  // next viewer's idle ticker credited it to them.
-  await editDocCrdt(created.id, created.content, { actor: a.actor, label: "Created" }, () => undefined);
   return json({ doc: created }, 201);
 });
 

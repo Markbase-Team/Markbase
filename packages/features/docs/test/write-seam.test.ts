@@ -45,7 +45,7 @@ vi.mock("../src/server/crdt-store", () => ({
   saveCrdtSnapshot: (id: string, s: Uint8Array) => saveCrdtSnapshot(id, s),
   broadcastCrdt: async () => undefined,
 }));
-vi.mock("@markbase/docs/server", () => ({ mirrorDocContent: async () => undefined }));
+vi.mock("../src/server/documents", () => ({ mirrorDocContent: async () => undefined }));
 
 const { editDocCrdt } = await import("../src/server/doc-crdt");
 

@@ -1,7 +1,6 @@
 import { markdownToDoc, docToMarkdown, deriveTitle } from "../logic/markdown";
 import { createDocument } from "./documents";
 import { createComment } from "./comments";
-import { editDocCrdt } from "./doc-crdt";
 import type { Actor } from "./auth";
 import type { DocJSON } from "../logic/types";
 
@@ -143,11 +142,11 @@ export async function seedWelcomeDoc(userId: string, vaultId: string): Promise<v
     doc_json: doc.toJSON() as DocJSON,
     content: docToMarkdown(doc),
     owner_id: userId,
+    // Its first version is Markbase's, like its comments — not the new
+    // account's, whose idle ticker would otherwise claim the text.
+    by: MARKBASE,
     vault_id: vaultId,
     path: WELCOME_DOC_PATH,
   });
-  // Its first version is Markbase's, like its comments — not the new
-  // account's, whose idle ticker would otherwise claim the text.
-  await editDocCrdt(row.id, row.content, { actor: MARKBASE, label: "Created" }, () => undefined);
   await seedComments(doc, row.id, row.version);
 }

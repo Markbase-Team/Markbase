@@ -10,8 +10,8 @@ import {
   type DocJSON,
   type VersionCredit,
 } from "@markbase/docs";
-import { mirrorDocContent } from "@markbase/docs/server";
 import type { Actor } from "./auth";
+import { mirrorDocContent } from "./documents";
 import { broadcastCrdt, loadCrdtSnapshot, saveCrdtSnapshot } from "./crdt-store";
 
 // The external agent HTTP API edits the SAME CRDT Y.Doc the browser editor and
