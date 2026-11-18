@@ -57,7 +57,7 @@ export async function createComment(input: {
       quoted_text: input.quotedText ?? "",
       body: input.body,
       author_kind: input.author.kind,
-      author_id: input.author.id ?? null,
+      author_id: input.author.userId ?? null,
       author_name: input.author.name,
     })
     .select(COLS)

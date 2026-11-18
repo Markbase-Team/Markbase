@@ -132,7 +132,7 @@ describe("getPublishedTabs", () => {
 });
 
 /** Who publishes: the owner, as the route gates it. */
-const OWNER: Actor = { kind: "user", id: "owner_1", userId: "owner_1", name: "Jessie" };
+const OWNER: Actor = { kind: "user", userId: "owner_1", name: "Jessie" };
 
 describe("publishing pins a version", () => {
   it("publishes the text as it stands and keeps showing it after more edits", async () => {

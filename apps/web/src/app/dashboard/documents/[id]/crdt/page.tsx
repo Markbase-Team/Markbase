@@ -27,7 +27,7 @@ export default async function CrdtDocPage({
   const memberCapability = await getMemberCapability(id, user.id);
   const capability = capabilityFor({
     ownerId: doc.owner_id,
-    actor: { kind: "user", id: user.id, userId: user.id, name: user.email ?? "" },
+    actor: { kind: "user", userId: user.id, name: user.email ?? "" },
     memberCapability,
     guestCapability: null,
   });

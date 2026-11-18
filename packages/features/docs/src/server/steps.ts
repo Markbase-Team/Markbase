@@ -88,7 +88,7 @@ export async function receiveSteps(input: {
     removed,
     session_id: input.sessionId ?? randomUUID(),
     author_kind: author.kind,
-    author_id: author.id ?? null,
+    author_id: author.userId ?? null,
     author_name: author.name,
   });
   if (ins.error) throw ins.error;

@@ -20,7 +20,12 @@ export type StepJSON = { [key: string]: JSONValue };
 /** Who made an edit or comment — humans, agents, and guests share one API. */
 export type Author = {
   kind: "user" | "agent" | "guest";
-  id?: string;
+  /**
+   * The account behind it: the person's own, or for an agent the person
+   * whose key it holds. What a comment or step records as its author, and
+   * what access is checked against. A guest on a share link has none.
+   */
+  userId?: string;
   name: string;
 };
 

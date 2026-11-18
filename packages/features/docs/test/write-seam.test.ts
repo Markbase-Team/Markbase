@@ -51,12 +51,11 @@ const { editDocCrdt } = await import("../src/server/doc-crdt");
 
 const CODEX: Actor = {
   kind: "agent",
-  id: "owner_1",
   userId: "owner_1",
   name: "Jessie's Codex",
   agent: { owner: "Jessie", tool: "codex" },
 };
-const JESSIE: Actor = { kind: "user", id: "owner_1", userId: "owner_1", name: "Jessie" };
+const JESSIE: Actor = { kind: "user", userId: "owner_1", name: "Jessie" };
 
 /** The document as the cloud now holds it. */
 function stored(id: string) {

@@ -75,7 +75,6 @@ export async function resolveActor(creds: Credentials): Promise<ResolvedActor> {
       ok: true,
       actor: {
         kind: "user",
-        id: caller.ownerId,
         userId: caller.ownerId,
         // A display name, not the raw email. This string is recorded as a
         // version's author INSIDE the Y.Doc, which replicates to everyone the
@@ -123,7 +122,6 @@ export async function resolveActor(creds: Credentials): Promise<ResolvedActor> {
     ok: true,
     actor: {
       kind: "agent",
-      id: caller.ownerId,
       userId: caller.ownerId,
       name,
       // A key may carry a capability ceiling (agent access control).
