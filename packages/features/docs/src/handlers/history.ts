@@ -38,7 +38,7 @@ export const searchDocsEndpoint = endpoint({
 }, async (req, _params, a) => {
   const params = new URL(req.url).searchParams;
   const shared = params.get("scope") === "shared";
-  const hits = await searchDocuments(a.userId, {
+  const hits = await searchDocuments(a.actor.userId, {
     query: params.get("q") ?? "",
     // Shared-with-me searches across owners' vaults, so a vault filter is moot.
     vaultId: shared ? undefined : (params.get("vault") ?? undefined),

@@ -2,7 +2,7 @@ import { callerFromHeaders } from "@markbase/protocol/auth";
 import {
   requireDocCapability as requireDocCapabilityFor,
   resolveActor,
-  type Actor,
+  type SignedInActor,
   type Capability,
   type Credentials,
   type DocAuth,
@@ -49,16 +49,17 @@ export function requireDocCapability(
  * these endpoints are about none. Returning the refusal rather than throwing
  * keeps each handler's happy path flat.
  *
- * The whole actor comes along, not only the user id: an account-level
- * endpoint that writes (creating a document) credits what it wrote to whoever
- * asked, and "whoever" is the actor the gate already resolved — the owner and
- * the tool — not a second lookup from the id.
+ * The whole actor comes along, narrowed to one with a user: an account-level
+ * endpoint scopes by `actor.userId`, and one that writes (creating a
+ * document) credits what it wrote to the actor the gate already resolved —
+ * the owner and the tool — not to a second lookup from the id.
  */
 export async function accountActor(
   req: Request
-): Promise<{ userId: string; actor: Actor } | { error: Response }> {
+): Promise<{ actor: SignedInActor } | { error: Response }> {
   const a = await resolveActor(credentialsFrom(req));
   if (!a.ok) return { error: json({ error: a.error }, a.status) };
-  if (!a.actor.userId) return { error: json({ error: "No user." }, 403) };
-  return { userId: a.actor.userId, actor: a.actor };
+  const userId = a.actor.userId;
+  if (!userId) return { error: json({ error: "No user." }, 403) };
+  return { actor: { ...a.actor, userId } };
 }

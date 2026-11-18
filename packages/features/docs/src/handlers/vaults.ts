@@ -55,7 +55,7 @@ export const listVaultsEndpoint = endpoint({
   // turns into the "create your first vault" onboarding. (A document created
   // without a vault_id still resolves a default in POST /docs, so the
   // invariant that every document lives in a vault holds.)
-  return json({ vaults: await listVaultsForUser(a.userId) });
+  return json({ vaults: await listVaultsForUser(a.actor.userId) });
 });
 
 // POST — create a vault. { name }
@@ -81,11 +81,11 @@ export const createVaultEndpoint = endpoint({
   // first thing a new person sees in the folder they just mounted. Only the
   // first: a second vault's owner has seen it. Best-effort: a vault without
   // its welcome is a vault; a failed welcome must not fail the vault.
-  const first = (await listVaultsForUser(a.userId)).length === 0;
-  const vault = await createVault({ name, owner_id: a.userId });
+  const first = (await listVaultsForUser(a.actor.userId)).length === 0;
+  const vault = await createVault({ name, owner_id: a.actor.userId });
   if (first) {
     try {
-      await seedWelcomeDoc(a.userId, vault.id);
+      await seedWelcomeDoc(a.actor.userId, vault.id);
     } catch {
       // the vault exists; the welcome is a nicety
     }
@@ -117,7 +117,7 @@ export const readVaultEndpoint = endpoint({
   scope: "read",
   summary: "One of your vaults (404: gone; 403: somebody else's)",
 }, async (_req, { id }, a) => {
-  const own = await ownVault(id, a.userId);
+  const own = await ownVault(id, a.actor.userId);
   if ("error" in own) return own.error;
   return json({ vault: own.vault });
 });
@@ -141,7 +141,7 @@ export const renameVaultEndpoint = endpoint({
   const name = body.name?.trim();
   if (!name) return json({ error: "name is required" }, 400);
 
-  const own = await ownVault(id, a.userId);
+  const own = await ownVault(id, a.actor.userId);
   if ("error" in own) return own.error;
 
   await renameVault(id, name);
@@ -162,11 +162,11 @@ export const deleteVaultEndpoint = endpoint({
 }, async (_req, { id }, a) => {
   // Settled here, with the same two answers as GET and PATCH; deleteVault's
   // own check (one "not found" for both) stays as the belt to these braces.
-  const own = await ownVault(id, a.userId);
+  const own = await ownVault(id, a.actor.userId);
   if ("error" in own) return own.error;
 
   try {
-    await deleteVault(id, a.userId);
+    await deleteVault(id, a.actor.userId);
     return json({ ok: true });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
@@ -210,7 +210,7 @@ export const convertFolderToVaultEndpoint = endpoint({
 
   try {
     const { vault, moved } = await convertFolderToVault({
-      ownerId: a.userId,
+      ownerId: a.actor.userId,
       fromVaultId,
       folder,
       name,

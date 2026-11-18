@@ -97,10 +97,10 @@ export const listDocsEndpoint = endpoint({
   // `content` when it's asked for (the bodies dwarf the rest of the row).
   const withContent = params.get("content") === "1";
   if (scope === "shared") {
-    const shared = await listSharedDocumentsForUser(a.userId, withContent);
+    const shared = await listSharedDocumentsForUser(a.actor.userId, withContent);
     return json({ docs: await Promise.all(shared.map((d) => sharedListEntry(d, withContent))) });
   }
-  const docs = await listDocumentsForUser(a.userId, vaultId, withContent);
+  const docs = await listDocumentsForUser(a.actor.userId, vaultId, withContent);
   // Omit the (potentially large) doc_json from the list view.
   return json({
     docs: docs.map((d) => ({
@@ -167,7 +167,7 @@ export const createDocEndpoint = endpoint({
   // created 116 documents inside another account's vaults (see
   // userOwnsVault). A vault that does not exist reads the same as someone
   // else's: either way it is not a place this caller may create in.
-  if (body.vault_id && !(await userOwnsVault(body.vault_id, a.userId))) {
+  if (body.vault_id && !(await userOwnsVault(body.vault_id, a.actor.userId))) {
     return json({ error: "You don't own that vault." }, 403);
   }
 
@@ -190,14 +190,14 @@ export const createDocEndpoint = endpoint({
     title: body.title,
     doc_json: doc.toJSON(),
     content: docToMarkdown(doc),
-    owner_id: a.userId,
+    owner_id: a.actor.userId,
     // The seed is the creator's: the first version says so.
     by: a.actor,
     // A file adopted from a vault folder keeps its path, so it stays put on
     // the next sync instead of being pulled back to the root.
     path: body.path,
     // Every document must live in a vault or it syncs to no folder at all.
-    vault_id: body.vault_id ?? (await ensureDefaultVault(a.userId)).id,
+    vault_id: body.vault_id ?? (await ensureDefaultVault(a.actor.userId)).id,
   });
   return json({ doc: created }, 201);
 });

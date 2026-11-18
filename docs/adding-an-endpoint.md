@@ -70,10 +70,10 @@ What each part does:
 - **A role on a document:** the caller must hold at least that role on the
   document. Your code receives `auth`, with `auth.doc` (the row), `auth.actor`
   (who is asking, person or agent) and `auth.capability` (what they hold).
-- **`null`:** the caller must be signed in. Your code receives `{ userId,
-  actor }`: whose account, and who is asking on it. Anything narrower is yours
-  to check, for example that a vault is the caller's (`ownVault` in
-  `handlers/vaults.ts`).
+- **`null`:** the caller must be signed in. Your code receives `{ actor }`,
+  with `actor.userId` the account to scope by (a `string` here: a guest never
+  gets in). Anything narrower is yours to check, for example that a vault is
+  the caller's (`ownVault` in `handlers/vaults.ts`).
 
 Do not call `requireDocCapability` or `accountActor` yourself. If the rule
 really depends on what is asked for, use `selfCheckedEndpoint(def, because,

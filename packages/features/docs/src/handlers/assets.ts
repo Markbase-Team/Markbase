@@ -109,7 +109,7 @@ export const listAssetsEndpoint = selfCheckedEndpoint({
   } else {
     const a = await accountActor(req);
     if ("error" in a) return a.error;
-    if (!(await ownedVault(vaultId as string, a.userId))) {
+    if (!(await ownedVault(vaultId as string, a.actor.userId))) {
       return json({ error: "Vault not found" }, 404);
     }
     assets = await listAssets(vaultId as string);
@@ -152,7 +152,7 @@ export const uploadAssetEndpoint = endpoint({
   if (typeof vaultId !== "string" || !vaultId) {
     return json({ error: "vault_id is required" }, 400);
   }
-  if (!(await ownedVault(vaultId, a.userId))) {
+  if (!(await ownedVault(vaultId, a.actor.userId))) {
     return json({ error: "Vault not found" }, 404);
   }
 
@@ -169,7 +169,7 @@ export const uploadAssetEndpoint = endpoint({
   const bytes = new Uint8Array(await file.arrayBuffer());
   const asset = await putAsset({
     vaultId,
-    ownerId: a.userId,
+    ownerId: a.actor.userId,
     path,
     bytes,
     contentType: file.type || undefined,

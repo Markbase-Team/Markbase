@@ -7,6 +7,7 @@ export {
   atLeast,
   type Capability,
   type Actor,
+  type SignedInActor,
 } from "./auth";
 export {
   createDocument,

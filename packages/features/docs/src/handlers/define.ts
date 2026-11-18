@@ -5,7 +5,7 @@ import {
   type RouteParams,
 } from "@markbase/protocol/endpoint";
 import type { DocEndpoint } from "../logic/endpoints";
-import type { Actor, Capability, DocAuth } from "../server";
+import type { Capability, DocAuth, SignedInActor } from "../server";
 import { accountActor, requireDocCapability } from "./actor";
 import { json } from "./respond";
 
@@ -31,11 +31,9 @@ export type Endpoint = DefinedEndpoint<DocEndpoint>;
 /** What a per-document endpoint is handed once the caller is allowed in. */
 export type AllowedOnDoc = Extract<DocAuth, { ok: true }>;
 
-/** What an account-level endpoint is handed: whose account, and who is asking on it. */
+/** What an account-level endpoint is handed: who is asking, with the account to scope by. */
 export interface AccountCaller {
-  userId: string;
-  /** The caller as a writer — what a document they create is credited to. */
-  actor: Actor;
+  actor: SignedInActor;
 }
 
 /** An endpoint about one document: `capability` is what the caller must hold on it. */
