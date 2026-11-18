@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
+import { isJsonObject as isObject, type Json, type JsonObject } from "./json";
 
 // Connecting the Markbase docs MCP server to the agents on this machine:
 // Claude Desktop, Claude Code, Codex and Cursor.
@@ -83,13 +84,6 @@ export interface McpInstallOptions {
   env?: NodeJS.ProcessEnv;
 }
 
-/** Any JSON value — an agent's config file is one, mostly not ours. */
-type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
-type JsonObject = { [key: string]: Json };
-
-function isObject(value: Json | undefined): value is JsonObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 /** The server entry every JSON-configured agent gets. */
 export function docsMcpServer(key: string | undefined, base: string): JsonObject {

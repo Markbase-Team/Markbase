@@ -8,25 +8,49 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/docs/agent-tools";
-import { installDocsMcp, type McpTarget } from "@markbase/node";
+import {
+  hookAgentsOf,
+  installAuditHooks,
+  installDocsMcp,
+  type AuditHookOptions,
+  type AuditHookResult,
+  type McpInstallOptions,
+  type McpInstallResult,
+  type McpTarget,
+} from "@markbase/node";
 import { canOpenBrowser } from "@markbase/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
 import { callEndpoint } from "./call";
+import { printHookResults } from "../audit-install";
 import { mcpAuth } from "./mcp-auth";
 import { toolSource } from "./tool-source";
 
 // `markbase mcp install [--desktop] [--claude-code] [--codex] [--cursor]` — wire
 // the doc tools into Claude Desktop, Claude Code, Codex, and/or Cursor. Default:
-// all detected. Authenticates first.
-export async function runMcpInstall(argv: string[] = []): Promise<void> {
-  await ensureAuthenticated();
-  const cfg = loadConfig();
+// all detected. Authenticates first. Every agent that gets the tools and has
+// file tools of its own (all but Claude Desktop) also gets the read-audit and
+// write-audit hooks, so its direct edits of vault files are attributed to it.
+
+/** What the install touches outside this function; a test hands in fakes. */
+export interface McpInstallDeps {
+  ensureAuthenticated: () => Promise<boolean>;
+  loadConfig: typeof loadConfig;
+  savedApiKey: typeof savedApiKey;
+  installDocsMcp: (opts: McpInstallOptions) => McpInstallResult[];
+  installAuditHooks: (opts: AuditHookOptions) => AuditHookResult[];
+}
+
+const LIVE_DEPS: McpInstallDeps = { ensureAuthenticated, loadConfig, savedApiKey, installDocsMcp, installAuditHooks };
+
+export async function runMcpInstall(argv: string[] = [], deps: McpInstallDeps = LIVE_DEPS): Promise<void> {
+  await deps.ensureAuthenticated();
+  const cfg = deps.loadConfig();
   // The saved key stays where it is: the server reads it when it starts, so
   // one sign-in serves every agent and a new one needs no reinstall. Only a
   // key the server could not find for itself (it came from this command's
   // environment) is written into the agents' configs.
-  const key = savedApiKey() ? undefined : cfg.apiKey || undefined;
+  const key = deps.savedApiKey() ? undefined : cfg.apiKey || undefined;
   const base = process.env.MARKBASE_API_BASE ?? `${appUrl()}/api/v1`;
 
   // Said BEFORE the ticks, not after them. Wiring the editors with no key is
@@ -69,11 +93,21 @@ export async function runMcpInstall(argv: string[] = []): Promise<void> {
   if (doCodex) targets.push("codex");
   if (doCursor) targets.push("cursor");
   // The same installer the desktop app's Settings runs (@markbase/node).
-  for (const r of installDocsMcp({ key, base, targets, forceCursor: want.cursor })) {
+  const installed = deps.installDocsMcp({ key, base, targets, forceCursor: want.cursor });
+  for (const r of installed) {
     const name = r.name.padEnd(15);
     if (r.status === "installed") console.log(`  ✓ ${name} → ${r.detail}`);
     else if (r.status === "skipped") console.log(`  • ${name} — skipped (${r.detail})`);
     else console.log(`  • ${name} — ${r.detail}`);
+  }
+
+  // The hooks, for the agents the server just landed on — the same installer
+  // `markbase audit install` and the desktop app run, so a second run (or
+  // either of those) adds nothing more.
+  const hookAgents = hookAgentsOf(installed);
+  if (hookAgents.length > 0) {
+    console.log("\nAdding the read-audit and write-audit hooks, so a document's history names the agent…\n");
+    printHookResults(deps.installAuditHooks({ targets: hookAgents }));
   }
 
   console.log();

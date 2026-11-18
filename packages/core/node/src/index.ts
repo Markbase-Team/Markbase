@@ -18,6 +18,7 @@ export * from "./repo-state";
 export * from "./vercel-preview";
 export * from "./repos";
 export * from "./mcp-install";
+export * from "./audit-hooks";
 
 export {
   awaitDeviceAuth,

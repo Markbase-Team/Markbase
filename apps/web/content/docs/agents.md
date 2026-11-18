@@ -108,7 +108,15 @@ and the Markbase CLI has two commands made for it.
 Both do nothing for a file outside a mounted vault, never block the agent, and
 keep their record on your machine, under `~/.markbaseConfig/audit`.
 
-Set the hooks up for every agent on the machine with one command:
+The hooks come with Markbase. `npx @markbase/cli mcp install` adds them to
+every agent it connects the document tools to, and the desktop app adds them
+at launch for the agents it finds on the computer (Claude Code, Codex, Cursor),
+once you are signed in. Running either again adds nothing twice, and a hooks
+file that is read-only or not valid JSON is left as it is. To keep the app
+from touching the agents' files, start it with `MARKBASE_AUDIT_HOOKS=off`.
+
+To set the hooks up by hand, on a machine without the app, or for an agent
+installed later:
 
 ```
 markbase audit install
@@ -135,8 +143,8 @@ markbase write-audit report                   # writes per file, by agent
 markbase write-audit report --file notes/plan.md   # every change to one file
 ```
 
-The sections below are what `markbase audit install` writes, for setting an
-agent up by hand.
+The sections below are what the installers write, for setting an agent up
+yourself.
 
 ### Claude Code
 

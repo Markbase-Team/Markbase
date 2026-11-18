@@ -40,7 +40,9 @@ git without push and pull.
   server with the document tools — `npx @markbase/cli mcp install` connects
   Claude Desktop, Claude Code, Codex and Cursor, and so does Settings in the
   desktop app — plus an HTTP API and a skill
-  ([`skills/markbase`](./skills/markbase)).
+  ([`skills/markbase`](./skills/markbase)). Both also give Claude Code, Codex
+  and Cursor the audit hooks that let a document's history name the agent
+  that edited a file.
 - **Teams** keep the vault in the repository, beside the code it describes, so
   the spec an engineer's agent builds from is the one the PM edited this
   morning.
