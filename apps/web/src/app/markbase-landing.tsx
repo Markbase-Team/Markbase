@@ -5,7 +5,6 @@ import {
   Apple,
   ArrowRight,
   Box,
-  Check,
   GitFork,
   Globe,
   History,
@@ -212,14 +211,15 @@ export async function MarkbaseLanding() {
               >
                 Your agents work in the same document your team does
               </h1>
+              {/* The two ways in, side by side: the web app, and the desktop app
+                  that turns a vault into a folder on your Mac. */}
               <div className="flex flex-wrap items-center gap-3">
                 <Link href="/login" className={inkBtn}>
                   Get started <ArrowRight className="size-4" />
                 </Link>
-                <a href={REPO_URL} className={ghostBtn}>
-                  <GitFork className="size-4" /> View on GitHub
-                </a>
+                <MacDownload version={version} />
               </div>
+              {MAC_FIRST_OPEN_NOTE && <p className="max-w-sm text-xs text-zinc-500">{MAC_FIRST_OPEN_NOTE}</p>}
             </div>
             <div className="flex flex-col items-start gap-4 lg:col-span-5">
               <DocWithComment />
@@ -227,9 +227,9 @@ export async function MarkbaseLanding() {
                 One markdown folder for people and agents. Claude, Cursor or Codex read it, edit the exact
                 passage you name, and comment on the line. Every change is a version.
               </p>
-              <span className="inline-flex items-center gap-2 text-sm text-zinc-600">
-                <Check className="size-3.5 text-zinc-900" /> Open source under Markbase-Team on GitHub
-              </span>
+              <a href={REPO_URL} className="inline-flex items-center gap-2 text-sm text-zinc-600 transition hover:text-zinc-900">
+                <GitFork className="size-3.5 text-zinc-900" /> Open source under Markbase-Team on GitHub
+              </a>
             </div>
           </div>
 
