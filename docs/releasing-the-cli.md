@@ -39,6 +39,9 @@ does nothing, so it is safe to repeat.
 
 A publish refused with a 404 or "not authorized" almost always means the
 trusted publisher setting below no longer matches.
+Search the Publish step's log for `oidc`: npm says there why it did not
+accept the workflow. The usual causes are a field that differs from the table
+below, or an entry that allows staged publishes only and not `npm publish`.
 
 ## The one-time setting on npmjs.com
 
