@@ -1,0 +1,91 @@
+name: Release CLI
+
+# Publishes @markbase/cli to npm when its version changes on main.
+#
+# A release is a merged version bump: change "version" in
+# apps/markbase/package.json in a PR, merge it, and this publishes that
+# version. A push that leaves the version as npm already has it does nothing,
+# so the workflow is safe to run again by hand (Actions → Release CLI → Run
+# workflow) after a failed run.
+#
+# There is no npm token. npm trusts this workflow file by name ("trusted
+# publishing", OIDC): the package's settings on npmjs.com name this
+# repository and `release-cli.yml`. Renaming this file breaks publishing until
+# that setting is changed to match. See docs/releasing-the-cli.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/markbase/package.json"
+      - ".github/workflows/release-cli.yml"
+  # A PR that changes the version or this file rehearses the release: the same
+  # install, tests and build, and `npm publish --dry-run`, which uploads nothing.
+  pull_request:
+    paths:
+      - "apps/markbase/package.json"
+      - ".github/workflows/release-cli.yml"
+  workflow_dispatch:
+
+# Two merges in a row publish one after the other, never at once.
+concurrency:
+  group: release-cli-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # lets npm verify the run is this workflow; without it publish is refused
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest # trusted publishing needs a GitHub-hosted runner
+    steps:
+      - uses: actions/checkout@v4
+
+      # Trusted publishing needs npm 11.5.1 or later, which Node 24 ships.
+      # No dependency cache: a release builds from a clean install.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Is this version on npm already?
+        id: version
+        run: |
+          version=$(node -p "require('./apps/markbase/package.json').version")
+          # Prints the version when npm has it, nothing when it does not.
+          published=$(npm view "@markbase/cli@$version" version 2>/dev/null || true)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$published" = "$version" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "@markbase/cli $version is already on npm; nothing to publish." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install
+        if: steps.version.outputs.publish == 'true'
+        run: npm ci
+
+      - name: Typecheck and test the CLI
+        if: steps.version.outputs.publish == 'true'
+        working-directory: apps/markbase
+        run: |
+          npm run typecheck
+          npm test
+
+      # prepublishOnly checks the agent skill is up to date and builds dist/.
+      - name: Rehearse the publish (pull request)
+        if: steps.version.outputs.publish == 'true' && github.event_name == 'pull_request'
+        working-directory: apps/markbase
+        run: |
+          npm --version
+          npm publish --dry-run
+
+      - name: Publish
+        if: steps.version.outputs.publish == 'true' && github.event_name != 'pull_request'
+        working-directory: apps/markbase
+        run: |
+          npm --version
+          npm publish
+          echo "Published @markbase/cli ${{ steps.version.outputs.version }} to npm." >> "$GITHUB_STEP_SUMMARY"
