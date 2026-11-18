@@ -82,10 +82,13 @@ jobs:
           npm --version
           npm publish --dry-run
 
+      # Verbose, because npm says why it refused this workflow's identity only
+      # at that level ("npm verbose oidc ..."). Without it a trusted publisher
+      # setting that does not match shows up as a bare 404 on the upload.
       - name: Publish
         if: steps.version.outputs.publish == 'true' && github.event_name != 'pull_request'
         working-directory: apps/markbase
         run: |
           npm --version
-          npm publish
+          npm publish --loglevel verbose
           echo "Published @markbase/cli ${{ steps.version.outputs.version }} to npm." >> "$GITHUB_STEP_SUMMARY"
