@@ -9,7 +9,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/docs/agent-tools";
 import { installDocsMcp, type McpTarget } from "@markbase/node";
-import { appUrl, loadConfig } from "../config";
+import { appUrl, loadConfig, savedApiKey } from "../config";
 import { ensureAuthenticated } from "../login";
 import { callEndpoint } from "./call";
 import { toolSource } from "./tool-source";
@@ -20,20 +20,24 @@ import { toolSource } from "./tool-source";
 export async function runMcpInstall(argv: string[] = []): Promise<void> {
   await ensureAuthenticated();
   const cfg = loadConfig();
-  const key = cfg.apiKey || "jsk_YOUR_KEY";
+  // The saved key stays where it is: the server reads it when it starts, so
+  // one sign-in serves every agent and a new one needs no reinstall. Only a
+  // key the server could not find for itself (it came from this command's
+  // environment) is written into the agents' configs.
+  const key = savedApiKey() ? undefined : cfg.apiKey || undefined;
   const base = process.env.MARKBASE_API_BASE ?? `${appUrl()}/api/v1`;
 
-  // Said BEFORE the ticks, not after them. Writing the placeholder config is
-  // deliberate — you can wire your editors now and paste a key in later — but a
-  // headless machine reaches this line having just been told it cannot sign in,
-  // and three green checkmarks underneath that read as "it worked".
+  // Said BEFORE the ticks, not after them. Wiring the editors with no key is
+  // deliberate — the server picks one up whenever it arrives — but a headless
+  // machine reaches this line having just been told it cannot sign in, and
+  // three green checkmarks underneath that read as "it worked".
   if (!cfg.apiKey) {
     // Deliberately does NOT repeat where to get a key: ensureAuthenticated has
     // just said that, two lines up. This says the one thing it doesn't — what
-    // the files below actually contain.
+    // state the tools are left in.
     console.log(
-      "⚠ No key yet, so the files below get a placeholder and the tools will\n" +
-        "  401 until a real key replaces it.\n"
+      "⚠ Not signed in yet, so the tools are wired but will not work until\n" +
+        "  you are. No need to run this again afterwards.\n"
     );
     // An installer or CI step reads the exit code, and until a real key is in
     // place this did not do what was asked.
@@ -69,7 +73,7 @@ export async function runMcpInstall(argv: string[] = []): Promise<void> {
 
   console.log();
   if (!cfg.apiKey) {
-    console.log("⚠ No key yet — create one in the dashboard → API keys, then re-run.");
+    console.log("⚠ Not signed in yet — run `markbase login`, or set MARKBASE_API_KEY.");
   }
   console.log("Restart the editor(s) you wired to load the document tools.");
 }
@@ -78,7 +82,8 @@ export async function runMcpInstall(argv: string[] = []): Promise<void> {
 // a tool. The tools are the server's own list (GET /agent/tools), generated
 // there from the registry that drives the routes and the skill.
 // Point Claude Desktop at it via claude_desktop_config.json (command: npx -y
-// @markbase/cli mcp; env: MARKBASE_API_KEY). humanOnly endpoints are excluded.
+// @markbase/cli mcp). It uses the key saved on this machine, or the one in
+// MARKBASE_API_KEY when the config names one. humanOnly endpoints are excluded.
 
 function version(): string {
   try {

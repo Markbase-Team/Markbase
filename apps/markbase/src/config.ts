@@ -9,6 +9,7 @@ import {
   type SavedInstance,
 } from "@markbase/vault";
 import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
+import { usableApiKey } from "@markbase/node";
 
 // Where the per-user config lives. Holds the API key, so it's written 0600.
 export const CONFIG_DIR = markbaseHome();
@@ -53,9 +54,10 @@ export function usesDefaultInstance(): boolean {
 }
 
 // Read config. Only the API key is persisted; the app URL is derived above.
-// MARKBASE_API_KEY (the same name the skill, `markbase api`, and the MCP config use)
-// overrides the saved key — so the MCP server picks up the key Claude Desktop
-// sets in its config env.
+// MARKBASE_API_KEY (the same name the skill and `markbase api` use) overrides
+// the saved key, so an agent's config can still name a key of its own. An
+// empty value, or the placeholder an older installer left there, is not a key
+// and does not override anything.
 interface ConfigFile {
   apiKey?: string;
   mirrorDir?: string;
@@ -83,13 +85,23 @@ function readFile(): ConfigFile {
 
 export function loadConfig(): MarkbaseConfig {
   const file = readFile();
-  const apiKey = process.env.MARKBASE_API_KEY ?? file.apiKey ?? "";
+  const apiKey = environmentApiKey() || usableApiKey(file.apiKey);
   return {
     appUrl: appUrl(),
     apiKey,
     mirrorDir: process.env.MARKBASE_MIRROR_DIR ?? file.mirrorDir ?? "",
     vaults: readMountedVaults(),
   };
+}
+
+/** The key in MARKBASE_API_KEY, when it holds one. */
+export function environmentApiKey(): string {
+  return usableApiKey(process.env.MARKBASE_API_KEY);
+}
+
+/** The key `markbase login` saved on this machine, whatever the environment says. */
+export function savedApiKey(): string {
+  return usableApiKey(readFile().apiKey);
 }
 
 // Merge into the existing file — a partial write must never drop the API key

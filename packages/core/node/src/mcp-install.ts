@@ -9,8 +9,16 @@ import { delimiter, dirname, join } from "node:path";
 // One implementation for both things that offer it — `markbase mcp install`
 // in the CLI and "Connect agents" in the desktop app's Settings — so the two
 // can never write different configs. Each agent gets a server named
-// `markbase-docs` that runs `npx -y @markbase/cli mcp` with the API key and
-// base URL in its environment:
+// `markbase-docs` that runs `npx -y @markbase/cli mcp` with the API's base URL
+// in its environment.
+//
+// The key is normally NOT written. The server reads the one `markbase login`
+// saved on this machine, so signing in once reaches every agent, and signing
+// in again replaces the key for all of them. A key is written only when the
+// caller holds one the server could not find for itself: the desktop app's
+// (kept in the app's own settings) or one that came from the environment.
+//
+// Where each agent's entry goes:
 //
 //   Claude Desktop  its claude_desktop_config.json (merged, other servers kept)
 //   Cursor          ~/.cursor/mcp.json (the same shape)
@@ -21,6 +29,19 @@ import { delimiter, dirname, join } from "node:path";
 // another instance).
 
 export const DOCS_MCP_SERVER = "markbase-docs";
+
+/**
+ * What this installer once wrote where a key belonged, when nobody was signed
+ * in. It is in agents' config files on real machines, where it overrides the
+ * key a later sign-in saved and earns a 401 on every call. It is not a key.
+ */
+export const PLACEHOLDER_API_KEY = "jsk_YOUR_KEY";
+
+/** A key worth sending: something, and not the placeholder. */
+export function usableApiKey(key: string | null | undefined): string {
+  const k = (key ?? "").trim();
+  return k === PLACEHOLDER_API_KEY ? "" : k;
+}
 
 export type McpTarget = "desktop" | "claude-code" | "codex" | "cursor";
 
@@ -41,8 +62,11 @@ export interface McpInstallResult {
 }
 
 export interface McpInstallOptions {
-  /** The API key the server will use. */
-  key: string;
+  /**
+   * A key to write into each agent's config. Leave it out when the key is the
+   * one saved on this machine: the server reads that itself.
+   */
+  key?: string;
   /** The API's base URL, ending in /api/v1. */
   base: string;
   /** Which agents; all of them when omitted. */
@@ -68,16 +92,18 @@ function isObject(value: Json | undefined): value is JsonObject {
 }
 
 /** The server entry every JSON-configured agent gets. */
-export function docsMcpServer(key: string, base: string): JsonObject {
-  return {
-    command: "npx",
-    args: ["-y", "@markbase/cli", "mcp"],
-    env: { MARKBASE_API_KEY: key, MARKBASE_API_BASE: base },
-  };
+export function docsMcpServer(key: string | undefined, base: string): JsonObject {
+  return { command: "npx", args: ["-y", "@markbase/cli", "mcp"], env: docsMcpEnv(key, base) };
+}
+
+/** The server's environment: where the API is, and a key only when one was handed in. */
+function docsMcpEnv(key: string | undefined, base: string): { [name: string]: string } {
+  const usable = usableApiKey(key);
+  return usable ? { MARKBASE_API_KEY: usable, MARKBASE_API_BASE: base } : { MARKBASE_API_BASE: base };
 }
 
 /** A JSON `mcpServers` config with our server set, and every other entry kept. */
-export function withDocsMcp(config: JsonObject, key: string, base: string): JsonObject {
+export function withDocsMcp(config: JsonObject, key: string | undefined, base: string): JsonObject {
   const servers = isObject(config.mcpServers) ? config.mcpServers : {};
   return { ...config, mcpServers: { ...servers, [DOCS_MCP_SERVER]: docsMcpServer(key, base) } };
 }
@@ -93,7 +119,7 @@ export function claudeDesktopConfigPath(home: string = homedir()): string {
   return join(process.env.XDG_CONFIG_HOME ?? join(home, ".config"), "Claude", "claude_desktop_config.json");
 }
 
-function installJsonConfig(path: string, key: string, base: string): string {
+function installJsonConfig(path: string, key: string | undefined, base: string): string {
   let config: JsonObject = {};
   try {
     const parsed: Json = JSON.parse(readFileSync(path, "utf8"));
@@ -149,6 +175,7 @@ export function installDocsMcp(opts: McpInstallOptions): McpInstallResult[] {
   const env = opts.env ?? process.env;
   const wanted = opts.targets ?? MCP_TARGETS.map((t) => t.target);
   const run = "npx -y @markbase/cli mcp".split(" ");
+  const vars = Object.entries(docsMcpEnv(key, base)).map(([name, value]) => `${name}=${value}`);
 
   return MCP_TARGETS.filter((t) => wanted.includes(t.target)).map(({ target, name }): McpInstallResult => {
     try {
@@ -165,8 +192,7 @@ export function installDocsMcp(opts: McpInstallOptions): McpInstallResult[] {
       if (target === "claude-code") {
         const add = [
           "mcp", "add", DOCS_MCP_SERVER, "-s", "user",
-          "-e", `MARKBASE_API_KEY=${key}`,
-          "-e", `MARKBASE_API_BASE=${base}`,
+          ...vars.flatMap((v) => ["-e", v]),
           "--", ...run,
         ];
         return { target, name, ...installWithCli("claude", add, ["mcp", "remove", DOCS_MCP_SERVER, "-s", "user"], env) };
@@ -174,8 +200,7 @@ export function installDocsMcp(opts: McpInstallOptions): McpInstallResult[] {
       // Codex: NAME comes before the `--` command, and env vars are `--env K=V`.
       const add = [
         "mcp", "add",
-        "--env", `MARKBASE_API_KEY=${key}`,
-        "--env", `MARKBASE_API_BASE=${base}`,
+        ...vars.flatMap((v) => ["--env", v]),
         DOCS_MCP_SERVER,
         "--", ...run,
       ];
