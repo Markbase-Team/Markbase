@@ -70,7 +70,10 @@ npx @markbase/cli mcp install
 ```
 
 adds the document tools to Claude Desktop, Claude Code, Codex and Cursor
-(`--desktop`, `--claude-code`, `--codex` or `--cursor` to pick one).
+(`--desktop`, `--claude-code`, `--codex` or `--cursor` to pick one). Restart
+the agent afterwards. Each agent keeps its own list of tools, so run the
+command again when you install another of them; for any other agent, see
+[An agent you install later](/docs/agents#an-agent-you-install-later-or-another-agent).
 
 ```bash
 npx @markbase/cli skill install

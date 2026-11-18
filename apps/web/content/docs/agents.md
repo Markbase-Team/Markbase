@@ -33,6 +33,33 @@ your browser opens to sign in, and the agent is told to try again once you
 have approved. On a machine with no browser, set `MARKBASE_API_KEY` in the
 agent's config for the server instead.
 
+### An agent you install later, or another agent
+
+An agent only sees the MCP servers listed in its own config. Installing
+Markbase does not make a new agent find it, and neither does another agent
+already being connected.
+
+- **Claude Desktop, Claude Code, Codex or Cursor, installed after Markbase:**
+  run `npx @markbase/cli mcp install` again, then restart the agent. It adds
+  the new one and leaves the others as they are.
+- **Any other agent that speaks MCP:** add a server to that agent's MCP
+  settings yourself, with these values:
+
+| Setting | Value |
+| --- | --- |
+| Name | `markbase-docs` |
+| Command | `npx` |
+| Arguments | `-y @markbase/cli mcp` |
+| Environment | `MARKBASE_API_BASE` = `https://markbase.so/api/v1` (your own address if you self-host) |
+
+You can also ask the agent to add it for you. Give it the command, so it does
+not guess one: *"Add an MCP server named markbase-docs that runs
+`npx -y @markbase/cli mcp`."*
+
+No key is needed either way. The new agent uses the sign-in already saved on
+the computer. Markbase has no hosted MCP address: the server is that command,
+running on your machine.
+
 | Tool | What it does |
 | --- | --- |
 | `listDocs`, `searchDocs`, `readDoc` | Find documents, search their text, and read one as markdown |
