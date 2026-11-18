@@ -214,7 +214,7 @@ export async function MarkbaseLanding() {
               {/* The two ways in, side by side: the web app, and the desktop app
                   that turns a vault into a folder on your Mac. */}
               <div className="flex flex-wrap items-center gap-3">
-                <Link href="/login" className={inkBtn}>
+                <Link href="/login" className={ghostBtn}>
                   Get started <ArrowRight className="size-4" />
                 </Link>
                 <MacDownload version={version} />
@@ -478,7 +478,7 @@ export async function MarkbaseLanding() {
               Free to start. Works with the agent you already use.
             </p>
             <div className="mt-1 flex flex-wrap justify-center gap-3">
-              <Link href="/login" className={inkBtn}>
+              <Link href="/login" className={ghostBtn}>
                 Get started <ArrowRight className="size-4" />
               </Link>
               <MacDownload version={version} />
@@ -521,15 +521,9 @@ function LandingNav() {
           <span className="hidden text-sm font-semibold sm:inline">Markbase</span>
         </Link>
         <div className="hidden items-center gap-5 pr-1 text-sm font-medium text-zinc-600 md:flex">
-          <a href="#why" className="transition hover:text-zinc-900">
-            Product
-          </a>
-          <a href="#how" className="transition hover:text-zinc-900">
-            How it works
-          </a>
-          <a href="#faq" className="transition hover:text-zinc-900">
-            FAQ
-          </a>
+          <Link href="/blog" className="transition hover:text-zinc-900">
+            Blog
+          </Link>
           <Link href={DOCS_HREF} className="transition hover:text-zinc-900">
             Docs
           </Link>
@@ -537,9 +531,7 @@ function LandingNav() {
             GitHub
           </a>
         </div>
-        <Link href="/login" className={`${inkBtn} h-9 px-4`}>
-          Get started <ArrowRight className="size-3.5" />
-        </Link>
+        <MacDownload version={null} className={`${inkBtn} h-9 px-4`} />
       </nav>
     </div>
   );
@@ -770,17 +762,17 @@ function CommentCard({ who, agent, text }: { who: string; agent?: boolean; text:
  * needs no change here and nothing already linking to it goes stale. The
  * first-open note sits under the buttons in the closing section.
  */
-function MacDownload({ version }: { version: string | null }) {
+function MacDownload({ version, className = inkBtn }: { version: string | null; className?: string }) {
   // Defaults to the public permalink, so a deploy needs no environment change to
   // offer the current build. The env var stays as an override for pointing a
   // preview at some other build.
   const href = process.env.NEXT_PUBLIC_MAC_DOWNLOAD_URL ?? MAC_DOWNLOAD_URL;
   if (!href) return null;
   return (
-    <a href={href} className={ghostBtn}>
+    <a href={href} className={className}>
       <Apple className="size-4" />
       Download for Mac
-      <span className="font-normal text-zinc-400">{version ? `· v${version}` : ""}</span>
+      {version && <span className="font-normal text-zinc-400">· v{version}</span>}
     </a>
   );
 }
