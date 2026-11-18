@@ -108,8 +108,8 @@ const ghostBtn =
 const AGENTS: { name: string; live?: boolean }[] = [
   { name: "Claude Code", live: true },
   { name: "Claude Desktop", live: true },
-  { name: "Cursor" },
-  { name: "Codex" },
+  { name: "Codex", live: true },
+  { name: "Cursor", live: true },
   { name: "opencode" },
   { name: "Pi" },
   { name: "OpenClaw" },
@@ -147,7 +147,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which agents can work on them?",
-    a: "Claude Code and Claude Desktop today, over MCP, with one install command. Cursor, Codex, opencode, Pi and OpenClaw are coming.",
+    a: "Claude Code, Claude Desktop, Codex and Cursor today, over MCP, with one install command. Run it again when you install another of them. Any other agent that speaks MCP can be connected by adding the Markbase server to its settings; one-command setup for opencode, Pi and OpenClaw is coming.",
   },
   {
     q: "Can an agent rewrite my whole document?",
@@ -378,13 +378,13 @@ export async function MarkbaseLanding() {
             <Step
               n="02"
               title="Connect your agent"
-              body="One command wires up Claude Code and Claude Desktop over MCP."
+              body="One command adds Markbase to Claude Code, Claude Desktop, Codex and Cursor. Run it again when you install another."
               dark
             >
               <div className="flex flex-col gap-2">
                 <Eyebrow>Terminal</Eyebrow>
                 <pre className={`${MONO} text-[13px] leading-[1.8] whitespace-pre-line text-[#e5ff6e]`}>
-                  {"$ npx @markbase/cli mcp install\n✓ Claude Code connected\n✓ Claude Desktop connected"}
+                  {"$ npx @markbase/cli mcp install\n✓ Claude Code connected\n✓ Claude Desktop connected\n✓ Codex connected\n✓ Cursor connected"}
                 </pre>
               </div>
             </Step>
