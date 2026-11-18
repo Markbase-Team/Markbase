@@ -34,7 +34,22 @@ function surviveUnhandledRejections(log: (m: string) => void): void {
   });
 }
 
-export async function runStart(): Promise<void> {
+/**
+ * Whether this run claims tickets. Off unless asked for, the same default as
+ * the desktop app: the ticket worker is a polling loop against the API, and
+ * on a hosted API every idle ask is a billed request — a worker with nothing
+ * to do was a third of what paused the Vercel account on 2026-11-17. Vault
+ * sync is what `markbase start` is for on most machines; tickets are opt-in,
+ * by flag (`--tickets`) or by the environment the service file sets
+ * (`MARKBASE_TICKETS=on`).
+ */
+export function ticketsRequested(args: readonly string[], env: NodeJS.ProcessEnv = process.env): boolean {
+  if (args.includes("--tickets")) return true;
+  if (args.includes("--no-tickets")) return false;
+  return env.MARKBASE_TICKETS === "on";
+}
+
+export async function runStart(args: readonly string[] = []): Promise<void> {
   surviveUnhandledRejections((m) => console.error(`[markbase] ${m}`));
   // The worker needs the API and its key, nothing else: since security lockdown
   // stage 2 it never opens a database connection (the publishable key in this
@@ -51,6 +66,11 @@ export async function runStart(): Promise<void> {
   void startVaultSyncDaemons().catch((e) =>
     console.error(`[markbase] vault-sync failed to start: ${e instanceof Error ? e.message : String(e)}`)
   );
+  if (!ticketsRequested(args)) {
+    console.log("[markbase] tickets: off — vault sync only (pass --tickets, or set MARKBASE_TICKETS=on, to run them)");
+    // The daemons run for the life of the process; nothing else holds it open.
+    await new Promise<never>(() => {});
+  }
   await runTicketWorker({
     appUrl,
     apiKey,

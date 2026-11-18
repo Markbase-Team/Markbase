@@ -26,8 +26,11 @@ Usage:
   markbase instance [url]      Show which instance this machine talks to, or point
                              it at a self-hosted one (the desktop app follows)
   markbase doctor              Check prerequisites (claude + API key; git/gh optional)
-  markbase start               Run the worker in the foreground
+  markbase start [--tickets]   Run the service in the foreground: every mounted
+                             vault syncs; --tickets also claims and runs your
+                             tickets with Claude Code (off by default)
   markbase install-service     Install + start it as a background service
+                             (vault sync; add --tickets to also run tickets)
                              (not needed on a Mac that has the desktop app)
   markbase uninstall-service   Stop + remove the background service
   markbase update              Upgrade to the latest CLI and restart the service
@@ -80,10 +83,10 @@ async function main(): Promise<void> {
       break;
     }
     case "start":
-      await runStart();
+      await runStart(process.argv.slice(3));
       break;
     case "install-service":
-      await runInstallService();
+      await runInstallService(undefined, process.argv.slice(3));
       break;
     case "uninstall-service":
       await uninstallService();

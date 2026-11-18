@@ -33,7 +33,12 @@ function write(path: string, contents: string): void {
   writeFileSync(path, contents);
 }
 
-async function installLaunchd(): Promise<void> {
+/** What the service runs. Tickets are opt-in (see start.ts ticketsRequested). */
+export interface ServiceOptions {
+  tickets?: boolean;
+}
+
+async function installLaunchd(opts: ServiceOptions): Promise<void> {
   const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -43,7 +48,7 @@ async function installLaunchd(): Promise<void> {
   <array>
     <string>${NODE}</string>
     <string>${CLI}</string>
-    <string>start</string>
+    <string>start</string>${opts.tickets ? "\n    <string>--tickets</string>" : ""}
   </array>
   <key>EnvironmentVariables</key>
   <dict>
@@ -65,13 +70,13 @@ async function installLaunchd(): Promise<void> {
   console.log(`  Stop:    markbase uninstall-service`);
 }
 
-async function installSystemd(): Promise<void> {
+async function installSystemd(opts: ServiceOptions): Promise<void> {
   const unit = `[Unit]
 Description=Markbase ticket worker
 After=network-online.target
 
 [Service]
-ExecStart=${NODE} ${CLI} start
+ExecStart=${NODE} ${CLI} start${opts.tickets ? " --tickets" : ""}
 Environment=PATH=${SERVICE_PATH}
 Restart=always
 RestartSec=3
@@ -94,9 +99,9 @@ export function serviceInstalled(): boolean {
   return false;
 }
 
-export async function installService(): Promise<void> {
-  if (process.platform === "darwin") return installLaunchd();
-  if (process.platform === "linux") return installSystemd();
+export async function installService(opts: ServiceOptions = {}): Promise<void> {
+  if (process.platform === "darwin") return installLaunchd(opts);
+  if (process.platform === "linux") return installSystemd(opts);
   console.error(
     `Automatic service install isn't supported on ${process.platform}. Run \`markbase start\` under your own process manager.`
   );
@@ -106,7 +111,7 @@ export async function installService(): Promise<void> {
 // How the two entry points below reach the world — swapped out in tests.
 export type ServiceDeps = {
   detectDesktopApp: () => Promise<boolean>;
-  install: () => Promise<void>;
+  install: (opts?: ServiceOptions) => Promise<void>;
 };
 
 /**
@@ -131,10 +136,13 @@ export async function installServiceAfterSetup(
  * that has the desktop app says first that the service duplicates it.
  */
 export async function runInstallService(
-  deps: ServiceDeps = { detectDesktopApp, install: installService }
+  deps: ServiceDeps = { detectDesktopApp, install: installService },
+  args: readonly string[] = []
 ): Promise<void> {
   if (await deps.detectDesktopApp()) console.log(`Note: ${DESKTOP_APP_NOTE}\n`);
-  await deps.install();
+  // The service file is what the next login runs, so the choice is made here
+  // and written into it: without --tickets the service syncs vaults only.
+  await deps.install({ tickets: args.includes("--tickets") });
 }
 
 export async function uninstallService(): Promise<void> {
