@@ -27,6 +27,12 @@ found on the machine (`--desktop`, `--claude-code`, `--codex` or `--cursor`
 picks one from the terminal). Restart the agent afterwards so it loads the
 tools.
 
+The tools use the account this computer is signed in to, so signing in once
+covers every agent. If nobody is signed in when an agent first uses a tool,
+your browser opens to sign in, and the agent is told to try again once you
+have approved. On a machine with no browser, set `MARKBASE_API_KEY` in the
+agent's config for the server instead.
+
 | Tool | What it does |
 | --- | --- |
 | `listDocs`, `searchDocs`, `readDoc` | Find documents, search their text, and read one as markdown |

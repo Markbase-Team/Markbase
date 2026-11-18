@@ -115,6 +115,32 @@ export async function browserLogin(): Promise<string> {
   }
 }
 
+/** How long a sign-in an agent started stays open for the person to come to. */
+const AGENT_SIGN_IN_MS = 10 * 60_000;
+
+/**
+ * Sign in for the MCP server: the same browser page, and not a word on stdout,
+ * which there is the protocol the agent is reading. `opened` is told the
+ * page's address; the key is saved where every other command looks for it.
+ */
+export async function agentBrowserLogin(
+  opened: (url: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
+  const { key } = await awaitDeviceAuth({
+    appUrl: appUrl(),
+    claudeVersion: detectClaudeVersion(),
+    signal,
+    timeoutMs: AGENT_SIGN_IN_MS,
+    open: (authUrl) => {
+      opened(authUrl);
+      openBrowser(authUrl);
+    },
+  });
+  saveConfig(key);
+  return key;
+}
+
 /** The part after a key arrives: say where it went, and what is still missing. */
 function finishLogin(key: string): string {
   console.log(`\nConnected. Saved to ${CONFIG_PATH}.`);

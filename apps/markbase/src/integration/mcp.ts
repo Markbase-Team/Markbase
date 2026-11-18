@@ -9,9 +9,11 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/docs/agent-tools";
 import { installDocsMcp, type McpTarget } from "@markbase/node";
-import { appUrl, loadConfig, savedApiKey } from "../config";
-import { ensureAuthenticated } from "../login";
+import { canOpenBrowser } from "@markbase/flows/node";
+import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
+import { agentBrowserLogin, ensureAuthenticated } from "../login";
 import { callEndpoint } from "./call";
+import { mcpAuth } from "./mcp-auth";
 import { toolSource } from "./tool-source";
 
 // `markbase mcp install [--desktop] [--claude-code] [--codex] [--cursor]` — wire
@@ -36,8 +38,11 @@ export async function runMcpInstall(argv: string[] = []): Promise<void> {
     // just said that, two lines up. This says the one thing it doesn't — what
     // state the tools are left in.
     console.log(
-      "⚠ Not signed in yet, so the tools are wired but will not work until\n" +
-        "  you are. No need to run this again afterwards.\n"
+      canOpenBrowser()
+        ? "⚠ Not signed in yet. The tools are wired, and the first one an agent\n" +
+            "  uses will open your browser to sign in.\n"
+        : "⚠ Not signed in yet, so the tools are wired but will not work until\n" +
+            "  a key is set. No need to run this again afterwards.\n"
     );
     // An installer or CI step reads the exit code, and until a real key is in
     // place this did not do what was asked.
@@ -73,7 +78,11 @@ export async function runMcpInstall(argv: string[] = []): Promise<void> {
 
   console.log();
   if (!cfg.apiKey) {
-    console.log("⚠ Not signed in yet — run `markbase login`, or set MARKBASE_API_KEY.");
+    console.log(
+      canOpenBrowser()
+        ? "⚠ Not signed in yet — run `markbase login`, or let the first tool call ask."
+        : "⚠ Not signed in yet — set MARKBASE_API_KEY in the agent's config."
+    );
   }
   console.log("Restart the editor(s) you wired to load the document tools.");
 }
@@ -94,9 +103,12 @@ function version(): string {
   }
 }
 
-/** Ask the server for its tools; null when it has no answer. */
-async function fetchServedTools(): Promise<string | null> {
-  const key = loadConfig().apiKey;
+/**
+ * Ask the server for its tools; null when it has no answer. Listing never
+ * signs anyone in: an agent lists tools as it starts, and a browser opening
+ * then would be a browser nobody asked for.
+ */
+async function fetchServedTools(key: string): Promise<string | null> {
   if (!key) return null;
   const base = process.env.MARKBASE_API_BASE ?? `${appUrl()}/api/v1`;
   const res = await fetch(base + AGENT_TOOLS_PATH, {
@@ -112,7 +124,22 @@ export async function runMcp(): Promise<void> {
     { capabilities: { tools: {} } }
   );
 
-  const tools = toolSource(fetchServedTools);
+  // A sign-in the agent started ends with the agent: the loopback it waits
+  // on would otherwise keep this process alive after the agent has gone. The
+  // agent going is its end of stdin closing, which the transport does not
+  // report, so both are listened for.
+  const leaving = new AbortController();
+  server.onclose = () => leaving.abort();
+  process.stdin.once("end", () => leaving.abort());
+  process.stdin.once("close", () => leaving.abort());
+  const auth = mcpAuth({
+    environmentKey: environmentApiKey,
+    savedKey: savedApiKey,
+    canSignIn: canOpenBrowser,
+    signIn: (opened) => agentBrowserLogin(opened, leaving.signal),
+  });
+
+  const tools = toolSource(() => fetchServedTools(auth.key()));
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: (await tools()).map((t) => ({
@@ -136,14 +163,18 @@ export async function runMcp(): Promise<void> {
       // so the API records which provider this is, and — when this server is
       // bound to a session via MARKBASE_SESSION_TOKEN — the session token so doc
       // actions attribute to that agent session.
-      const r = await callEndpoint(
-        e,
-        (req.params.arguments ?? {}) as Record<string, unknown>,
-        {
+      // With a key that works: the one this machine has or, when the API
+      // refuses it or there is none, the one a sign-in in the browser gives.
+      const r = await auth.call((apiKey) =>
+        callEndpoint(e, (req.params.arguments ?? {}) as Record<string, unknown>, {
           clientName: server.getClientVersion()?.name,
           sessionToken: process.env.MARKBASE_SESSION_TOKEN,
-        }
+          apiKey,
+        })
       );
+      if ("needsSignIn" in r) {
+        return { isError: true, content: [{ type: "text", text: r.needsSignIn }] };
+      }
       let text = r.body;
       try {
         text = JSON.stringify(JSON.parse(r.body), null, 2);

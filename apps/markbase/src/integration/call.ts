@@ -21,7 +21,9 @@ export async function callEndpoint(
   // The MCP server forwards, when known: the connecting client's name (so the
   // API records which provider this key is) and the session token (so doc
   // actions attribute to a specific agent session).
-  opts: { clientName?: string; sessionToken?: string } = {}
+  // And the key to send, when it has already worked out which one (see
+  // mcp-auth); `markbase api` leaves it out and gets the configured key.
+  opts: { clientName?: string; sessionToken?: string; apiKey?: string } = {}
 ): Promise<CallResult> {
   const rest = { ...params };
 
@@ -34,14 +36,14 @@ export async function callEndpoint(
     delete rest[name];
   }
 
-  const cfg = loadConfig();
-  if (!cfg.apiKey) {
+  const apiKey = opts.apiKey ?? loadConfig().apiKey;
+  if (!apiKey) {
     throw new Error("No API key. Set MARKBASE_API_KEY, or run `markbase login`.");
   }
   const base = process.env.MARKBASE_API_BASE ?? `${appUrl()}/api/v1`;
 
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${cfg.apiKey}`,
+    Authorization: `Bearer ${apiKey}`,
   };
   if (opts.clientName) headers["X-MCP-Client"] = opts.clientName;
   if (opts.sessionToken) headers["X-MCP-Session"] = opts.sessionToken;
