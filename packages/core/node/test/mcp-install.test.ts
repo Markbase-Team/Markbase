@@ -4,8 +4,10 @@ import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 import {
   DOCS_MCP_SERVER,
+  PLACEHOLDER_API_KEY,
   claudeDesktopConfigPath,
   installDocsMcp,
+  usableApiKey,
   withDocsMcp,
   withToolPath,
 } from "../src/mcp-install";
@@ -33,10 +35,36 @@ describe("withDocsMcp", () => {
     });
   });
 
+  it("writes no key when none is handed in: the server reads the saved one", () => {
+    const merged = withDocsMcp({}, undefined, BASE);
+    expect(merged.mcpServers).toEqual({
+      [DOCS_MCP_SERVER]: {
+        command: "npx",
+        args: ["-y", "@markbase/cli", "mcp"],
+        env: { MARKBASE_API_BASE: BASE },
+      },
+    });
+  });
+
+  it("never writes the placeholder, and drops one an earlier install left", () => {
+    const old = withDocsMcp({}, KEY, BASE);
+    const stale = JSON.parse(JSON.stringify(old).replace(KEY, PLACEHOLDER_API_KEY));
+    for (const key of [undefined, PLACEHOLDER_API_KEY, "  "]) {
+      expect(JSON.stringify(withDocsMcp(stale, key, BASE))).not.toContain("MARKBASE_API_KEY");
+    }
+  });
+
   it("replaces an earlier entry of ours, so a new key takes", () => {
     const first = withDocsMcp({}, "jsk_old", BASE);
     const second = withDocsMcp(first, KEY, BASE);
     expect(JSON.stringify(second)).not.toContain("jsk_old");
+  });
+});
+
+describe("usableApiKey", () => {
+  it("is the key, or nothing for a blank, a missing one and the placeholder", () => {
+    expect(usableApiKey(" jsk_real ")).toBe("jsk_real");
+    expect([undefined, null, "", "  ", PLACEHOLDER_API_KEY].map(usableApiKey)).toEqual(["", "", "", "", ""]);
   });
 });
 
@@ -56,6 +84,14 @@ describe("installDocsMcp", () => {
     expect(result).toMatchObject({ target: "desktop", name: "Claude Desktop", status: "installed", detail: path });
     const written = JSON.parse(readFileSync(path, "utf8"));
     expect(Object.keys(written.mcpServers).sort()).toEqual(["markbase-docs", "other"]);
+  });
+
+  it("leaves the key out of the file when the caller has none to hand in", () => {
+    const [result] = installDocsMcp({ base: BASE, targets: ["desktop"], home });
+    expect(result.status).toBe("installed");
+    const written = readFileSync(claudeDesktopConfigPath(home), "utf8");
+    expect(written).toContain(BASE);
+    expect(written).not.toContain("MARKBASE_API_KEY");
   });
 
   it("skips Cursor when it is not on the machine, unless asked for by name", () => {
