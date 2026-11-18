@@ -7,6 +7,7 @@ import {
   type DocJSON,
   retitleLeadingH1,
   setMarkdown,
+  accountOf,
 } from "../logic";
 import {
   createDocument,
@@ -363,7 +364,8 @@ export const setMemberPathEndpoint = endpoint({
   humanOnly: true,
   why: "A folder layout is a person's own.",
 }, async (req, { id }, auth) => {
-  if (!auth.actor.userId || auth.doc.owner_id === auth.actor.userId) {
+  const member = accountOf(auth.actor);
+  if (member === null || auth.doc.owner_id === member) {
     return json({ error: "You own this document; move it with PATCH /docs/:id instead." }, 400);
   }
 
@@ -377,7 +379,7 @@ export const setMemberPathEndpoint = endpoint({
     return json({ error: "path (string or null) is required" }, 400);
   }
   const next = typeof body.path === "string" ? normalizePath(body.path) : null;
-  const ok = await setMemberPath(id, auth.actor.userId, next && next.length > 0 ? next : null);
+  const ok = await setMemberPath(id, member, next && next.length > 0 ? next : null);
   if (!ok) return json({ error: "Document not found." }, 404);
   return json({ ok: true, path: next });
 });
@@ -394,10 +396,11 @@ export const leaveShareEndpoint = endpoint({
   humanOnly: true,
   why: "Leaving a share is the person's decision, not an edit.",
 }, async (_req, { id }, auth) => {
-  if (!auth.actor.userId || auth.doc.owner_id === auth.actor.userId) {
+  const member = accountOf(auth.actor);
+  if (member === null || auth.doc.owner_id === member) {
     return json({ error: "You own this document; delete it with DELETE /docs/:id instead." }, 400);
   }
-  const ok = await removeMember(id, auth.actor.userId);
+  const ok = await removeMember(id, member);
   if (!ok) return json({ error: "Document not found." }, 404);
   return json({ ok: true });
 });

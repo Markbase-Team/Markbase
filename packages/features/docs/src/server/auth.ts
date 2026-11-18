@@ -33,7 +33,7 @@ export type Actor = Author & {
 };
 
 /** An actor with an account behind it — a person, or an agent on its owner's key. Never a guest. */
-export type SignedInActor = Actor & { userId: string };
+export type SignedInActor = Extract<Actor, { kind: "user" | "agent" }>;
 
 /** The lower of two capabilities (a ceiling never raises access). */
 export function minCapability(a: Capability, b: Capability): Capability {

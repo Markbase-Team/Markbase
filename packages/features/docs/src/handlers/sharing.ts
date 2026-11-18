@@ -1,3 +1,4 @@
+import { accountOf } from "../logic";
 import {
   createComment,
   createLink,
@@ -167,7 +168,7 @@ export const createLinkEndpoint = endpoint({
     docId: id,
     mode,
     capability,
-    createdBy: auth.actor.userId ?? auth.doc.owner_id,
+    createdBy: accountOf(auth.actor) ?? auth.doc.owner_id,
   });
   return json({ link: { ...link, url: shareUrl(req, link.token) } }, 201);
 });

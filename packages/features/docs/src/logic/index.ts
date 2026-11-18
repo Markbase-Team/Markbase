@@ -82,6 +82,7 @@ export {
   type ToolInputSchema,
 } from "./agent-tools";
 export type { Author, Anchor, DocJSON, StepJSON, JSONValue } from "./types";
+export { accountOf } from "./types";
 export * from "./mentions";
 export {
   createDoc,

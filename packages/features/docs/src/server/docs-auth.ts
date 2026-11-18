@@ -3,6 +3,7 @@ import { ownerDisplayName } from "./owner-name";
 import { agentLabel } from "@markbase/protocol/attribution";
 import { claimAgentSession, providerFromClient, type Provider } from "@markbase/protocol";
 import { docEndpoint } from "../logic/endpoints";
+import { accountOf } from "../logic/types";
 import {
   atLeast,
   capabilityFor,
@@ -178,11 +179,10 @@ export async function requireDocCapability(
   // 1. The caller the gate attached (session cookie or API key).
   const actorRes = await resolveActor(creds);
   if (actorRes.ok) {
+    const account = accountOf(actorRes.actor);
     const [doc, memberCapability] = await Promise.all([
       loadDoc(),
-      actorRes.actor.userId
-        ? getMemberCapability(docId, actorRes.actor.userId)
-        : Promise.resolve(null),
+      account ? getMemberCapability(docId, account) : Promise.resolve(null),
     ]);
     if (!doc) return { ok: false, status: 404, error: "Document not found." };
     const capability = capabilityFor({

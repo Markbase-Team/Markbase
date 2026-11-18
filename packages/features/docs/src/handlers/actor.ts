@@ -59,7 +59,6 @@ export async function accountActor(
 ): Promise<{ actor: SignedInActor } | { error: Response }> {
   const a = await resolveActor(credentialsFrom(req));
   if (!a.ok) return { error: json({ error: a.error }, a.status) };
-  const userId = a.actor.userId;
-  if (!userId) return { error: json({ error: "No user." }, 403) };
-  return { actor: { ...a.actor, userId } };
+  if (a.actor.kind === "guest") return { error: json({ error: "No user." }, 403) };
+  return { actor: a.actor };
 }

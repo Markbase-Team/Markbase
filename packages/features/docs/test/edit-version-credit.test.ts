@@ -10,29 +10,29 @@ import { versionCredit } from "../src/server/doc-crdt";
 
 describe("versionCredit", () => {
   it("credits an agent's edit as an agent's", () => {
-    expect(versionCredit({ kind: "agent", name: "Jessie's Claude Code" })).toEqual({
+    expect(versionCredit({ kind: "agent", userId: "u1", name: "Jessie's Claude Code" })).toEqual({
       agents: ["Jessie's Claude Code"],
     });
   });
 
   it("records whose agent and which tool apart, as an agent's hook does", () => {
     expect(
-      versionCredit({ kind: "agent", name: "Jessie's Claude", agent: { owner: "Jessie", tool: "claude" } })
+      versionCredit({ kind: "agent", userId: "u1", name: "Jessie's Claude", agent: { owner: "Jessie", tool: "claude" } })
     ).toEqual({ author: "Jessie", agents: ["claude"] });
     const doc = new Y.Doc();
     setMarkdown(doc, "a\n");
-    checkpoint(doc, versionCredit({ kind: "agent", name: "Jessie's agent", agent: { owner: "Jessie", tool: null } }));
+    checkpoint(doc, versionCredit({ kind: "agent", userId: "u1", name: "Jessie's agent", agent: { owner: "Jessie", tool: null } }));
     expect(writerText(lineCredit(doc).shares[0].writer)).toBe("Jessie's agent");
   });
 
   it("credits a person's edit to the person", () => {
-    expect(versionCredit({ kind: "user", name: "Jessie" })).toEqual({ author: "Jessie" });
+    expect(versionCredit({ kind: "user", userId: "u1", name: "Jessie" })).toEqual({ author: "Jessie" });
   });
 
   it("makes the agent's lines read as an agent's in Who wrote it", () => {
     const doc = new Y.Doc();
     setMarkdown(doc, "a\nb\n");
-    checkpoint(doc, versionCredit({ kind: "agent", name: "Jessie's agent" }));
+    checkpoint(doc, versionCredit({ kind: "agent", userId: "u1", name: "Jessie's agent" }));
     const [share] = lineCredit(doc).shares;
     expect([share.writer.kind, writerText(share.writer)]).toEqual(["agent", "Jessie's agent"]);
   });
