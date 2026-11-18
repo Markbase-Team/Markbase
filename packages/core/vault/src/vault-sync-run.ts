@@ -1932,7 +1932,13 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
   // hung for 90 s, six passes per vault piled up. And a pass that can't reach the
   // cloud makes the next one wait longer (nextPollDelay): polling a failing
   // server at full rate is what kept it down on 2026-09-13.
-  const reconcileMs = opts.reconcileMs ?? 15_000;
+  // A minute, not fifteen seconds. Edits arrive through the change feed (one
+  // ask per process, see CrdtChangesFeed) and local edits through the file
+  // watcher; this pass is the safety net for what neither carries — renames,
+  // deletions, membership, media. Each pass is several API requests per
+  // vault, and on a hosted API each is a billed invocation: seven vaults at
+  // fifteen seconds were 40k requests a day doing nothing.
+  const reconcileMs = opts.reconcileMs ?? 60_000;
   let reconcileTimer: ReturnType<typeof setTimeout> | undefined;
   let failedPasses = 0;
   const schedulePass = (): void => {
@@ -1941,7 +1947,7 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
     reconcileTimer = setTimeout(() => {
       void (async () => {
         // Both catch. reconcile() did not, and it is the pass that talks to the
-        // cloud every fifteen seconds — so an outage rejected it with a
+        // cloud every minute — so an outage rejected it with a
         // PostgREST error object, which nothing caught, which killed the whole
         // service. It only ever guarded its own fetch; everything after that
         // was free to throw.
