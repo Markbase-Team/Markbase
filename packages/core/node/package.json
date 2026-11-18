@@ -13,6 +13,7 @@
     "./features": "./src/features.ts",
     "./generated-files": "./src/generated-files.ts",
     "./mcp-install": "./src/mcp-install.ts",
+    "./mcp-oauth": "./src/mcp-oauth.ts",
     "./repo-state": "./src/repo-state.ts",
     "./repos": "./src/repos.ts",
     "./skill-bundle": "./src/skill-bundle.ts",

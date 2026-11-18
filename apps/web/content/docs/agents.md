@@ -71,19 +71,21 @@ https://markbase.so/mcp
 On your own instance it is `/mcp` on your address. This is the only hosted
 address; an agent that suggests another has guessed it.
 
-It takes an API key from the dashboard (**API keys**), sent as
-`Authorization: Bearer <key>`. Add it wherever the agent takes a remote MCP
-server with a header:
+Add the address to an agent that takes a remote MCP server and it asks you to
+sign in: your browser opens on Markbase, you choose how much the agent may do
+(view, comment, edit, or everything), and it is connected. Each agent
+connected this way gets a key of its own, listed under **API keys** in the
+dashboard, where you can change its access or revoke it without touching the
+others.
 
 | Agent | How |
 | --- | --- |
-| Claude Code | `claude mcp add --transport http markbase-docs https://markbase.so/mcp --header "Authorization: Bearer <key>"` |
-| Cursor, VS Code | A server with `"url": "https://markbase.so/mcp"` and `"headers": { "Authorization": "Bearer <key>" }` in the MCP settings file |
+| Claude (desktop, web, mobile) | **Settings › Connectors › Add custom connector**, and paste the address |
+| Claude Code | `claude mcp add --transport http markbase-docs https://markbase.so/mcp`, then `/mcp` to sign in |
+| Cursor, VS Code | A server with `"url": "https://markbase.so/mcp"` in the MCP settings file |
 
-Unlike the local server, each agent connected this way has a key of its own:
-give it only the access it needs, and revoke it without touching the others.
-Agents that sign in through the browser instead of taking a key (Claude's
-custom connectors, ChatGPT) cannot use the address yet.
+An agent that cannot open a browser can send a key instead: make one under
+**API keys** and send it as `Authorization: Bearer <key>`.
 
 | Tool | What it does |
 | --- | --- |
