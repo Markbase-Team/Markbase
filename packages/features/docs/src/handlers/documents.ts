@@ -197,6 +197,10 @@ export const createDocEndpoint = endpoint({
     // Every document must live in a vault or it syncs to no folder at all.
     vault_id: body.vault_id ?? (await ensureDefaultVault(a.userId)).id,
   });
+  // The seed is the creator's. Written through the seam so the document's
+  // first version says so — without it, the text sat unrecorded until the
+  // next viewer's idle ticker credited it to them.
+  await editDocCrdt(created.id, created.content, { actor: a.actor, label: "Created" }, () => undefined);
   return json({ doc: created }, 201);
 });
 
@@ -293,7 +297,7 @@ export const renameDocEndpoint = endpoint({
     // the heading back, or a title that was stale by the time it arrived would
     // overwrite what the person went on typing.
     if (body.syncHeading === true) {
-      await editDocCrdt(id, auth.doc.content, (doc) => {
+      await editDocCrdt(id, auth.doc.content, { actor: auth.actor }, (doc) => {
         const markdown = getMarkdown(doc);
         const next = retitleLeadingH1(markdown, title);
         if (next !== markdown) setMarkdown(doc, next);

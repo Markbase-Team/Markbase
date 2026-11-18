@@ -142,7 +142,7 @@ export const publishEndpoint = endpoint({
     { name: "version", type: "number", description: "The version index (from /history) to publish; omitted, the text as it stands." },
   ],
   summary: "Publish a document to the web (anyone with the URL can read it)",
-}, async (req, { id }) => {
+}, async (req, { id }, auth) => {
   let body: { version?: number } = {};
   try {
     body = (await req.json()) as { version?: number };
@@ -153,7 +153,7 @@ export const publishEndpoint = endpoint({
     return json({ error: "version must be a whole number" }, 400);
   }
   try {
-    await publishDocument(id, body.version);
+    await publishDocument(id, auth.actor, body.version);
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Could not publish" }, 400);
   }

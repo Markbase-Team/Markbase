@@ -1,7 +1,12 @@
 import { markdownToDoc, docToMarkdown, deriveTitle } from "../logic/markdown";
 import { createDocument } from "./documents";
 import { createComment } from "./comments";
+import { editDocCrdt } from "./doc-crdt";
+import type { Actor } from "./auth";
 import type { DocJSON } from "../logic/types";
+
+/** Who the welcome document and its sample comments are from. */
+const MARKBASE: Actor = { kind: "agent", name: "Markbase" };
 
 // The first document a new account sees: a copy of its own, in its first
 // vault (see seedWelcomeDoc). It is a normal document — fully editable and
@@ -111,7 +116,7 @@ async function seedComments(
         anchorTo: anchor?.to ?? 0,
         anchorVersion: version,
         body,
-        author: { kind: "agent", name: "Markbase" },
+        author: MARKBASE,
       });
     } catch {
       // Non-fatal — skip this sample comment.
@@ -141,5 +146,8 @@ export async function seedWelcomeDoc(userId: string, vaultId: string): Promise<v
     vault_id: vaultId,
     path: WELCOME_DOC_PATH,
   });
+  // Its first version is Markbase's, like its comments — not the new
+  // account's, whose idle ticker would otherwise claim the text.
+  await editDocCrdt(row.id, row.content, { actor: MARKBASE, label: "Created" }, () => undefined);
   await seedComments(doc, row.id, row.version);
 }

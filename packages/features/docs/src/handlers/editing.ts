@@ -1,5 +1,5 @@
-import { applyAnchoredEdit, checkpoint, restoreVersion, type VersionCredit } from "../logic";
-import { editDocCrdt, setDocContent, type Actor } from "../server";
+import { applyAnchoredEdit, restoreVersion } from "../logic";
+import { editDocCrdt, setDocContent } from "../server";
 import { endpoint } from "./define";
 import { json } from "./respond";
 
@@ -97,7 +97,9 @@ export const editDocEndpoint = endpoint({
   const insert = body.insert;
 
   try {
-    await editDocCrdt(id, auth.doc.content, (doc) => {
+    // The seam records the edit as a version in the actor's name, so /history
+    // and "Who wrote it" see it even for a doc no browser has open.
+    await editDocCrdt(id, auth.doc.content, { actor: auth.actor }, (doc) => {
       // Edit the markdown source where the quote can be found there, so the
       // rest of the document keeps the formatting it was written with. Only a
       // quote that exists solely in the rendered projection (across a hard
@@ -105,9 +107,6 @@ export const editDocEndpoint = endpoint({
       // which used to be the only path, and flattened tables on every agent
       // edit.
       applyAnchoredEdit(doc, { quote, insert });
-      // Record a version so /history stays populated even for a doc no
-      // browser has open (only the browser's ticker checkpoints otherwise).
-      checkpoint(doc, versionCredit(auth.actor));
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Anchor not found";
@@ -116,20 +115,6 @@ export const editDocEndpoint = endpoint({
   }
   return json({ ok: true });
 });
-
-/**
- * Who a version written through the API is credited to. An agent's edit is
- * credited as an agent's ("Jessie's Claude"), so history and line credit
- * show it as one; a person's edit, to the person.
- */
-export function versionCredit(actor: Actor): VersionCredit {
-  if (actor.kind !== "agent") return { author: actor.name };
-  // Whose agent and which tool, apart — the shape an agent's hook records, so
-  // "Jessie's Claude" is one writer however the edit arrived. An agent that
-  // did not say which tool it is, is "agent".
-  if (actor.agent) return { author: actor.agent.owner, agents: [actor.agent.tool ?? "agent"] };
-  return { agents: [actor.name] };
-}
 
 // POST { version } — make a past CRDT version the new head by writing its
 // content back as a normal edit (editor+). Nothing is rewound; history stays
@@ -165,9 +150,8 @@ export const restoreDocEndpoint = endpoint({
   const version = body.version;
 
   try {
-    await editDocCrdt(id, auth.doc.content, (doc) => {
+    await editDocCrdt(id, auth.doc.content, { actor: auth.actor, label: `Restored version ${version + 1}` }, (doc) => {
       restoreVersion(doc, version); // throws if the version index doesn't exist
-      checkpoint(doc, { ...versionCredit(auth.actor), label: `Restored version ${version + 1}` });
     });
     return json({ ok: true });
   } catch (e) {

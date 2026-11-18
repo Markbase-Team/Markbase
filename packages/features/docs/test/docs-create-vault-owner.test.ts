@@ -16,6 +16,7 @@ const createDocument = vi.fn();
 const reviveForFile = vi.fn();
 const getVault = vi.fn();
 const ensureDefaultVault = vi.fn();
+const editDocCrdt = vi.fn();
 
 vi.mock("../src/server/documents", () => ({
   createDocument: (input: Record<string, string | null | undefined>) => createDocument(input),
@@ -30,6 +31,10 @@ vi.mock("../src/server/vaults", () => ({
     const v = (await getVault(id)) as { owner_id: string } | null;
     return v !== null && v.owner_id === userId;
   },
+}));
+vi.mock("../src/server/doc-crdt", () => ({
+  editDocCrdt: (id: string, seed: string, by: { actor: { kind: string; name: string; agent?: { owner: string; tool: string | null } }; label?: string }) =>
+    editDocCrdt(id, seed, by),
 }));
 vi.mock("../src/server/revive-doc", () => ({
   reviveForFile: (input: { vaultId: string; path: string; content: string }) => reviveForFile(input),
@@ -76,6 +81,7 @@ beforeEach(() => {
     id === "vault_a" ? { id: "vault_a", name: "Work", owner_id: "owner_1" } : null
   );
   ensureDefaultVault.mockReset().mockResolvedValue({ id: "vault_default", owner_id: "user_2" });
+  editDocCrdt.mockReset().mockResolvedValue({ result: undefined, markdown: "", docJson: {} });
 });
 
 describe("POST /docs with someone else's vault_id", () => {
@@ -112,6 +118,22 @@ describe("POST /docs by the vault's owner", () => {
     expect(res.status).toBe(201);
     expect(createDocument).toHaveBeenCalledTimes(1);
     expect(createDocument.mock.calls[0][0]).toMatchObject({ owner_id: "owner_1", vault_id: "vault_a" });
+  });
+
+  it("writes the seed through the seam, so the first version is the creator's", async () => {
+    // A document Codex created read "Not recorded yet", then as the person's:
+    // the row was inserted and nothing cut a version until the next viewer's
+    // idle ticker did. The seam cuts it, credited to the key's owner and tool.
+    createDocument.mockImplementation(async (input) => ({ id: "doc_new", content: input.content, ...input }));
+    const res = await docsHandler.POST(post(OTHER_KEY, { title: "Notes", content: "# Notes\n" }));
+    expect(res.status).toBe(201);
+    expect(editDocCrdt).toHaveBeenCalledTimes(1);
+    const [id, seed, by] = editDocCrdt.mock.calls[0];
+    expect(id).toBe("doc_new");
+    expect(seed).toBe("# Notes"); // the row's markdown, as the serializer leaves it
+    expect(by.label).toBe("Created");
+    expect(by.actor.kind).toBe("agent");
+    expect(by.actor.agent).toEqual({ owner: "name-of(user_2)", tool: "claude" });
   });
 
   it("still tries to revive a returning file on the adopt path", async () => {

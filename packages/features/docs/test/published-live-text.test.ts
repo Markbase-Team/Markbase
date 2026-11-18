@@ -1,3 +1,4 @@
+import type { Actor } from "../src/server/auth";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createDoc, setMarkdown } from "../src/logic/crdt";
 import { snapshot } from "../src/logic/sync";
@@ -130,13 +131,16 @@ describe("getPublishedTabs", () => {
   });
 });
 
+/** Who publishes: the owner, as the route gates it. */
+const OWNER: Actor = { kind: "user", id: "owner_1", userId: "owner_1", name: "Jessie" };
+
 describe("publishing pins a version", () => {
   it("publishes the text as it stands and keeps showing it after more edits", async () => {
     const { getPublishedTabs, publishDocument, publishVersions } = await import("../src/server/publish");
     rows.push(row({ published_at: null, public_slug: null }));
     crdt.set("d1", crdtOf("# Launch Post\n\nReady to ship.\n"));
 
-    const { slug, version } = await publishDocument("d1");
+    const { slug, version } = await publishDocument("d1", OWNER);
     expect(version).toBe(0);
 
     // The author keeps writing; the public page does not move.
@@ -152,14 +156,14 @@ describe("publishing pins a version", () => {
     expect(state.versions).toHaveLength(1);
 
     // Publishing again takes the latest text as a new version.
-    const again = await publishDocument("d1");
+    const again = await publishDocument("d1", OWNER);
     expect(again.version).toBe(1);
     expect((await getPublishedTabs(slug))?.tabs[0].content).toContain("half-finished thought");
     expect(await publishVersions("d1", null)).toMatchObject({ version: 1, behind: false });
 
     // And an older version can be chosen back.
-    await publishDocument("d1", 0);
+    await publishDocument("d1", OWNER, 0);
     expect((await getPublishedTabs(slug))?.tabs[0].content).toBe("# Launch Post\n\nReady to ship.\n");
-    await expect(publishDocument("d1", 7)).rejects.toThrow();
+    await expect(publishDocument("d1", OWNER, 7)).rejects.toThrow();
   });
 });

@@ -3,7 +3,7 @@ import * as Y from "yjs";
 import { setMarkdown } from "../src/logic/crdt";
 import { checkpoint } from "../src/logic/versions";
 import { lineCredit, writerText } from "../src/logic/analytics";
-import { versionCredit } from "../src/handlers/editing";
+import { versionCredit } from "../src/server/doc-crdt";
 
 // An edit made through the API is credited to whoever made it: an agent's edit
 // as an agent's, so history and "Who wrote it" show it as one.

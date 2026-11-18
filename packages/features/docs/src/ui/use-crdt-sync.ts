@@ -13,13 +13,8 @@ import type * as Y from "yjs";
 import {
   docJsonToMarkdown,
   EditorBinding,
-  getMarkdown,
-  observeMarkdown,
-  checkpoint,
-  shouldCheckpoint,
-  listVersions,
-  versionContent,
-  versionCount,
+  EDITOR_ORIGIN,
+  VersionTracker,
   watchComments,
   docText,
   posToTextOffset,
@@ -142,42 +137,23 @@ export function useCrdtSync(
       detachUpdate = () => editor.off("update", onUpdate);
 
       // Record history (roadmap B3). The op-log already has every keystroke, so a
-      // VERSION means "a thought finished" — shouldCheckpoint decides; this only
-      // asks it often enough to notice. Versions land in the same Y.Doc, so they
-      // sync and persist by the same path as the content, with nothing extra.
-      let lastEditAt = Date.now();
-      let lastVersionAt: number | null = null;
-      let lastVersionContent = "";
-      try {
-        const already = versionCount(doc);
-        if (already > 0) {
-          lastVersionAt = listVersions(doc)[already - 1].at;
-          lastVersionContent = versionContent(doc, already - 1);
-        }
-      } catch (e) {
-        // A single corrupted version entry must NOT break live sync — otherwise the
-        // whole effect rejects, `setStatus("live")` never runs, and (in dev) the
-        // unhandled rejection stops Fast Refresh so edits need a manual reload.
-        // History for this doc is unavailable; content, comments, and new versions
-        // keep working.
-        console.warn(`[crdt ${docId}] version history unavailable:`, e);
-      }
-      const detachObserve = observeMarkdown(doc, () => {
-        lastEditAt = Date.now();
-      });
+      // VERSION means "a thought finished" — the tracker decides; this only asks
+      // it often enough to notice. Versions land in the same Y.Doc, so they sync
+      // and persist by the same path as the content, with nothing extra.
+      //
+      // Only what was typed HERE: an edit that arrived over the bus — an
+      // agent's, through the API — is its maker's to record, and the tracker
+      // refuses it, so an open window never credits it to the person reading.
+      // A corrupted version entry does not break live sync: the tracker starts
+      // history fresh, and content, comments and new versions keep working.
+      const versions = new VersionTracker(doc, EDITOR_ORIGIN);
       const ticker = setInterval(() => {
-        const content = getMarkdown(doc);
-        if (!shouldCheckpoint({ now: Date.now(), lastEditAt, lastVersionAt, lastVersionContent, content })) {
-          return;
-        }
-        if (checkpoint(doc, { author: authorRef.current })) {
-          lastVersionAt = Date.now();
-          lastVersionContent = content;
-        }
+        if (!versions.due()) return;
+        versions.record({ author: authorRef.current });
       }, TICK_MS);
       stopTicker = () => {
         clearInterval(ticker);
-        detachObserve();
+        versions.stop();
       };
 
       // Comment highlights (roadmap B1): the comments Y.Array is in THIS same doc,
