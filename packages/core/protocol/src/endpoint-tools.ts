@@ -92,7 +92,48 @@ const METHODS: readonly string[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 const PARAM_TYPES: readonly string[] = ["string", "number", "boolean", "json"];
 
 /** Any JSON value — what a server's answer is before it is checked. */
-type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+/** A JSON value: what a tool's arguments and a served tool list are made of. */
+export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
+/** The HTTP request a tool call becomes, relative to the API's base (`/api/v1`). */
+export interface ToolRequest {
+  method: HttpMethod;
+  /** The path with its `:name` segments filled in and, for a read, its query. */
+  path: string;
+  /** The JSON body, for the methods that carry one. */
+  body?: string;
+}
+
+/**
+ * Turn a tool call into the request that answers it: path parameters go into
+ * the path, and what is left is the JSON body (POST, PUT, PATCH) or the query
+ * (GET, DELETE). Throws when a path parameter is missing, so the caller can
+ * say which one. The local MCP server and the hosted one both call through
+ * this, so a tool means the same request wherever it is run.
+ */
+export function toolRequest(
+  tool: { method: HttpMethod; path: string },
+  args: { [name: string]: Json }
+): ToolRequest {
+  const rest = { ...args };
+  let path = tool.path;
+  for (const name of pathParams(tool.path)) {
+    const value = rest[name];
+    if (value == null || value === "") throw new Error(`Missing path param: ${name}`);
+    path = path.replace(`:${name}`, encodeURIComponent(String(value)));
+    delete rest[name];
+  }
+  if (tool.method === "POST" || tool.method === "PUT" || tool.method === "PATCH") {
+    return { method: tool.method, path, body: JSON.stringify(rest) };
+  }
+  const query = new URLSearchParams(
+    Object.entries(rest).map(([k, v]): [string, string] => [
+      k,
+      typeof v === "object" && v !== null ? JSON.stringify(v) : String(v),
+    ])
+  ).toString();
+  return { method: tool.method, path: query ? `${path}?${query}` : path };
+}
 
 function isRecord(value: Json | undefined): value is { [key: string]: Json } {
   return typeof value === "object" && value !== null && !Array.isArray(value);

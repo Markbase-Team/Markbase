@@ -12,6 +12,7 @@ import { installDocsMcp, type McpTarget } from "@markbase/node";
 import { canOpenBrowser } from "@markbase/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
+import type { Json } from "@markbase/protocol/endpoint-tools";
 import { callEndpoint } from "./call";
 import { mcpAuth } from "./mcp-auth";
 import { toolSource } from "./tool-source";
@@ -166,7 +167,7 @@ export async function runMcp(): Promise<void> {
       // With a key that works: the one this machine has or, when the API
       // refuses it or there is none, the one a sign-in in the browser gives.
       const r = await auth.call((apiKey) =>
-        callEndpoint(e, (req.params.arguments ?? {}) as Record<string, unknown>, {
+        callEndpoint(e, (req.params.arguments ?? {}) as { [name: string]: Json }, {
           clientName: server.getClientVersion()?.name,
           sessionToken: process.env.MARKBASE_SESSION_TOKEN,
           apiKey,

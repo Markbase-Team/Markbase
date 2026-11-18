@@ -16,6 +16,7 @@
     "./endpoint": "./src/endpoint.ts",
     "./endpoint-gen": "./src/endpoint-gen.ts",
     "./endpoint-tools": "./src/endpoint-tools.ts",
+    "./mcp-http": "./src/mcp-http.ts",
     "./features": "./src/features.ts",
     "./folders": "./src/folders.ts",
     "./instance": "./src/instance.ts",

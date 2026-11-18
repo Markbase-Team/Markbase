@@ -1,5 +1,6 @@
 import type { HttpMethod } from "@markbase/docs/endpoints";
 import { pathParams } from "@markbase/docs/agent-tools";
+import { toolRequest, type Json } from "@markbase/protocol/endpoint-tools";
 import { appUrl, loadConfig } from "../config";
 
 // Build + send a request for a registry endpoint from a flat param map. Path
@@ -17,24 +18,10 @@ export interface CallResult {
 
 export async function callEndpoint(
   ep: { method: HttpMethod; path: string },
-  params: Record<string, unknown>,
-  // The MCP server forwards, when known: the connecting client's name (so the
-  // API records which provider this key is) and the session token (so doc
-  // actions attribute to a specific agent session).
-  // And the key to send, when it has already worked out which one (see
-  // mcp-auth); `markbase api` leaves it out and gets the configured key.
+  params: { [name: string]: Json },
   opts: { clientName?: string; sessionToken?: string; apiKey?: string } = {}
 ): Promise<CallResult> {
-  const rest = { ...params };
-
-  let path = ep.path;
-  for (const name of pathParams(ep.path)) {
-    if (rest[name] == null || rest[name] === "") {
-      throw new Error(`Missing path param: ${name}`);
-    }
-    path = path.replace(`:${name}`, encodeURIComponent(String(rest[name])));
-    delete rest[name];
-  }
+  const request = toolRequest(ep, params);
 
   const apiKey = opts.apiKey ?? loadConfig().apiKey;
   if (!apiKey) {
@@ -47,18 +34,12 @@ export async function callEndpoint(
   };
   if (opts.clientName) headers["X-MCP-Client"] = opts.clientName;
   if (opts.sessionToken) headers["X-MCP-Session"] = opts.sessionToken;
-  let url = base + path;
-  const init: RequestInit = { method: ep.method, headers };
-  if (ep.method === "POST" || ep.method === "PUT" || ep.method === "PATCH") {
+  const init: RequestInit = { method: request.method, headers };
+  if (request.body !== undefined) {
     headers["content-type"] = "application/json";
-    init.body = JSON.stringify(rest);
-  } else if (Object.keys(rest).length) {
-    const qs = new URLSearchParams(
-      Object.entries(rest).map(([k, v]) => [k, String(v)] as [string, string])
-    );
-    url += `?${qs.toString()}`;
+    init.body = request.body;
   }
 
-  const res = await fetch(url, init);
+  const res = await fetch(base + request.path, init);
   return { ok: res.ok, status: res.status, body: await res.text() };
 }

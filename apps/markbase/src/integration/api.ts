@@ -1,4 +1,5 @@
 import { AGENT_ENDPOINTS, docEndpoint, type DocEndpoint } from "@markbase/docs/endpoints";
+import type { Json } from "@markbase/protocol/endpoint-tools";
 import { callEndpoint, pathParams } from "./call";
 
 // `markbase api <endpoint> [key=value] [key:=json]` — call any document endpoint
@@ -63,7 +64,7 @@ export async function runApi(argv: string[]): Promise<void> {
   }
 
   // Parse key=value (string) and key:=json (raw JSON) args.
-  const params: Record<string, unknown> = {};
+  const params: { [name: string]: Json } = {};
   for (const arg of rest) {
     const json = /^([^=]+):=(.*)$/s.exec(arg);
     const str = /^([^=]+)=(.*)$/s.exec(arg);
