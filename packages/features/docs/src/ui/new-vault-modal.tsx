@@ -3,7 +3,8 @@
 import { api } from "@markbase/protocol/api-client";
 import { useState } from "react";
 import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
-import { Download, FolderInput, Library, Loader2 } from "lucide-react";
+import { FolderInput, Library, Loader2 } from "lucide-react";
+import { DownloadButton } from "@markbase/ui/download-button";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -244,14 +245,8 @@ export function NewVaultModal({
                 <FolderInput className="mt-0.5 size-4 shrink-0" />
                 <span className="min-w-0 flex-1">
                   Added later, on your Mac: the desktop app syncs this vault to a
-                  folder of your choice.{" "}
-                  <a
-                    href={MAC_DOWNLOAD_URL}
-                    className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-2 hover:underline"
-                  >
-                    Download for Mac
-                    <Download className="size-3.5" />
-                  </a>
+                  folder of your choice.
+                  <DownloadButton size="sm" className="mt-2 flex w-fit" />
                 </span>
               </p>
             )}

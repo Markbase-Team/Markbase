@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AppWindow, Download } from "lucide-react";
+import { AppWindow } from "lucide-react";
+import { DownloadButton } from "@markbase/ui/download-button";
 import { connectLink, DEFAULT_APP_URL } from "@markbase/protocol/instance";
-import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
+import { MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
 import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";
 import { latestMacVersion } from "@/lib/latest-release";
@@ -92,16 +93,7 @@ export default async function JoinPage({
             <AppWindow className="size-4" />
             Open in desktop app
           </a>
-          <a
-            href={MAC_DOWNLOAD_URL}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border bg-background px-4 text-sm font-medium transition hover:bg-muted"
-          >
-            <Download className="size-4" />
-            Download for Mac
-            <span className="text-xs text-muted-foreground">
-              · {version ? `v${version}, ` : ""}Apple silicon
-            </span>
-          </a>
+          <DownloadButton version={version} className="h-12 w-full rounded-lg" />
           <p className="text-center text-xs text-muted-foreground">
             {hosted
               ? "The app points here out of the box; Open in desktop app just launches it."
