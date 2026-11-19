@@ -4,6 +4,7 @@ import Script from "next/script";
 import { connection } from "next/server";
 import { instanceConfigScript } from "@markbase/protocol/instance-config";
 import { Toaster } from "@markbase/ui/sonner";
+import { SignupSourceCapture } from "@/components/signup-source-capture";
 import { serverInstanceConfig } from "@/lib/instance-info";
 import { SITE_OG_IMAGE } from "@/lib/seo";
 import "./globals.css";
@@ -66,6 +67,8 @@ export default async function RootLayout({
           </Script>
         )}
         {children}
+        {/* Notes how this browser first arrived, for the sign-up to record. */}
+        <SignupSourceCapture />
         {/* All toasts share one bottom-right stack; collapsed until hover. */}
         <Toaster richColors position="bottom-right" />
         {/* Google Analytics (gtag.js). lazyOnload (not afterInteractive) so the

@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { safeNext } from "@/lib/routes";
+import { SIGNUP_SOURCE_COOKIE } from "@/lib/signup-source";
+import { recordSignupSource } from "@/lib/signup-source-server";
 
 export const runtime = "nodejs";
 
@@ -43,7 +45,7 @@ export async function GET(req: NextRequest) {
         },
       }
     );
-    const { error } = tokenHash
+    const { data, error } = tokenHash
       ? await supabase.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash })
       : await supabase.auth.exchangeCodeForSession(code as string);
     if (error) failed = error.message;
@@ -51,7 +53,18 @@ export async function GET(req: NextRequest) {
     // account's first vault when that vault is created (POST /api/v1/vaults),
     // which is the first moment there is somewhere for it to live — and which
     // every client reaches, where this callback was only ever one way in.
-    if (!error) return response;
+    //
+    // What does happen here: if this browser is turning into a NEW account,
+    // the source cookie it arrived with (where it came from, see
+    // @/lib/signup-source) is written down against that account. A sign-in by
+    // an older account records nothing; the cookie goes either way.
+    if (!error) {
+      if (data.user) {
+        await recordSignupSource(data.user, req.cookies.get(SIGNUP_SOURCE_COOKIE)?.value);
+      }
+      response.cookies.delete(SIGNUP_SOURCE_COOKIE);
+      return response;
+    }
   }
 
   // Carry the reason. "Could not sign in" was all anyone ever saw, while the
