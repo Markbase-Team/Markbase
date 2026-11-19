@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, Code, Copy, ExternalLink, MessageSquare, Terminal } from "lucide-react";
+import { Check, Code, Copy, Download, ExternalLink, MessageSquare, Terminal } from "lucide-react";
 import { connectOptions, type ConnectOption } from "@markbase/protocol/connect-links";
 import { AgentLogo, hasAgentLogo } from "./agent-logo";
 
@@ -27,16 +27,26 @@ export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; app
   // not let the page use the clipboard.
   const [shown, setShown] = useState<ConnectOption | null>(null);
 
-  async function act(option: ConnectOption) {
-    let copied = true;
-    if (option.copy) {
-      setShown(option);
-      try {
-        await navigator.clipboard.writeText(option.copy);
-      } catch {
-        copied = false;
-      }
+  async function copyText(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
     }
+  }
+
+  async function act(option: ConnectOption) {
+    setShown(option);
+    if (option.kind === "link" && option.href) {
+      // Followed in place, the way an app's own link has to be. Whether the
+      // app opened, the page cannot tell, so nothing here says it did, and
+      // the way to do it by hand is shown under the buttons every time.
+      toast.message(option.after);
+      window.location.href = option.href;
+      return;
+    }
+    const copied = option.copy ? await copyText(option.copy) : true;
     if (copied) {
       setDone(option.id);
       setTimeout(() => setDone((current) => (current === option.id ? null : current)), 2000);
@@ -44,11 +54,7 @@ export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; app
     } else {
       toast.error("Couldn't copy it for you. It is shown under the buttons to copy by hand.");
     }
-    if (option.href) {
-      // An app's own link is followed in place; a web page opens beside this one.
-      if (option.kind === "link") window.location.href = option.href;
-      else window.open(option.href, "_blank", "noopener,noreferrer");
-    }
+    if (option.href) window.open(option.href, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -91,6 +97,37 @@ export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; app
           <div className="text-xs font-medium">{shown.name}</div>
           <code className="mt-1 block font-mono text-xs break-all select-all">{shown.copy}</code>
           <p className="mt-1.5 text-xs text-muted-foreground">{shown.after.replace(/^(Command|Address) copied\. /, "")}</p>
+        </div>
+      )}
+      {shown?.fallback && (
+        <div className="mt-3 rounded-xl border bg-muted/50 p-3" aria-live="polite">
+          <div className="text-xs font-medium">{shown.name}</div>
+          <p className="mt-1 text-xs text-muted-foreground">{shown.fallback.where}</p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-background p-2 font-mono text-xs whitespace-pre-wrap break-all select-all">
+            {shown.fallback.text}
+          </pre>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                const fallback = shown.fallback;
+                if (!fallback) return;
+                if (await copyText(fallback.text)) toast.success("Copied.");
+                else toast.error("Couldn't copy it for you. Select it above and copy it by hand.");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2.5 py-1 text-xs font-medium transition hover:bg-muted"
+            >
+              <Copy className="size-3.5" /> Copy
+            </button>
+            <a
+              href={shown.fallback.getApp}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+            >
+              <Download className="size-3.5" /> Don&apos;t have {shown.name}? Get it
+            </a>
+          </div>
         </div>
       )}
       <p className="mt-3 text-xs text-muted-foreground">
