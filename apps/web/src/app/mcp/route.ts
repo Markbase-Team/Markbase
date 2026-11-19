@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { agentTools } from "@markbase/docs/agent-tools";
 import { offersToken } from "@markbase/node/caller";
+import { signInChallenge } from "@markbase/node/mcp-oauth";
 import { toolRequest, type Json } from "@markbase/protocol/endpoint-tools";
 import {
   MCP_SESSION_HEADER,
@@ -12,6 +13,7 @@ import {
   type McpHost,
 } from "@markbase/protocol/mcp-http";
 import { authenticateAgent } from "@/lib/agent-auth";
+import { instanceUrl } from "@/lib/instance-url";
 
 export const runtime = "nodejs";
 
@@ -59,14 +61,20 @@ export const DELETE = notOffered;
 export async function POST(req: Request) {
   // A key, never the browser's cookie: this URL is reachable from any page a
   // signed-in person has open, and a cookie would let that page act as them.
+  // A client with no key is told where to sign in (see @markbase/node/mcp-oauth);
+  // one that can only send a key is told the same thing in words.
   if (!offersToken(req)) {
-    return refusal(401, "Send 'Authorization: Bearer <api_key>'. Keys are made in the dashboard, under API keys.", {
-      "WWW-Authenticate": 'Bearer realm="Markbase"',
+    return refusal(401, "Sign in, or send 'Authorization: Bearer <api_key>'. Keys are made in the dashboard, under API keys.", {
+      "WWW-Authenticate": signInChallenge(await instanceUrl()),
     });
   }
   const caller = await authenticateAgent(req, "read");
   if (!caller.ok) {
-    return refusal(caller.status, caller.error, caller.status === 401 ? { "WWW-Authenticate": 'Bearer realm="Markbase", error="invalid_token"' } : {});
+    return refusal(
+      caller.status,
+      caller.error,
+      caller.status === 401 ? { "WWW-Authenticate": signInChallenge(await instanceUrl(), true) } : {}
+    );
   }
 
   let body: Json;

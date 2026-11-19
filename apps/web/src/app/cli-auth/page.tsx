@@ -5,21 +5,9 @@ import {
   signedOutRedirect,
   type AuthorizeQuery,
 } from "@markbase/protocol/device-auth-contract";
+import { CapabilitySelect } from "@/components/capability-select";
+import { pickedCapability } from "@/lib/capabilities";
 import { AutoApprove } from "./auto-approve";
-
-// A connection's capability is the ceiling on what any agent on this machine can
-// do to your documents. It is THE security boundary: agents co-located on one
-// machine can read each other's credentials, so a session can never widen this.
-export const CAPABILITIES = ["viewer", "commenter", "editor", "owner"] as const;
-// Least-privilege sane default: co-write docs, but not share or delete them.
-export const DEFAULT_CAPABILITY = "editor";
-
-const CAPABILITY_HELP: Record<(typeof CAPABILITIES)[number], string> = {
-  viewer: "Viewer — read only",
-  commenter: "Commenter — read and comment",
-  editor: "Editor — read and edit documents",
-  owner: "Owner — full access, including share and delete",
-};
 
 // Only ever hand the minted key back to a loopback address on the user's own
 // machine — never an arbitrary URL.
@@ -58,10 +46,7 @@ export default async function CliAuthPage({
   const wantSession = framing.desktop;
   const claudeVersion = framing.claudeVersion;
   // The CLI may pre-select a capability; otherwise least-privilege.
-  const defaultCapability =
-    capability && (CAPABILITIES as readonly string[]).includes(capability)
-      ? capability
-      : DEFAULT_CAPABILITY;
+  const defaultCapability = pickedCapability(capability);
 
   const user = await getCurrentUser();
   if (!user) {
@@ -122,28 +107,7 @@ export default async function CliAuthPage({
                     </p>
                   )}
 
-                  <div className="text-left">
-                    <label htmlFor="capability" className="text-sm font-medium">
-                      Document access
-                    </label>
-                    <select
-                      id="capability"
-                      name="capability"
-                      defaultValue={defaultCapability}
-                      className="mt-1.5 h-10 w-full rounded-lg border bg-background px-3 text-sm"
-                    >
-                      {CAPABILITIES.map((c) => (
-                        <option key={c} value={c}>
-                          {CAPABILITY_HELP[c]}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="mt-1.5 text-xs text-muted-foreground">
-                      The most any agent on this machine can do to your documents.
-                      Nothing an agent does can exceed it. Change it later under API
-                      keys.
-                    </p>
-                  </div>
+                  <CapabilitySelect defaultValue={defaultCapability} subject="any agent on this machine" />
                 </>
               )}
 

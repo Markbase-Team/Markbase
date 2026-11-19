@@ -93,7 +93,16 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     // /blog/<slug>.md is the post as markdown (app/blog/[slug]/markdown).
-    return [{ source: "/blog/:slug.md", destination: "/blog/:slug/markdown" }];
+    return [
+      { source: "/blog/:slug.md", destination: "/blog/:slug/markdown" },
+      // Sign-in for the hosted MCP server is found at well-known addresses
+      // (RFC 9728, RFC 8414); the routes that answer are under app/oauth.
+      // A client may append the resource's or the issuer's path.
+      { source: "/.well-known/oauth-protected-resource", destination: "/oauth/protected-resource" },
+      { source: "/.well-known/oauth-protected-resource/:path*", destination: "/oauth/protected-resource" },
+      { source: "/.well-known/oauth-authorization-server", destination: "/oauth/authorization-server" },
+      { source: "/.well-known/oauth-authorization-server/:path*", destination: "/oauth/authorization-server" },
+    ];
   },
 
   async redirects() {

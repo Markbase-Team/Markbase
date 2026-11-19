@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createApiKey } from "@markbase/node/api-keys";
 import { getCurrentUser } from "@/lib/supabase/server";
-import { CAPABILITIES, DEFAULT_CAPABILITY, isLoopbackCallback } from "../page";
+import { pickedCapability } from "@/lib/capabilities";
+import { isLoopbackCallback } from "../page";
 
 export const runtime = "nodejs";
 
@@ -29,12 +30,7 @@ export async function POST(req: Request) {
   // account, no ceiling. The CLI path caps agents on a (possibly shared) machine,
   // so it honours the picked capability.
   const desktop = form.get("desktop") === "1";
-  const picked = form.get("capability");
-  const capability = desktop
-    ? "owner"
-    : typeof picked === "string" && (CAPABILITIES as readonly string[]).includes(picked)
-      ? picked
-      : DEFAULT_CAPABILITY;
+  const capability = desktop ? "owner" : pickedCapability(form.get("capability"));
 
   // The CLI probed `claude --version` on the machine and passed the result
   // through. Recording it on the key is what unlocks the Claude-Code-only
