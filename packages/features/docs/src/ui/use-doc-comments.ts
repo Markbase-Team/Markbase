@@ -42,7 +42,7 @@ export interface DocComments {
   remove: (id: string) => void;
 }
 
-const author = (name: string, id: string | null) => ({ name, id });
+const author = (name: string, userId: string | null) => ({ name, userId });
 
 export function useDocComments(
   docId: string,

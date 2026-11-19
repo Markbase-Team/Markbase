@@ -70,13 +70,25 @@ What each part does:
 - **A role on a document:** the caller must hold at least that role on the
   document. Your code receives `auth`, with `auth.doc` (the row), `auth.actor`
   (who is asking, person or agent) and `auth.capability` (what they hold).
-- **`null`:** the caller must be signed in. Your code receives `{ userId }`.
-  Anything narrower is yours to check, for example that a vault is the
-  caller's (`ownVault` in `handlers/vaults.ts`).
+- **`null`:** the caller must be signed in. Your code receives `{ actor }`,
+  with `actor.userId` the account to scope by (a `string` here: a guest never
+  gets in). Anything narrower is yours to check, for example that a vault is
+  the caller's (`ownVault` in `handlers/vaults.ts`).
 
 Do not call `requireDocCapability` or `accountActor` yourself. If the rule
 really depends on what is asked for, use `selfCheckedEndpoint(def, because,
 run)` and say why in `because`; `docs_listAssets` is the only one today.
+
+### Recording who wrote it is not yours to write either
+
+A change to a document's text goes through `editDocCrdt(id, seed, { actor },
+fn)` in `server/doc-crdt.ts`, and the seam records what `fn` changed as a
+version in the actor's name — the owner and the tool for an agent, the person
+for a person. That is what history and "Who wrote it" are built from, so a
+handler never calls `checkpoint` or `appendVersion` itself (a test fails if
+one does): forgetting is how an agent's text came to be credited to whoever
+next had the document open. Pass a `label` for a version worth naming
+("Created", "Restored version 3").
 
 ### Hiding an endpoint from agents
 

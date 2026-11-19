@@ -9,7 +9,8 @@ import {
   versionCount,
   type VersionMeta,
 } from "@markbase/docs";
-import { editDocCrdt, readDocCrdt } from "./doc-crdt";
+import type { Actor } from "./auth";
+import { editDocCrdt, readDocCrdt, versionCredit } from "./doc-crdt";
 import { getDocument, type DocumentRow } from "./documents";
 
 const db = () => supabase.schema("docs");
@@ -47,12 +48,15 @@ const PUBLISHED_LABEL = "Published";
 async function pinPublished(
   docId: string,
   rowContent: string | null,
+  by: Actor,
   version?: number
 ): Promise<number> {
-  const { result } = await editDocCrdt(docId, rowContent ?? "", (y) => {
+  const { result } = await editDocCrdt(docId, rowContent ?? "", { actor: by }, (y) => {
     let index = version;
     if (index === undefined) {
-      checkpoint(y, { label: PUBLISHED_LABEL });
+      // Recorded here rather than left to the seam, because the pin needs the
+      // index of the version it records. The seam then has nothing new to add.
+      checkpoint(y, { ...versionCredit(by), label: PUBLISHED_LABEL });
       index = versionCount(y) - 1;
     }
     pinVersion(y, index);
@@ -67,12 +71,13 @@ async function pinPublished(
 // published_at. Owner-gated by the route.
 export async function publishDocument(
   docId: string,
+  by: Actor,
   version?: number
 ): Promise<{ slug: string; version: number }> {
   const doc = await getDocument(docId);
   if (!doc) throw new Error("Document not found");
 
-  const pinned = await pinPublished(docId, doc.content, version);
+  const pinned = await pinPublished(docId, doc.content, by, version);
   const { data: siblings } = await db()
     .from("documents")
     .select("id, content")
@@ -80,7 +85,7 @@ export async function publishDocument(
   const others = ((siblings ?? []) as { id: string; content: string | null }[]).filter(
     (d) => d.id !== docId
   );
-  await Promise.all(others.map((d) => pinPublished(d.id, d.content)));
+  await Promise.all(others.map((d) => pinPublished(d.id, d.content, by)));
 
   const slug = doc.public_slug ?? publicSlug(doc.title, docId);
   const { error } = await db()

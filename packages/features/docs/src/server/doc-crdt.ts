@@ -1,13 +1,17 @@
 import type { Doc as YDoc } from "yjs";
 import {
+  checkpoint,
   createDoc,
   derivedDoc,
   getMarkdown,
   restore,
   snapshot,
+  versionCount,
   type DocJSON,
+  type VersionCredit,
 } from "@markbase/docs";
-import { mirrorDocContent } from "@markbase/docs/server";
+import type { Actor } from "./auth";
+import { mirrorDocContent } from "./documents";
 import { broadcastCrdt, loadCrdtSnapshot, saveCrdtSnapshot } from "./crdt-store";
 
 // The external agent HTTP API edits the SAME CRDT Y.Doc the browser editor and
@@ -40,9 +44,41 @@ export async function readDocCrdt<T>(
 
 export type EditResult<T> = { result: T; markdown: string; docJson: DocJSON };
 
+/** Who is writing through the seam, and what to call the version they leave. */
+export interface Writer {
+  actor: Actor;
+  /** A name for the version in history ("Created", "Restored version 3"). */
+  label?: string;
+}
+
+/**
+ * Who a version written through the API is credited to. An agent's edit is
+ * credited as an agent's ("Jessie's Claude"), so history and line credit
+ * show it as one; a person's edit, to the person.
+ */
+export function versionCredit(actor: Actor): VersionCredit {
+  if (actor.kind !== "agent") return { author: actor.name };
+  // Whose agent and which tool, apart — the shape an agent's hook records, so
+  // "Jessie's Claude" is one writer however the edit arrived. An agent that
+  // did not say which tool it is, is "agent".
+  if (actor.agent) return { author: actor.agent.owner, agents: [actor.agent.tool ?? "agent"] };
+  return { agents: [actor.name] };
+}
+
 /**
  * Open the doc's CRDT, run `fn` (which MUTATES the Y.Doc — e.g. `setMarkdown`,
- * `checkpoint`, `restoreVersion`), then persist and broadcast.
+ * `restoreVersion`), record what it changed as a version in `by`'s name, then
+ * persist and broadcast.
+ *
+ * The version is cut HERE, not by the caller. Every content change the API
+ * makes passes through this function, so this is the one place that can
+ * promise none goes unrecorded — and a handler that forgets is a handler that
+ * credits the next viewer's idle ticker with an agent's work (that is how a
+ * document Codex created came to read as the person's). A caller may still
+ * record earlier inside `fn` when it needs the version's index; the seam then
+ * finds nothing new to say. What gets a version: a change `fn` made, or the
+ * first write to a document that has none — creation is a write of nothing
+ * onto the seed, and the seed is the creator's.
  *
  * The save is a merge with a compare-and-swap (crdt-store.ts), so anything
  * persisted since we opened — a human edit that landed mid-request — is kept,
@@ -53,12 +89,17 @@ export type EditResult<T> = { result: T; markdown: string; docJson: DocJSON };
 export async function editDocCrdt<T>(
   docId: string,
   seedMarkdown: string,
+  by: Writer,
   fn: (doc: YDoc) => T
 ): Promise<EditResult<T>> {
   const existing = await loadCrdtSnapshot(docId);
   const doc = existing ? restore(existing.state) : createDoc(seedMarkdown);
   try {
+    const before = getMarkdown(doc);
     const result = fn(doc);
+    if (versionCount(doc) === 0 || getMarkdown(doc) !== before) {
+      checkpoint(doc, { ...versionCredit(by.actor), ...(by.label === undefined ? {} : { label: by.label }) });
+    }
     const saved = await saveCrdtSnapshot(docId, snapshot(doc));
     // Awaited: this runs in a request handler on a serverless runtime, and a
     // function that returns while the broadcast is still in flight may be

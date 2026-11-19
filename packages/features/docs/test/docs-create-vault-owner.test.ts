@@ -18,7 +18,7 @@ const getVault = vi.fn();
 const ensureDefaultVault = vi.fn();
 
 vi.mock("../src/server/documents", () => ({
-  createDocument: (input: Record<string, string | null | undefined>) => createDocument(input),
+  createDocument: (input: Record<string, string | null | undefined | { kind: string }>) => createDocument(input),
   getDocument: async () => null,
   listDocumentsForUser: async () => [],
   listSharedDocumentsForUser: async () => [],
@@ -112,6 +112,18 @@ describe("POST /docs by the vault's owner", () => {
     expect(res.status).toBe(201);
     expect(createDocument).toHaveBeenCalledTimes(1);
     expect(createDocument.mock.calls[0][0]).toMatchObject({ owner_id: "owner_1", vault_id: "vault_a" });
+  });
+
+  it("names the creator, so the first version is theirs", async () => {
+    // A document Codex created read "Not recorded yet", then as the person's:
+    // the row was inserted and nothing cut a version until the next viewer's
+    // idle ticker did. createDocument now cuts it, credited to the key's
+    // owner and tool — which the handler has to hand it.
+    const res = await docsHandler.POST(post(OTHER_KEY, { title: "Notes", content: "# Notes\n" }));
+    expect(res.status).toBe(201);
+    const { by } = createDocument.mock.calls[0][0] as { by: { kind: string; agent?: { owner: string; tool: string | null } } };
+    expect(by.kind).toBe("agent");
+    expect(by.agent).toEqual({ owner: "name-of(user_2)", tool: "claude" });
   });
 
   it("still tries to revive a returning file on the adopt path", async () => {

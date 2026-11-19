@@ -7,6 +7,7 @@ export {
   atLeast,
   type Capability,
   type Actor,
+  type SignedInActor,
 } from "./auth";
 export {
   createDocument,
@@ -128,8 +129,8 @@ export {
   requireDocEndpoint,
   requireDocCapability,
 } from "./docs-auth";
-export type { EditResult } from "./doc-crdt";
-export { readDocCrdt, editDocCrdt } from "./doc-crdt";
+export type { EditResult, Writer } from "./doc-crdt";
+export { readDocCrdt, editDocCrdt, versionCredit } from "./doc-crdt";
 export {
   loadCrdtSnapshot,
   saveCrdtSnapshot,

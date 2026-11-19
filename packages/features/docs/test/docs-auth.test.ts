@@ -91,7 +91,7 @@ describe("resolveActor — the caller, as an author", () => {
   it("names a session by its account, never by its address", async () => {
     await expect(resolveActor(creds(SESSION))).resolves.toEqual({
       ok: true,
-      actor: { kind: "user", id: "owner_1", userId: "owner_1", name: "name-of(o@example.com)" },
+      actor: { kind: "user", userId: "owner_1", name: "name-of(o@example.com)" },
     });
   });
 
@@ -100,7 +100,6 @@ describe("resolveActor — the caller, as an author", () => {
       ok: true,
       actor: {
         kind: "agent",
-        id: "owner_1",
         userId: "owner_1",
         name: "name-of(owner_1)'s Claude",
         capabilityCap: "commenter",

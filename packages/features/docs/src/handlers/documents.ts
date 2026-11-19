@@ -7,6 +7,7 @@ import {
   type DocJSON,
   retitleLeadingH1,
   setMarkdown,
+  accountOf,
 } from "../logic";
 import {
   createDocument,
@@ -97,10 +98,10 @@ export const listDocsEndpoint = endpoint({
   // `content` when it's asked for (the bodies dwarf the rest of the row).
   const withContent = params.get("content") === "1";
   if (scope === "shared") {
-    const shared = await listSharedDocumentsForUser(a.userId, withContent);
+    const shared = await listSharedDocumentsForUser(a.actor.userId, withContent);
     return json({ docs: await Promise.all(shared.map((d) => sharedListEntry(d, withContent))) });
   }
-  const docs = await listDocumentsForUser(a.userId, vaultId, withContent);
+  const docs = await listDocumentsForUser(a.actor.userId, vaultId, withContent);
   // Omit the (potentially large) doc_json from the list view.
   return json({
     docs: docs.map((d) => ({
@@ -167,7 +168,7 @@ export const createDocEndpoint = endpoint({
   // created 116 documents inside another account's vaults (see
   // userOwnsVault). A vault that does not exist reads the same as someone
   // else's: either way it is not a place this caller may create in.
-  if (body.vault_id && !(await userOwnsVault(body.vault_id, a.userId))) {
+  if (body.vault_id && !(await userOwnsVault(body.vault_id, a.actor.userId))) {
     return json({ error: "You don't own that vault." }, 403);
   }
 
@@ -190,12 +191,14 @@ export const createDocEndpoint = endpoint({
     title: body.title,
     doc_json: doc.toJSON(),
     content: docToMarkdown(doc),
-    owner_id: a.userId,
+    owner_id: a.actor.userId,
+    // The seed is the creator's: the first version says so.
+    by: a.actor,
     // A file adopted from a vault folder keeps its path, so it stays put on
     // the next sync instead of being pulled back to the root.
     path: body.path,
     // Every document must live in a vault or it syncs to no folder at all.
-    vault_id: body.vault_id ?? (await ensureDefaultVault(a.userId)).id,
+    vault_id: body.vault_id ?? (await ensureDefaultVault(a.actor.userId)).id,
   });
   return json({ doc: created }, 201);
 });
@@ -293,7 +296,7 @@ export const renameDocEndpoint = endpoint({
     // the heading back, or a title that was stale by the time it arrived would
     // overwrite what the person went on typing.
     if (body.syncHeading === true) {
-      await editDocCrdt(id, auth.doc.content, (doc) => {
+      await editDocCrdt(id, auth.doc.content, { actor: auth.actor }, (doc) => {
         const markdown = getMarkdown(doc);
         const next = retitleLeadingH1(markdown, title);
         if (next !== markdown) setMarkdown(doc, next);
@@ -361,7 +364,8 @@ export const setMemberPathEndpoint = endpoint({
   humanOnly: true,
   why: "A folder layout is a person's own.",
 }, async (req, { id }, auth) => {
-  if (!auth.actor.userId || auth.doc.owner_id === auth.actor.userId) {
+  const member = accountOf(auth.actor);
+  if (member === null || auth.doc.owner_id === member) {
     return json({ error: "You own this document; move it with PATCH /docs/:id instead." }, 400);
   }
 
@@ -375,7 +379,7 @@ export const setMemberPathEndpoint = endpoint({
     return json({ error: "path (string or null) is required" }, 400);
   }
   const next = typeof body.path === "string" ? normalizePath(body.path) : null;
-  const ok = await setMemberPath(id, auth.actor.userId, next && next.length > 0 ? next : null);
+  const ok = await setMemberPath(id, member, next && next.length > 0 ? next : null);
   if (!ok) return json({ error: "Document not found." }, 404);
   return json({ ok: true, path: next });
 });
@@ -392,10 +396,11 @@ export const leaveShareEndpoint = endpoint({
   humanOnly: true,
   why: "Leaving a share is the person's decision, not an edit.",
 }, async (_req, { id }, auth) => {
-  if (!auth.actor.userId || auth.doc.owner_id === auth.actor.userId) {
+  const member = accountOf(auth.actor);
+  if (member === null || auth.doc.owner_id === member) {
     return json({ error: "You own this document; delete it with DELETE /docs/:id instead." }, 400);
   }
-  const ok = await removeMember(id, auth.actor.userId);
+  const ok = await removeMember(id, member);
   if (!ok) return json({ error: "Document not found." }, 404);
   return json({ ok: true });
 });

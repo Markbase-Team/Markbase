@@ -19,11 +19,10 @@ export function atLeast(have: Capability | null, need: Capability): boolean {
   return have !== null && RANK[have] >= RANK[need];
 }
 
-/** An authenticated/guest actor making a request. Agents pass the userId of
+/** An authenticated/guest actor making a request. Agents carry the userId of
  *  their API key's owner and resolve exactly as that user would — unless the key
  *  carries a `capabilityCap`, which lowers what that agent may do. */
 export type Actor = Author & {
-  userId?: string;
   capabilityCap?: Capability | null;
   /**
    * For an agent that named no session: whose it is and which tool, apart, so
@@ -32,6 +31,9 @@ export type Actor = Author & {
    */
   agent?: { owner: string; tool: string | null };
 };
+
+/** An actor with an account behind it — a person, or an agent on its owner's key. Never a guest. */
+export type SignedInActor = Extract<Actor, { kind: "user" | "agent" }>;
 
 /** The lower of two capabilities (a ceiling never raises access). */
 export function minCapability(a: Capability, b: Capability): Capability {

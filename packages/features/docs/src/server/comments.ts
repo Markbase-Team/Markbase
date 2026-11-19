@@ -1,5 +1,5 @@
 import { supabase } from "@markbase/protocol/supabase";
-import type { Author } from "../logic/types";
+import { accountOf, type Author } from "../logic/types";
 
 // Anchored review comments. A root comment pins to a text range (positions +
 // the quoted text as a durable fallback); replies carry a parent_id and no
@@ -57,7 +57,7 @@ export async function createComment(input: {
       quoted_text: input.quotedText ?? "",
       body: input.body,
       author_kind: input.author.kind,
-      author_id: input.author.id ?? null,
+      author_id: accountOf(input.author),
       author_name: input.author.name,
     })
     .select(COLS)

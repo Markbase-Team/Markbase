@@ -18,7 +18,8 @@ import { markdownToDoc } from "./markdown";
 import type { MarkdownLens } from "./media";
 import type { DocJSON } from "./types";
 
-const EDITOR_ORIGIN: Origin = "editor";
+/** The origin the editor's own edits carry — what its version tracker records. */
+export const EDITOR_ORIGIN: Origin = "editor";
 
 /** How the binding reads from / writes to a concrete editor. */
 export interface EditorBridge {

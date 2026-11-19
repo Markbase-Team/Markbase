@@ -110,7 +110,7 @@ export function addComment(
     from: number;
     to: number;
     body: string;
-    author: { name: string; id?: string | null };
+    author: { name: string; userId?: string | null };
     id?: string;
     at?: number;
   }
@@ -122,7 +122,7 @@ export function addComment(
   m.set("anchor", createAnchor(doc, input.from, input.to));
   m.set("body", input.body);
   m.set("authorName", input.author.name);
-  m.set("authorId", input.author.id ?? null);
+  m.set("authorId", input.author.userId ?? null);
   m.set("resolved", false);
   m.set("at", input.at ?? Date.now());
   log(doc).push([m]);
@@ -135,7 +135,7 @@ export function addReply(
   input: {
     parentId: string;
     body: string;
-    author: { name: string; id?: string | null };
+    author: { name: string; userId?: string | null };
     id?: string;
     at?: number;
   }
@@ -147,7 +147,7 @@ export function addReply(
   m.set("anchor", null);
   m.set("body", input.body);
   m.set("authorName", input.author.name);
-  m.set("authorId", input.author.id ?? null);
+  m.set("authorId", input.author.userId ?? null);
   m.set("resolved", false);
   m.set("at", input.at ?? Date.now());
   log(doc).push([m]);

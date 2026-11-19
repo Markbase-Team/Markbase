@@ -1,7 +1,14 @@
 import { markdownToDoc, docToMarkdown, deriveTitle } from "../logic/markdown";
 import { createDocument } from "./documents";
 import { createComment } from "./comments";
+import type { Actor } from "./auth";
 import type { DocJSON } from "../logic/types";
+
+/**
+ * Who the welcome document and its sample comments are from: Markbase, as an
+ * agent on the new account — the way any agent is "someone's agent".
+ */
+const markbase = (userId: string): Actor => ({ kind: "agent", userId, name: "Markbase" });
 
 // The first document a new account sees: a copy of its own, in its first
 // vault (see seedWelcomeDoc). It is a normal document — fully editable and
@@ -99,7 +106,8 @@ function findAnchor(
 async function seedComments(
   doc: PMNode,
   docId: string,
-  version: number
+  version: number,
+  by: Actor
 ): Promise<void> {
   for (const { needle, body } of SEED_COMMENTS) {
     try {
@@ -111,7 +119,7 @@ async function seedComments(
         anchorTo: anchor?.to ?? 0,
         anchorVersion: version,
         body,
-        author: { kind: "agent", name: "Markbase" },
+        author: by,
       });
     } catch {
       // Non-fatal — skip this sample comment.
@@ -138,8 +146,11 @@ export async function seedWelcomeDoc(userId: string, vaultId: string): Promise<v
     doc_json: doc.toJSON() as DocJSON,
     content: docToMarkdown(doc),
     owner_id: userId,
+    // Its first version is Markbase's, like its comments — not the new
+    // account's, whose idle ticker would otherwise claim the text.
+    by: markbase(userId),
     vault_id: vaultId,
     path: WELCOME_DOC_PATH,
   });
-  await seedComments(doc, row.id, row.version);
+  await seedComments(doc, row.id, row.version, markbase(userId));
 }

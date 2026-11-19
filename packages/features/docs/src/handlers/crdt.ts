@@ -125,7 +125,7 @@ export const crdtChangesEndpoint = endpoint({
     return json({ error: "scope=shared and vault are exclusive" }, 400);
   }
   try {
-    return json(await listCrdtChanges(a.userId, since, scope === "shared" ? "shared" : { vaultId: vault }));
+    return json(await listCrdtChanges(a.actor.userId, since, scope === "shared" ? "shared" : { vaultId: vault }));
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return json({ error: message }, /ISO timestamp/.test(message) ? 400 : 503);

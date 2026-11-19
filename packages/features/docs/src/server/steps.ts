@@ -6,7 +6,7 @@ import { applySteps } from "../logic/steps";
 import { docToMarkdown, deriveTitle, isUntitled, markdownToDoc } from "../logic/markdown";
 import { diffCounts, diffSegments, type DiffSegment } from "../logic/diff";
 import { docReplaceSteps } from "../logic/restore";
-import type { Author, DocJSON, StepJSON } from "../logic/types";
+import { accountOf, type Author, type DocJSON, type StepJSON } from "../logic/types";
 import { getDocument } from "./documents";
 
 // The collab authority. Every edit — human or agent — flows through receiveSteps.
@@ -88,7 +88,7 @@ export async function receiveSteps(input: {
     removed,
     session_id: input.sessionId ?? randomUUID(),
     author_kind: author.kind,
-    author_id: author.id ?? null,
+    author_id: accountOf(author),
     author_name: author.name,
   });
   if (ins.error) throw ins.error;

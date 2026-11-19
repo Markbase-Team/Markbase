@@ -82,6 +82,7 @@ export {
   type ToolInputSchema,
 } from "./agent-tools";
 export type { Author, Anchor, DocJSON, StepJSON, JSONValue } from "./types";
+export { accountOf } from "./types";
 export * from "./mentions";
 export {
   createDoc,
@@ -121,7 +122,8 @@ export {
   type VaultBaseStore,
   type VaultSyncOpenOptions,
 } from "./vault-sync";
-export { EditorBinding, type EditorBridge } from "./editor-binding";
+export { EditorBinding, EDITOR_ORIGIN, type EditorBridge } from "./editor-binding";
+export { VersionTracker } from "./version-tracker";
 export { openEditorDoc, type OpenedDoc } from "./editor-doc";
 export {
   addComment,

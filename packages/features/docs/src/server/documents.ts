@@ -2,7 +2,8 @@ import { supabase } from "@markbase/protocol/supabase";
 import { emptyDoc } from "../logic/markdown";
 import { collapseToPrimary } from "../logic/tab-group";
 import type { DocJSON } from "../logic/types";
-import type { Capability } from "./auth";
+import type { Actor, Capability } from "./auth";
+import { editDocCrdt } from "./doc-crdt";
 import { listMembershipsForUser } from "./members";
 
 // Data layer for docs.documents. All access goes through the `docs` schema
@@ -67,11 +68,24 @@ const LIST_COLUMNS =
 const listColumns = (withContent: boolean) =>
   withContent ? `${LIST_COLUMNS},content` : LIST_COLUMNS;
 
+/**
+ * Create a document: its row, and its CRDT with a first version in `by`'s
+ * name.
+ *
+ * A document is two stores — the row (title, path, a searchable mirror of the
+ * text) and the CRDT, where the text and its history live. The CRDT used to be
+ * made lazily, by whichever client opened the document first, seeded from the
+ * row; so the creator's text was nobody's until some viewer's idle ticker
+ * recorded it as theirs. Creating it here, through the write seam, makes
+ * creation the first write, and the seed the creator's.
+ */
 export async function createDocument(input: {
   title?: string;
   doc_json: DocJSON;
   content: string;
   owner_id: string;
+  /** Who is creating it — what its first version is credited to. */
+  by: Actor;
   /** Where this doc lives in the vault; omit for a root-level doc. */
   path?: string | null;
   /** Which vault it belongs to. The API resolves the user's default when absent. */
@@ -91,7 +105,9 @@ export async function createDocument(input: {
     .select("*")
     .single();
   if (error) throw error;
-  return data as DocumentRow;
+  const row = data as DocumentRow;
+  await editDocCrdt(row.id, row.content, { actor: input.by, label: "Created" }, () => undefined);
+  return row;
 }
 
 export async function getDocument(id: string): Promise<DocumentRow | null> {

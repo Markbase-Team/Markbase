@@ -17,9 +17,9 @@
 import * as Y from "yjs";
 import { VaultDoc, LOCAL_ORIGIN, type ApplyResult } from "./vault";
 import { SyncSession, type DocStore, type DocPubSub } from "./transport";
-import { checkpoint, listVersions, shouldCheckpoint, versionContent, versionCount } from "./versions";
+import { VersionTracker } from "./version-tracker";
 import { addAgentReads, type AgentReadTally } from "./analytics";
-import { getMarkdown, observeMarkdown, setMarkdown, type Origin } from "./crdt";
+import { getMarkdown, setMarkdown, type Origin } from "./crdt";
 import { snapshot } from "./sync";
 import type { VaultSyncFs, VaultBaseStore } from "@markbase/protocol/storage";
 
@@ -99,13 +99,8 @@ export class VaultSync {
   // --- Version tracking. Off until trackVersions() is called. ---
   /** Who to credit — a person, not this machine. Null records unattributed. */
   private author: string | null = null;
-  private tracking = false;
-  private detachObserve: () => void = () => {};
-  /** When the markdown last changed, and where that change came from. */
-  private lastEditAt = 0;
-  private lastOrigin: Origin = null;
-  private lastVersionAt: number | null = null;
-  private lastVersionContent = "";
+  /** When a version is due for an edit off this disk; null until tracking. */
+  private versions: VersionTracker | null = null;
   /** Asks which agent wrote a change; absent, every change is the author's. */
   private credit: AgentCredit | null = null;
   /**
@@ -380,7 +375,7 @@ export class VaultSync {
    * version is one writer's work as far as that can be known.
    */
   private noteWriter(content: string): void {
-    if (!this.tracking || this.credit === null) return;
+    if (this.versions === null || this.credit === null) return;
     if (content === this.vaultDoc.markdown()) return; // our own write, echoed back
     const write = this.credit(content);
     const last = this.pendingWrites[this.pendingWrites.length - 1];
@@ -388,7 +383,7 @@ export class VaultSync {
     // A document with text but no history yet (a file just adopted): that text
     // was there before the agent wrote, so it gets a version of its own first
     // rather than being folded into the agent's.
-    else if (last === undefined && write.agent !== null && this.lastVersionAt === null) {
+    else if (last === undefined && write.agent !== null && this.versions.lastVersionAt === null) {
       this.recordVersion(Date.now());
     }
     // One entry says it all for a run of writes by the same known agent; the
@@ -445,26 +440,10 @@ export class VaultSync {
   trackVersions(author: string | null, credit?: AgentCredit): void {
     this.author = author;
     this.credit = credit ?? null;
-    if (this.tracking) return;
-    this.tracking = true;
-
-    // Pick up where the cloud left off, so the first local edit isn't mistaken
-    // for this document's first version ever. A corrupted entry must not take
-    // sync down with it: history then simply starts fresh from here.
-    try {
-      const already = versionCount(this.doc);
-      if (already > 0) {
-        this.lastVersionAt = listVersions(this.doc)[already - 1].at;
-        this.lastVersionContent = versionContent(this.doc, already - 1);
-      }
-    } catch {
-      // keep syncing regardless — content matters more than its history
-    }
-
-    this.detachObserve = observeMarkdown(this.doc, (origin) => {
-      this.lastEditAt = Date.now();
-      this.lastOrigin = origin;
-    });
+    if (this.versions !== null) return;
+    // Only edits that came off THIS machine's disk are ours to record; the
+    // tracker holds that rule.
+    this.versions = new VersionTracker(this.doc, LOCAL_ORIGIN);
   }
 
   /**
@@ -489,23 +468,12 @@ export class VaultSync {
    * would otherwise introduce.
    */
   maybeCheckpoint(now: number = Date.now()): boolean {
-    if (!this.tracking) return false;
-    if (this.lastOrigin !== LOCAL_ORIGIN) return false;
+    if (this.versions === null) return false;
     // A version lives in the Y.Doc, and a read-only replica's Y.Doc goes
     // nowhere: recording one would credit a fork with history the document
     // never gets. Versions start when the saves do.
     if (this.mode.readOnly) return false;
-
-    const content = this.markdown();
-    const due = shouldCheckpoint({
-      now,
-      lastEditAt: this.lastEditAt,
-      lastVersionAt: this.lastVersionAt,
-      lastVersionContent: this.lastVersionContent,
-      content,
-    });
-    if (!due) return false;
-
+    if (!this.versions.due(now)) return false;
     return this.recordVersion(now);
   }
 
@@ -515,9 +483,8 @@ export class VaultSync {
    * new to record.
    */
   private recordVersion(now: number): boolean {
-    if (this.mode.readOnly) return false;
-    const content = this.markdown();
-    if (content === this.lastVersionContent) return false;
+    if (this.versions === null || this.mode.readOnly) return false;
+    if (this.markdown() === this.versions.lastVersionContent) return false;
 
     // Settle who wrote what: a change not credited when it arrived asks again.
     const agents: string[] = [];
@@ -529,15 +496,13 @@ export class VaultSync {
     }
     this.pendingWrites = [];
 
-    const recorded = checkpoint(this.doc, {
-      ...(this.author === null ? {} : { author: this.author }),
-      ...(agents.length > 0 ? { agents, mixed: person } : {}),
-    });
-    if (recorded) {
-      this.lastVersionAt = now;
-      this.lastVersionContent = content;
-    }
-    return recorded;
+    return this.versions.record(
+      {
+        ...(this.author === null ? {} : { author: this.author }),
+        ...(agents.length > 0 ? { agents, mixed: person } : {}),
+      },
+      now
+    );
   }
 
   /** Rewrite the file from the CRDT — restores a file deleted on disk in error
@@ -554,7 +519,7 @@ export class VaultSync {
 
   close(): void {
     this.detach();
-    this.detachObserve();
+    this.versions?.stop();
     this.detachShadow();
     this.session.close();
   }
