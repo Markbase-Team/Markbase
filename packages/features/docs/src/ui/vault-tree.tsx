@@ -8,6 +8,7 @@ import { useNavigation } from "@markbase/ui/navigation";
 import { cn } from "@markbase/ui/utils";
 import { LocalDate } from "./local-date";
 import { RelativeTime } from "@markbase/ui/relative-time";
+import { useIsActiveDoc } from "./active-doc";
 import {
   ChevronRight,
   ChevronsDownUp,
@@ -448,12 +449,22 @@ export function VaultTree({
 
   function DocRow({ doc, depth }: { doc: DocMeta; depth: number }) {
     const p = pathOf(doc);
+    const active = useIsActiveDoc(doc.id);
+    // Past where a folder's chevron (size-4) + gap sits, so a root doc's title
+    // lines up with folder names instead of hugging the edge.
+    const indent = (dense ? 8 : 16) + depth * (dense ? 14 : 20) + 24;
     return (
       <li
         className={cn(
-          "group flex items-center hover:bg-muted",
+          "group flex items-center",
+          // The open document wears the brand lime, faintly: "you are here"
+          // without competing with the title. In the sidebar the tint and the
+          // hairline both span the whole row.
+          active ? "bg-[#e5ff6e]/35 dark:bg-[#e5ff6e]/15" : "hover:bg-muted",
+          dense && "border-b border-border/60",
           drag?.path === p && "opacity-50"
         )}
+        aria-current={active ? "page" : undefined}
         draggable={!readOnly}
         onDragStart={() => !readOnly && setDrag({ kind: "doc", path: p })}
         onDragEnd={() => {
@@ -478,16 +489,12 @@ export function VaultTree({
             "flex min-w-0 flex-1 text-left",
             dense ? "pr-2" : "items-center py-3 pr-4 text-muted-foreground"
           )}
-          // Indent past where a folder's chevron (size-4) + gap sits, so a
-          // root doc's title lines up with folder names instead of hugging the edge.
-          style={{ paddingLeft: `${(dense ? 8 : 16) + depth * (dense ? 14 : 20) + 24}px` }}
+          style={{ paddingLeft: `${indent}px` }}
         >
           {dense ? (
             // The preview: what the document is called, how it opens, and when
-            // it last changed — enough to pick one without opening any. The
-            // hairline under it sits inside the indent, so it starts where the
-            // text does, like a list of notes rather than a table.
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5 border-b border-border/60 py-2">
+            // it last changed — enough to pick one without opening any.
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5 py-2">
               <span className="truncate text-sm font-semibold text-foreground">
                 {doc.title || "Untitled"}
               </span>

@@ -24,6 +24,7 @@ import {
   type OpenIntent,
 } from "@markbase/docs/workspace-tabs";
 import { DocsSidebar } from "./docs-sidebar";
+import { setActiveDoc } from "./active-doc";
 import { NewVaultModal, type VaultMeta } from "./new-vault-modal";
 import { ConnectAgentDialog } from "./connect-agent-dialog";
 import { VaultEmptyState, VaultLoadError } from "./vault-empty-state";
@@ -270,6 +271,9 @@ export function DocsShell({
   // popstate tells Back from Forward.
   const seqRef = useRef(0);
   const activeId = activeDocId(tabs);
+  // The sidebar highlights the open document from this, not from a prop; see
+  // active-doc.ts for why.
+  useEffect(() => setActiveDoc(activeId), [activeId]);
 
   const urlVault = searchParams.get("vault");
   // Focus follows the URL; when it's absent we resolve one once the vaults load.
