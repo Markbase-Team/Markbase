@@ -1,5 +1,6 @@
 import type { Doc as YDoc } from "yjs";
 import {
+  addApiRead,
   checkpoint,
   createDoc,
   derivedDoc,
@@ -116,5 +117,50 @@ export async function editDocCrdt<T>(
     return { result, markdown, docJson };
   } finally {
     doc.destroy();
+  }
+}
+
+/**
+ * The reader an API read is counted for: an agent whose tool is known, on its
+ * owner's behalf — the same `{ agent, owner }` its file hooks record, so a
+ * read over MCP and a read of the file land in one row. Null for everyone
+ * else: a person in a browser is not an agent, and a key that says no tool
+ * (the desktop app's own, reading for its window) is not an agent reading.
+ */
+export function apiReader(actor: Actor): { agent: string; owner: string } | null {
+  if (actor.kind !== "agent" || !actor.agent?.tool) return null;
+  return { agent: actor.agent.tool, owner: actor.agent.owner };
+}
+
+/**
+ * Count one read of the document by an agent that read it through the API
+ * (an MCP tool, `markbase api`), in the tally the Analytics panel shows.
+ *
+ * Only a document that already has a CRDT: one that has none has never been
+ * opened anywhere, and creating it just to hold a read would cut its first
+ * version in the reader's name. Never cuts a version; a read inside the
+ * repeat window changes nothing and writes nothing. Never throws — a read is
+ * answered whether or not it could be counted.
+ */
+export async function countApiRead(docId: string, actor: Actor, now: number = Date.now()): Promise<boolean> {
+  const reader = apiReader(actor);
+  if (!reader) return false;
+  try {
+    const existing = await loadCrdtSnapshot(docId);
+    if (!existing) return false;
+    const doc = restore(existing.state);
+    try {
+      if (!addApiRead(doc, reader, now)) return false;
+      const saved = await saveCrdtSnapshot(docId, snapshot(doc));
+      // Awaited for the same reason as an edit's: a serverless function may be
+      // frozen once it answers. The panel of anyone looking hears the new count.
+      if (saved.changed) await broadcastCrdt(docId, saved.state);
+      return saved.changed;
+    } finally {
+      doc.destroy();
+    }
+  } catch {
+    // Counting is advisory; the read already succeeded.
+    return false;
   }
 }

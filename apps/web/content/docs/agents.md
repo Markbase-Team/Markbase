@@ -161,8 +161,10 @@ agent's names you both.
 
 Every document also has an **Analytics** panel, beside Comments and History:
 
-- **Read by agents**: how many times each agent read the file, and whose
-  agent it was (the person whose machine it ran on).
+- **Read by agents**: how many times each agent read the document, and
+  whose agent it was. A read counts whether the agent opened the file
+  (through its hooks) or the document (through the MCP tools); reads by the
+  same agent within a minute of each other count once.
 - **Who wrote it**: how much of the document as it is now each person and
   each agent wrote.
 - **Line by line**: which lines are whose.

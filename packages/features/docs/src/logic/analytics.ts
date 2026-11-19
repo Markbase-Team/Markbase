@@ -12,8 +12,11 @@ import { agentLabel, listVersions, versionContents, type VersionMeta } from "./v
 // The server does, for GET /docs/:id/analytics (`docAnalytics` below), which is
 // what the web app, the desktop app and an agent's MCP tool all ask:
 //
-//   - reads are a tally the sync daemon adds to, from what agents' hooks
-//     reported (the vault's agent audit, `markbase read-audit`);
+//   - reads are a tally added to from two places: the sync daemon, from what
+//     agents' hooks reported of the files (`markbase read-audit`), and the
+//     server, when an agent reads the document through the API (an MCP tool;
+//     `addApiRead`, at most once a minute per agent). Both name the reader
+//     the same way, so one agent has one row;
 //   - line credit is not stored at all. It is worked out from the versions,
 //     each of which already says who wrote it (versions.ts): a line belongs
 //     to the version that last changed it.
@@ -62,6 +65,30 @@ export function addAgentReads(doc: Y.Doc, reads: AgentReadTally[]): void {
       });
     }
   });
+}
+
+/**
+ * How close together one agent's reads through the API count as one. An agent
+ * reading a document over MCP often reads it, edits, and reads it again within
+ * seconds; that is one look at the document, and each counted read is a write
+ * to the CRDT.
+ */
+export const API_READ_WINDOW_MS = 60_000;
+
+/**
+ * Add one read made through the API, unless the same agent for the same
+ * person already read it within `windowMs`. True when the tally changed.
+ */
+export function addApiRead(
+  doc: Y.Doc,
+  read: { agent: string; owner: string | null },
+  now: number,
+  windowMs: number = API_READ_WINDOW_MS
+): boolean {
+  const had = readsMap(doc).get(tallyKey(read.agent, read.owner));
+  if (had && now - had.lastAt < windowMs) return false;
+  addAgentReads(doc, [{ agent: read.agent, owner: read.owner, count: 1, lastAt: now }]);
+  return true;
 }
 
 /** Every agent's reads of the document, most first. */
