@@ -145,3 +145,67 @@ describe("POST /docs by the vault's owner", () => {
     expect(createDocument.mock.calls[0][0]).toMatchObject({ owner_id: "user_2", vault_id: "vault_default" });
   });
 });
+
+// A file the sync daemon adopts was written by someone, and the daemon knows
+// who from the agents' hooks. Its key is the owner's, so the caller reads as
+// "an agent" — and before `written_by`, every file that appeared in a vault,
+// typed in Obsidian or written by Claude, was created by "Jessie's agent".
+
+/** The desktop app's daemon: the owner's key, stamped with no tool. */
+const APP_KEY: Caller = {
+  via: "api_key",
+  ownerId: "owner_1",
+  key: { id: "key_app", provider: "unknown", capability: null },
+};
+
+type AdoptBody = {
+  content: string;
+  path: string;
+  vault_id: string;
+  adopt?: boolean;
+  written_by?: { agent: string | null } | { agent: number } | null;
+};
+
+function adoptPost(caller: Caller, body: AdoptBody): Request {
+  return new Request("https://markbase.so/api/v1/docs", {
+    method: "POST",
+    headers: { [CALLER_HEADER]: serializeCaller(caller), "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+type CreatedBy = { kind: string; name: string; userId: string; agent?: { owner: string; tool: string | null } };
+const createdBy = (): CreatedBy => (createDocument.mock.calls[0][0] as { by: CreatedBy }).by;
+const FILE = { content: "# Notes\n", path: "notes.md", vault_id: "vault_a" };
+
+describe("POST /docs adopting a file, with who wrote it", () => {
+  it("credits the agent its hook named, on the owner's behalf", async () => {
+    const res = await docsHandler.POST(adoptPost(APP_KEY, { ...FILE, adopt: true, written_by: { agent: "claude" } }));
+    expect(res.status).toBe(201);
+    expect(createdBy()).toMatchObject({ kind: "agent", userId: "owner_1", agent: { owner: "name-of(owner_1)", tool: "claude" } });
+  });
+
+  it("credits the person when no hook recorded the write", async () => {
+    const res = await docsHandler.POST(adoptPost(APP_KEY, { ...FILE, adopt: true, written_by: { agent: null } }));
+    expect(res.status).toBe(201);
+    expect(createdBy()).toEqual({ kind: "user", userId: "owner_1", name: "name-of(owner_1)" });
+  });
+
+  it("keeps the caller when the daemon says nothing (an older daemon)", async () => {
+    await docsHandler.POST(adoptPost(APP_KEY, { ...FILE, adopt: true }));
+    expect(createdBy()).toMatchObject({ kind: "agent", agent: { owner: "name-of(owner_1)", tool: null } });
+  });
+
+  it("ignores written_by outside adoption, and a malformed one", async () => {
+    await docsHandler.POST(adoptPost(APP_KEY, { ...FILE, written_by: { agent: null } }));
+    expect(createdBy().kind).toBe("agent");
+    createDocument.mockClear();
+    await docsHandler.POST(adoptPost(APP_KEY, { ...FILE, adopt: true, written_by: { agent: 7 } }));
+    expect(createdBy()).toMatchObject({ kind: "agent", agent: { tool: null } });
+  });
+
+  it("never turns a signed-in person into someone else", async () => {
+    await docsHandler.POST(adoptPost(OWNER, { ...FILE, adopt: true, written_by: { agent: "claude" } }));
+    expect(createdBy()).toMatchObject({ kind: "user", userId: "owner_1" });
+  });
+});

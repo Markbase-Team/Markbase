@@ -419,15 +419,22 @@ async function uploadAsset(
  *  blog post adopted from disk should show as "Prometheus Behind NAT", not as
  *  "prometheus-behind-nat-reverse-tunnel". The path is unaffected either way:
  *  only an explicit rename moves a file. */
-function makeAdopt(
+export function makeAdopt(
   appUrl: string,
   apiKey: string,
   log: (m: string) => void,
-  vaultId?: string
+  vaultId?: string,
+  /**
+   * Which agent wrote this content, when its hook recorded the write
+   * (agentCredit); null means the person. Sent as `written_by`, so the
+   * document's first version names its writer rather than this daemon's key.
+   */
+  writtenBy?: (path: string, content: string) => string | null
 ): AdoptFile {
   return async (path, content) => {
     const title =
       deriveTitle(content) || basename(path).replace(/\.md$/i, "") || "untitled";
+    const written_by = writtenBy ? { agent: writtenBy(path, content) } : undefined;
     const res = await fetchWithTimeout(`${appUrl}/api/v1/docs`, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
@@ -435,7 +442,7 @@ function makeAdopt(
       // `adopt`: this came from a folder, so it may be a document that left and
       // came back rather than a new one. The server decides — it is the only
       // side that can see what is in the trash.
-      body: JSON.stringify({ title, content, path, vault_id: vaultId, adopt: true }),
+      body: JSON.stringify({ title, content, path, vault_id: vaultId, adopt: true, written_by }),
     });
     if (!res.ok) {
       log(`couldn't adopt ${path} (${res.status})`);
@@ -1109,7 +1116,10 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
       // No adoption in the Shared Vault: a file dropped there has no owner to
       // create a document for. tryAdopt says so; the manager just has nothing
       // to call.
-      adopt: shared ? undefined : (opts.adopt ?? makeAdopt(appUrl, apiKey, log, opts.vaultId)),
+      adopt: shared
+        ? undefined
+        : (opts.adopt ??
+          makeAdopt(appUrl, apiKey, log, opts.vaultId, (path, content) => agentCredit(dir, () => path)(content).agent)),
       onMoved: paths.persist,
       onOpened: (done, total) => opts.onProgress?.({ phase: "opening", done, total }),
       author,
