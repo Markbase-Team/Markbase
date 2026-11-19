@@ -8,6 +8,7 @@ import { Input } from "@markbase/ui/input";
 import { Label } from "@markbase/ui/label";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "@markbase/ui/app-header";
+import { ConnectAgents } from "@markbase/ui/connect-agents";
 
 type ApiScope = "read" | "write";
 type Capability = "owner" | "editor" | "commenter" | "viewer";
@@ -42,7 +43,7 @@ function fmtDate(s: string | null): string {
   return new Date(s).toLocaleString();
 }
 
-export function ApiKeysClient() {
+export function ApiKeysClient({ mcpUrl }: { mcpUrl: string }) {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [name, setName] = useState("");
   const [scopes, setScopes] = useState<ApiScope[]>(["read", "write"]);
@@ -124,9 +125,19 @@ export function ApiKeysClient() {
       <AppHeader title="API Keys" />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
-      <p className="text-sm text-muted-foreground sm:text-base">
-        Give an agent (e.g. Claude) a key to read and push skills, learnings, and
-        terms. You can call the same API key-free while signed in.
+      {/* Connect an agent: it signs in through the browser and gets a key of
+          its own, which then shows in the list below. */}
+      <section className="max-w-2xl">
+        <h2 className="text-base font-semibold">Connect an agent</h2>
+        <p className="mt-1 mb-3 text-sm text-muted-foreground">
+          Pick your agent. It gets a key of its own, listed below, where you can revoke it.
+        </p>
+        <ConnectAgents mcpUrl={mcpUrl} />
+      </section>
+
+      <h2 className="mt-10 text-base font-semibold">Make a key by hand</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        For a script, or an agent that cannot open a browser. You can call the same API key-free while signed in.
       </p>
       {/* Create a key. */}
       <form onSubmit={create} className="mt-6 space-y-3 rounded-lg border bg-card p-4">
