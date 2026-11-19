@@ -57,8 +57,33 @@ not guess one: *"Add an MCP server named markbase-docs that runs
 `npx -y @markbase/cli mcp`."*
 
 No key is needed either way. The new agent uses the sign-in already saved on
-the computer. Markbase has no hosted MCP address: the server is that command,
-running on your machine.
+the computer.
+
+### At a URL, with nothing to install
+
+The same tools are served at an address, for an agent that cannot run a
+command on your machine or where you would rather not install Node:
+
+```
+https://markbase.so/mcp
+```
+
+On your own instance it is `/mcp` on your address. This is the only hosted
+address; an agent that suggests another has guessed it.
+
+It takes an API key from the dashboard (**API keys**), sent as
+`Authorization: Bearer <key>`. Add it wherever the agent takes a remote MCP
+server with a header:
+
+| Agent | How |
+| --- | --- |
+| Claude Code | `claude mcp add --transport http markbase-docs https://markbase.so/mcp --header "Authorization: Bearer <key>"` |
+| Cursor, VS Code | A server with `"url": "https://markbase.so/mcp"` and `"headers": { "Authorization": "Bearer <key>" }` in the MCP settings file |
+
+Unlike the local server, each agent connected this way has a key of its own:
+give it only the access it needs, and revoke it without touching the others.
+Agents that sign in through the browser instead of taking a key (Claude's
+custom connectors, ChatGPT) cannot use the address yet.
 
 | Tool | What it does |
 | --- | --- |
