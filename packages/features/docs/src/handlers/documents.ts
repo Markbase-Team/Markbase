@@ -11,8 +11,10 @@ import {
   accountOf,
 } from "../logic";
 import {
+  adoptedFileActor,
   createDocument,
   deleteDocumentGroup,
+  fileWriterOf,
   ensureDefaultVault,
   getDocument,
   listDocumentsForUser,
@@ -158,6 +160,12 @@ export const createDocEndpoint = endpoint({
     vault_id?: string;
     /** This file was found in a vault folder — it may be one we had. */
     adopt?: boolean;
+    /**
+     * With `adopt`: who wrote the file, as the sync daemon knows it from the
+     * agents' hooks — `{ agent: "claude" }`, or `{ agent: null }` for the
+     * person. Credits the first version; see adoptedFileActor.
+     */
+    written_by?: { agent?: string | null } | null;
   } = {};
   try {
     body = await req.json();
@@ -192,13 +200,19 @@ export const createDocEndpoint = endpoint({
   }
 
   const doc = body.content?.trim() ? markdownToDoc(body.content) : emptyDoc();
+  // The seed is the creator's: the first version says so. A file the sync
+  // daemon adopts was written by whoever its hook says (or the person), not
+  // by the daemon that carried it up.
+  const writer = body.adopt ? fileWriterOf(body.written_by) : null;
+  const by = writer
+    ? adoptedFileActor(a.actor, writer, a.actor.agent?.owner ?? (await ownerDisplayName(a.actor.userId)))
+    : a.actor;
   const created = await createDocument({
     title: body.title,
     doc_json: doc.toJSON(),
     content: docToMarkdown(doc),
     owner_id: a.actor.userId,
-    // The seed is the creator's: the first version says so.
-    by: a.actor,
+    by,
     // A file adopted from a vault folder keeps its path, so it stays put on
     // the next sync instead of being pulled back to the root.
     path: body.path,

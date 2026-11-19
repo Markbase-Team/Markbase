@@ -8,6 +8,9 @@ export {
   type Capability,
   type Actor,
   type SignedInActor,
+  adoptedFileActor,
+  fileWriterOf,
+  type FileWriter,
 } from "./auth";
 export {
   createDocument,
