@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Button } from "@markbase/ui/button";
 import { Input } from "@markbase/ui/input";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { reportSignupSource } from "@/components/signup-source-capture";
 
 type Mode = "login" | "signup";
 
@@ -114,8 +115,9 @@ export function AuthForm({
         setNotice("Check your email to confirm your account, then log in.");
         return;
       }
-      // Signed in right here, without the /auth/callback round trip that seeds
-      // onboarding — so ask the server to seed before we land on the app.
+      // Signed in right here, without the /auth/callback round trip — so tell
+      // the server where this sign-up came from ourselves.
+      reportSignupSource();
       router.push(next);
       router.refresh();
       return;

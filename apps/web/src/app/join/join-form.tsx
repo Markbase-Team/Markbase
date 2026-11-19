@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@markbase/protocol/api-client";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Input } from "@markbase/ui/input";
+import { reportSignupSource } from "@/components/signup-source-capture";
 
 // Create an account on this instance with its invite code: the server checks
 // the code and creates the user (POST /api/v1/instance/join), then the browser
@@ -50,6 +51,8 @@ export function JoinForm({
       setError(error.message);
       return;
     }
+    // A join never passes through /auth/callback, so report the source here.
+    reportSignupSource();
     router.push(next);
     router.refresh();
   }
