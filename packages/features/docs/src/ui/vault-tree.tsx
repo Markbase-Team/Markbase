@@ -7,6 +7,7 @@ import { usePrompt } from "@markbase/ui/prompt-dialog";
 import { useNavigation } from "@markbase/ui/navigation";
 import { cn } from "@markbase/ui/utils";
 import { LocalDate } from "./local-date";
+import { RelativeTime } from "@markbase/ui/relative-time";
 import {
   ChevronRight,
   ChevronsDownUp,
@@ -37,6 +38,12 @@ export type DocMeta = {
   path: string | null;
   version: number;
   updated_at: string;
+  /**
+   * The opening prose, shown under the title in the sidebar. Absent for an
+   * empty document, and from a local index written before it was recorded —
+   * the network's list fills it in.
+   */
+  excerpt?: string;
 };
 
 /** What's being dragged: a single document, or a whole folder subtree. */
@@ -193,6 +200,7 @@ export function VaultTree({
         path: d.path,
         version: d.version,
         updated_at: d.updated_at,
+        excerpt: d.excerpt,
       }));
     const readDisk = (): Promise<VaultIndexEntry[] | null> =>
       vaultId && !isSharedScope(vaultId)
@@ -467,20 +475,38 @@ export function VaultTree({
             onOpenDoc(doc.id, doc.title, "new");
           }}
           className={cn(
-            "flex min-w-0 flex-1 items-center text-left text-muted-foreground",
-            dense ? "py-1 pr-2 text-sm" : "py-3 pr-4"
+            "flex min-w-0 flex-1 text-left",
+            dense ? "pr-2" : "items-center py-3 pr-4 text-muted-foreground"
           )}
           // Indent past where a folder's chevron (size-4) + gap sits, so a
           // root doc's title lines up with folder names instead of hugging the edge.
           style={{ paddingLeft: `${(dense ? 8 : 16) + depth * (dense ? 14 : 20) + 24}px` }}
         >
-          <span className="min-w-0 flex-1 truncate">
-            {doc.title || "Untitled"}
-          </span>
-          {!dense && (
-            <span className="shrink-0 text-xs text-muted-foreground">
-              <LocalDate value={doc.updated_at} />
+          {dense ? (
+            // The preview: what the document is called, how it opens, and when
+            // it last changed — enough to pick one without opening any. The
+            // hairline under it sits inside the indent, so it starts where the
+            // text does, like a list of notes rather than a table.
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5 border-b border-border/60 py-2">
+              <span className="truncate text-sm font-semibold text-foreground">
+                {doc.title || "Untitled"}
+              </span>
+              {doc.excerpt && (
+                <span className="line-clamp-2 text-xs leading-snug text-muted-foreground">
+                  {doc.excerpt}
+                </span>
+              )}
+              <span className="text-[11px] text-muted-foreground/70">
+                <RelativeTime value={doc.updated_at} />
+              </span>
             </span>
+          ) : (
+            <>
+              <span className="min-w-0 flex-1 truncate">{doc.title || "Untitled"}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                <LocalDate value={doc.updated_at} />
+              </span>
+            </>
           )}
         </button>
         {!readOnly && (

@@ -129,7 +129,7 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
     "skill": {
       "whenToUse": "To find a document or see what you can access. `?scope=shared` lists what others shared with you, with your capability on each.",
       "input": "?scope=shared · ?vault=<id> · (nothing: your own documents)",
-      "output": "{ docs: [{ id, title, version, updated_at, capability? }] }",
+      "output": "{ docs: [{ id, title, excerpt, version, updated_at, capability? }] }",
       "example": "curl -s -H \"$AUTH\" -H \"$CLIENT\" \"$BASE/docs\" | jq '.docs'"
     }
   },

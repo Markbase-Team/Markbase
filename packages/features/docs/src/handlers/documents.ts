@@ -1,5 +1,6 @@
 import {
   derivedDoc,
+  docExcerpt,
   docToMarkdown,
   emptyDoc,
   getMarkdown,
@@ -48,6 +49,7 @@ async function sharedListEntry(d: SharedDocumentListRow, withContent: boolean) {
   return {
     id: d.id,
     title: d.title,
+    excerpt: docExcerpt(d.content_head),
     ...(withContent ? { content: d.content } : {}),
     path: d.member_path ?? sharedDocPath(ownerName, d.title),
     member_path: d.member_path,
@@ -79,7 +81,7 @@ export const listDocsEndpoint = endpoint({
     whenToUse:
       "To find a document or see what you can access. `?scope=shared` lists what others shared with you, with your capability on each.",
     input: "?scope=shared · ?vault=<id> · (nothing: your own documents)",
-    output: '{ docs: [{ id, title, version, updated_at, capability? }] }',
+    output: '{ docs: [{ id, title, excerpt, version, updated_at, capability? }] }',
     example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs" | jq '.docs'`,
   },
 }, async (req, _params, a) => {
@@ -107,6 +109,9 @@ export const listDocsEndpoint = endpoint({
     docs: docs.map((d) => ({
       id: d.id,
       title: d.title,
+      // Always sent: a line of prose from the kilobyte of content the
+      // list already selects, and the sidebar is this endpoint's main reader.
+      excerpt: docExcerpt(d.content_head),
       ...(withContent ? { content: d.content } : {}),
       // The vault reads this to place the file in its folder; null = root.
       path: d.path,

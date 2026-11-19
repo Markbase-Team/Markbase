@@ -45,6 +45,12 @@ export interface VaultIndexEntry {
   version: number;
   updated_at: string;
   /**
+   * The opening prose of the document, as the API's list gives it — the line a
+   * tree shows under the title. Absent when there is none (an empty document)
+   * or the index predates it.
+   */
+  excerpt?: string;
+  /**
    * The Shared Vault only (docs/shared-vault.md): what the person holds on a
    * document someone shared with them. Absent in an owned vault, where every
    * file is the owner's.

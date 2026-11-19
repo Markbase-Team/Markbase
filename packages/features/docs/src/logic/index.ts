@@ -49,6 +49,7 @@ export {
   splitFrontmatter,
 } from "./markdown";
 export { docFileSlug, combineTabMarkdown } from "./download";
+export { docExcerpt, EXCERPT_LENGTH } from "./excerpt";
 export { applySteps, mapPositionThroughSteps } from "./steps";
 export { resolveQuoteToRange, remapAnchor, docText, posToTextOffset, textOffsetToPos } from "./anchors";
 export { mapPositionThroughEdit, mapSelectionThroughEdit } from "./selection";
