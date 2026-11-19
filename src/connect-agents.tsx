@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Check, Code, Copy, ExternalLink, MessageSquare, Terminal } from "lucide-react";
 import { connectOptions, type ConnectOption } from "@markbase/protocol/connect-links";
+import { AgentLogo, hasAgentLogo } from "./agent-logo";
 
 const ICONS = { "Custom connector": MessageSquare, CLI: Terminal, IDE: Code } as const;
 
@@ -65,9 +66,16 @@ export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; app
                 onClick={() => act(option)}
                 className="flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left text-card-foreground transition hover:border-foreground/50 active:scale-[0.99]"
               >
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#e5ff6e] text-zinc-900">
-                  <Icon className="size-4" />
-                </span>
+                {hasAgentLogo(option.id) ? (
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg border bg-background">
+                    <AgentLogo agent={option.id} className="size-5" />
+                  </span>
+                ) : (
+                  // No mark we may ship for this one: an icon for the kind of app it is.
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#e5ff6e] text-zinc-900">
+                    <Icon className="size-4" />
+                  </span>
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="block text-[15px] font-semibold">{option.name}</span>
                   <span className="block text-xs text-muted-foreground">{option.caption}</span>
