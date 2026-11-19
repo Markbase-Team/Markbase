@@ -9,8 +9,9 @@ import { useDocAnalytics } from "./use-doc-analytics";
 // wrote what is in it now — a person, or an agent, and whose agent. Both come
 // from GET /docs/:id/analytics (see use-doc-analytics), the call an agent's
 // tool makes too, already worded ("Jessie's Claude"). What agents do is
-// known only where their hooks report it (`markbase audit install`), which
-// the empty states say.
+// known only where their hooks report it. The hooks come with Markbase: the
+// desktop app adds them at launch and `markbase mcp install` adds them to
+// every agent it connects, which the empty state says.
 //
 // Sections are set apart by their headings and space; there are no rules.
 
@@ -71,8 +72,10 @@ export function DocAnalytics({ docId }: { docId: string }) {
         </h3>
         {reads.length === 0 ? (
           <p className="text-muted-foreground">
-            No agent has read this file yet, as far as their hooks report. Set the hooks up with{" "}
-            <code className="rounded bg-muted px-1 py-0.5">markbase audit install</code>.
+            No agent has read this file yet. Reads by Claude Code, Codex and Cursor show here once
+            the desktop app or{" "}
+            <code className="rounded bg-muted px-1 py-0.5">npx @markbase/cli mcp install</code> has
+            connected them.
           </p>
         ) : (
           <ul className="space-y-1.5">
