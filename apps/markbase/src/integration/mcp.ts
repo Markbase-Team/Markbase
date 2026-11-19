@@ -21,7 +21,7 @@ import {
 import { canOpenBrowser } from "@markbase/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
-import type { Json } from "@markbase/protocol/endpoint-tools";
+import { toolAnnotations, type Json } from "@markbase/protocol/endpoint-tools";
 import { callEndpoint } from "./call";
 import { printHookResults } from "../audit-install";
 import { mcpAuth } from "./mcp-auth";
@@ -181,7 +181,8 @@ export async function runMcp(): Promise<void> {
       name: t.name,
       description: t.description,
       inputSchema: toolInputSchema(t),
-      annotations: { readOnlyHint: t.readOnly, destructiveHint: t.destructive },
+      title: toolAnnotations(t).title,
+      annotations: toolAnnotations(t),
     })),
   }));
 

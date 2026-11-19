@@ -13,7 +13,7 @@
 // (it is only said in `initialize`, and history attributes edits with it), so
 // that travels in the session id the client sends back with each request.
 
-import { toolInputSchema, type AgentTool, type Json } from "./endpoint-tools";
+import { toolAnnotations, toolInputSchema, type AgentTool, type Json } from "./endpoint-tools";
 
 /** MCP protocol revisions this server answers, newest first. */
 export const MCP_PROTOCOL_VERSIONS: readonly string[] = ["2025-11-25", "2025-06-18", "2025-03-26"];
@@ -105,10 +105,11 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
       return result(id, {
         tools: host.tools().map((t) => ({
           name: t.name,
+          title: toolAnnotations(t).title,
           description: t.description,
           // The schema is plain JSON; the cast only tells TypeScript so.
           inputSchema: JSON.parse(JSON.stringify(toolInputSchema(t))) as JsonObject,
-          annotations: { readOnlyHint: t.readOnly, destructiveHint: t.destructive },
+          annotations: { ...toolAnnotations(t) },
         })),
       });
     case "tools/call":

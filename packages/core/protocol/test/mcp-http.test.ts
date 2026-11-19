@@ -12,7 +12,7 @@ import {
 
 const READ: AgentTool = {
   name: "docs_readDoc",
-  description: "Read a document",
+  description: "Read a document (markdown + current version) — Always read before you edit",
   method: "GET",
   path: "/docs/:id",
   params: [{ name: "tab", type: "string" }],
@@ -21,7 +21,7 @@ const READ: AgentTool = {
 };
 const EDIT: AgentTool = {
   name: "docs_editDoc",
-  description: "Edit a passage",
+  description: "Edit a passage (quote → insert) — the only way to change a doc",
   method: "POST",
   path: "/docs/:id/edits",
   params: [{ name: "quote", type: "string", required: true }],
@@ -80,8 +80,18 @@ describe("answerMcp", () => {
     expect(a).toMatchObject({
       result: {
         tools: [
-          { name: "docs_readDoc", inputSchema: { type: "object", required: ["id"] }, annotations: { readOnlyHint: true } },
-          { name: "docs_editDoc", inputSchema: { required: ["id", "quote"] } },
+          {
+            name: "docs_readDoc",
+            title: "Read a document",
+            inputSchema: { type: "object", required: ["id"] },
+            annotations: { title: "Read a document", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+          },
+          {
+            name: "docs_editDoc",
+            title: "Edit a passage",
+            inputSchema: { required: ["id", "quote"] },
+            annotations: { readOnlyHint: false, destructiveHint: true },
+          },
         ],
       },
     });

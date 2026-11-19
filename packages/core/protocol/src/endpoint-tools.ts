@@ -57,6 +57,51 @@ export function toolsFrom(defs: readonly EndpointDef[]): AgentTool[] {
 
 export { pathParams };
 
+/**
+ * A short name for a tool, for the person approving its use: the start of
+ * its summary, before any aside. "Edit a passage (quote → insert) — the only
+ * way to change a doc" is "Edit a passage". Made from the description, so it
+ * works on tools from a server older than this code.
+ */
+export function toolTitle(tool: { name: string; description: string }): string {
+  let title = tool.description.split(" — ")[0];
+  title = title.split(" (")[0];
+  title = title.split(": ")[0];
+  if (title.length > 48) title = title.split(", ")[0];
+  title = title.trim().replace(/[.:;,]$/, "");
+  return title.length > 0 && title.length <= 64 ? title : tool.name;
+}
+
+/** Does this write only add something, leaving what exists as it was? Creating and adding do; anything else changes or removes. */
+function additive(tool: { name: string }): boolean {
+  return /_(create|add)[A-Z]/.test(tool.name);
+}
+
+/** The MCP annotations an agent's app shows and decides permissions by. */
+export interface ToolAnnotations {
+  title: string;
+  readOnlyHint: boolean;
+  destructiveHint: boolean;
+  openWorldHint: boolean;
+}
+
+/**
+ * How a tool is described to an agent's app. Read-only tools can run without
+ * asking; a tool that changes or removes something (an edit, a rename, a
+ * publish, a delete) is marked destructive, as MCP defines it, so the app
+ * asks first. Only creating something new is not. Every tool acts on this
+ * service alone, so none is open-world. Shared by the local and hosted
+ * servers so both say the same.
+ */
+export function toolAnnotations(tool: AgentTool): ToolAnnotations {
+  return {
+    title: toolTitle(tool),
+    readOnlyHint: tool.readOnly,
+    destructiveHint: !tool.readOnly && (tool.destructive || !additive(tool)),
+    openWorldHint: false,
+  };
+}
+
 /** One property of a tool's input, as JSON Schema. */
 export interface ToolProperty {
   type?: "string" | "number" | "boolean";

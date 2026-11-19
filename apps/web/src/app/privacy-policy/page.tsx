@@ -9,19 +9,26 @@ export const metadata = pageMetadata({
 
 const CONTENT = `# Privacy Policy
 
-_Last updated: June 29, 2026_
+_Last updated: November 19, 2026_
 
 This Privacy Policy explains how Markbase ("the app", "we") at
-markbase.so handles your information. The app is a personal
-project-and-request tracker that can optionally connect to your Google account to
-help you triage email.
+markbase.so handles your information. Markbase is a place for markdown
+documents that you and the AI agents you connect (Claude, ChatGPT, Codex,
+Cursor and others) read and edit together. It can also optionally connect to
+your Google account to help you triage email.
 
 ## Information we collect
 
 - **Account information.** When you sign in with Google, we receive your email
   address and basic profile (name, Google account id) to identify your account.
-- **Content you create.** Projects, tickets, requests, work logs, documentation,
-  diary entries, and similar content you add, stored so you can access it.
+- **Content you create.** Documents and their version history, comments,
+  vaults, images and files, share links, and other content you or your agents
+  add, stored so you can access it.
+- **Connected agents.** When you connect an agent, we create an API key for
+  that connection and store its name, the access you chose for it, the name
+  the agent reports for itself, and when it was created and last used. Each
+  change an agent makes is recorded in the document's history under that
+  agent's name.
 - **Connected Google (Gmail) data — only if you connect it.** If you connect a
   Gmail account, the app requests **read-only** access to your Gmail. It uses
   this to display your inbox and to classify selected emails into your
@@ -42,6 +49,19 @@ help you triage email.
   the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy),
   including the **Limited Use** requirements.
 
+## Agents and connectors
+
+- An agent you connect (for example through Claude's connectors, ChatGPT, or
+  the Markbase MCP server) can read and change your documents within the
+  access you chose for it, using the tools it calls.
+- We receive only those tool calls and what they need. We do **not** receive
+  your conversations with the agent.
+- What a tool returns, such as a document's text, is sent to the agent and so
+  to its provider (Anthropic, OpenAI, Cursor, Microsoft or another), and is
+  handled under that provider's own privacy policy.
+- If you install Markbase's audit hooks, they record which agent read or wrote
+  which file, for a document's Analytics panel.
+
 ## Service providers
 
 We use a few processors to run the app:
@@ -58,6 +78,9 @@ We use a few processors to run the app:
 - You can disconnect a Gmail account at any time, which removes its stored token
   and stops further access.
 - You can delete your content from within the app.
+- You can disconnect an agent at any time by revoking its key under API keys;
+  it loses access at once. Changes it made stay in the document's history
+  until you delete the document.
 - To delete your account and associated data, contact us at the email below.
 
 ## Security
