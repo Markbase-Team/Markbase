@@ -19,6 +19,38 @@ const CONTENT = `# Releases
 The Markbase desktop app for macOS (Apple silicon).
 [Download the latest](${MAC_DOWNLOAD_URL}).${MAC_FIRST_OPEN_NOTE ? ` ${MAC_FIRST_OPEN_NOTE}` : ""}
 
+## 2.1.0
+
+_November 19, 2026_
+
+**The sidebar**
+
+- Each document in the sidebar shows its title, the first lines of what it
+  says, and when it last changed ("44 minutes ago", "yesterday").
+
+**Agents**
+
+- After your first vault is made, the app offers to connect an agent: one
+  button each for Claude, Claude Code, Cursor, Codex and VS Code, connected to
+  the hosted MCP server.
+- An agent given the server's address signs in through the browser, and its
+  config never holds a key.
+- The audit hooks come with the app, so what an agent reads and writes in a
+  vault is recorded without a separate install.
+
+**Documents**
+
+- An **Analytics** panel shows who read a document and who wrote each line.
+- Agents are credited by name ("Jessie's Claude"), never as "Someone", and a
+  document's history says which agent wrote each version.
+- The app offers, once, to become the default app for markdown files.
+- Cmd+A selects the whole document and Cmd+B is bold again.
+
+**Sync**
+
+- The app asks the cloud what changed once for all your vaults, instead of
+  once per vault.
+
 ## 2.0.0
 
 _November 12, 2026_
