@@ -453,13 +453,15 @@ export function VaultTree({
     // Past where a folder's chevron (size-4) + gap sits, so a root doc's title
     // lines up with folder names instead of hugging the edge.
     const indent = (dense ? 8 : 16) + depth * (dense ? 14 : 20) + 24;
+    // In the sidebar the highlight and the hairline share one left edge, a
+    // little before the text, so a row reads as one block at its depth rather
+    // than a full-width band under an inset line.
+    const edge = indent - 8;
     return (
       <li
         className={cn(
-          "group relative flex items-center",
-          // The open document wears the brand lime, faintly, so it reads as
-          // "you are here" without competing with the title.
-          active ? "bg-[#e5ff6e]/35 dark:bg-[#e5ff6e]/15" : "hover:bg-muted",
+          "group relative isolate flex items-center",
+          !dense && (active ? "bg-[#e5ff6e]/35 dark:bg-[#e5ff6e]/15" : "hover:bg-muted"),
           drag?.path === p && "opacity-50"
         )}
         aria-current={active ? "page" : undefined}
@@ -547,14 +549,26 @@ export function VaultTree({
             )}
           </button>
         )}
-        {/* The hairline starts where the text does, like a list of notes, and
-            runs to the row's right edge, under the rename and delete buttons. */}
+        {/* The row's tint and its hairline both start at `edge` and run to
+            the right edge, under the rename and delete buttons. The open
+            document wears the brand lime, faintly: "you are here" without
+            competing with the title. */}
         {dense && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute right-0 bottom-0 h-px bg-border/60"
-            style={{ left: `${indent}px` }}
-          />
+          <>
+            <span
+              aria-hidden
+              className={cn(
+                "pointer-events-none absolute inset-y-0 right-0 -z-10",
+                active ? "bg-[#e5ff6e]/35 dark:bg-[#e5ff6e]/15" : "group-hover:bg-muted"
+              )}
+              style={{ left: `${edge}px` }}
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute right-0 bottom-0 h-px bg-border/60"
+              style={{ left: `${edge}px` }}
+            />
+          </>
         )}
       </li>
     );
