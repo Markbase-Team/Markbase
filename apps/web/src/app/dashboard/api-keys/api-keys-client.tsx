@@ -8,7 +8,7 @@ import { Input } from "@markbase/ui/input";
 import { Label } from "@markbase/ui/label";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "@markbase/ui/app-header";
-import { ConnectAgents } from "@/components/connect-agents";
+import { ConnectAgents } from "@markbase/ui/connect-agents";
 
 type ApiScope = "read" | "write";
 type Capability = "owner" | "editor" | "commenter" | "viewer";

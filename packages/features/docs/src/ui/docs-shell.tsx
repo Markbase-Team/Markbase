@@ -25,6 +25,7 @@ import {
 } from "@markbase/docs/workspace-tabs";
 import { DocsSidebar } from "./docs-sidebar";
 import { NewVaultModal, type VaultMeta } from "./new-vault-modal";
+import { ConnectAgentDialog } from "./connect-agent-dialog";
 import { VaultEmptyState, VaultLoadError } from "./vault-empty-state";
 import { SHARED_SCOPE, isSharedScope } from "./scope";
 import { DocsStoreProvider, preloadDocWorkspaces } from "./docs-store";
@@ -204,6 +205,11 @@ export function DocsShell({
   // (0 vaults) still needs to offer the "Shared with me" view.
   const [sharedExists, setSharedExists] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  // Offered once, right after an account's first vault is created: there is
+  // now something for an agent to work on. Held here, above both trees this
+  // shell renders, because creating that vault swaps the empty state for the
+  // full one.
+  const [connectOpen, setConnectOpen] = useState(false);
   // A confirmed-empty account gets the first-vault dialog straight away, once:
   // the screen behind it has one thing to do, and asking the person to click a
   // button to be asked for a name was a step with nothing in it. Dismissing it
@@ -803,8 +809,9 @@ export function DocsShell({
       setVaults((prev) => [...prev, vault]);
       invalidateUrl(VAULTS_URL); // the cached list predates this vault
       focus(vault.id);
+      if (vaults.length === 0) setConnectOpen(true);
     },
-    [focus]
+    [focus, vaults.length]
   );
 
   const onDeletedVault = useCallback(
@@ -897,6 +904,7 @@ export function DocsShell({
             onCreated={onCreatedVault}
             isFirstVault
           />
+          <ConnectAgentDialog open={connectOpen} onOpenChange={setConnectOpen} isDesktop={isDesktop} />
         </div>
       </DocsPortsProvider>
     );
@@ -985,6 +993,7 @@ export function DocsShell({
           onCreated={onCreatedVault}
           isFirstVault={vaults.length === 0}
         />
+        <ConnectAgentDialog open={connectOpen} onOpenChange={setConnectOpen} isDesktop={isDesktop} />
       </div>
     </DocsStoreProvider>
     </AgentLauncherProvider>

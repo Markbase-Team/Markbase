@@ -12,6 +12,7 @@
     "./auth": "./src/auth.ts",
     "./browser": "./src/browser.ts",
     "./caller": "./src/caller.ts",
+    "./connect-links": "./src/connect-links.ts",
     "./downloads": "./src/downloads.ts",
     "./endpoint": "./src/endpoint.ts",
     "./endpoint-gen": "./src/endpoint-gen.ts",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { claudeCodeCommand, codexCommand, connectOptions, cursorInstallLink, vscodeInstallLink } from "../src/lib/connect-links";
+import { claudeCodeCommand, codexCommand, connectOptions, cursorInstallLink, vscodeInstallLink } from "../src/connect-links";
 
 const URL_ = "https://markbase.so/mcp";
 

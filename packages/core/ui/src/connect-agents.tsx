@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Check, Code, Copy, ExternalLink, MessageSquare, Terminal } from "lucide-react";
-import { connectOptions, type ConnectOption } from "@/lib/connect-links";
+import { connectOptions, type ConnectOption } from "@markbase/protocol/connect-links";
 
 const ICONS = { "Custom connector": MessageSquare, CLI: Terminal, IDE: Code } as const;
 
@@ -13,8 +13,13 @@ function iconFor(option: ConnectOption) {
 
 // A button per agent that adds the hosted MCP server to it: the agent's own
 // install link where it has one, otherwise the command or the address, copied.
-// `mcpUrl` is this instance's /mcp address. Used in the docs and the dashboard.
-export function ConnectAgents({ mcpUrl }: { mcpUrl: string }) {
+// `mcpUrl` is this instance's /mcp address. Used in the docs, the dashboard's
+// API keys page and after a first vault is created.
+//
+// `appLinks={false}` leaves out the agents that are added by a link their own
+// app opens (`cursor://…`). The desktop app's window only lets web addresses
+// out, so there those buttons would do nothing.
+export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; appLinks?: boolean }) {
   const [done, setDone] = useState<string | null>(null);
   // The last command or address a button copied, kept on the page: it says
   // what was copied, and it is there to copy by hand when the browser would
@@ -48,7 +53,9 @@ export function ConnectAgents({ mcpUrl }: { mcpUrl: string }) {
   return (
     <div className="not-prose">
       <ul className="grid gap-3 sm:grid-cols-2">
-        {connectOptions(mcpUrl).map((option) => {
+        {connectOptions(mcpUrl)
+          .filter((option) => appLinks || option.kind !== "link")
+          .map((option) => {
           const Icon = iconFor(option);
           const Action = done === option.id ? Check : option.kind === "command" ? Copy : ExternalLink;
           return (
