@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Fragment_Mono, Geist, Manrope } from "next/font/google";
 import {
-  Apple,
   ArrowRight,
   Box,
   GitFork,
@@ -17,6 +16,7 @@ import { StayInTouchForm } from "@/components/stay-in-touch";
 
 import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE, REPO_URL } from "@markbase/protocol/downloads";
 import { latestMacVersion } from "@/lib/latest-release";
+import { DownloadButton } from "@markbase/ui/download-button";
 
 // Canonical destinations, reused in the nav, footer, and the SiteNavigationElement
 // structured data that hints Google's sitelinks.
@@ -217,7 +217,7 @@ export async function MarkbaseLanding() {
                 <Link href="/login" className={ghostBtn}>
                   Get started <ArrowRight className="size-4" />
                 </Link>
-                <MacDownload version={version} />
+                <DownloadButton version={version} />
               </div>
               {MAC_FIRST_OPEN_NOTE && <p className="max-w-sm text-xs text-zinc-500">{MAC_FIRST_OPEN_NOTE}</p>}
             </div>
@@ -481,7 +481,7 @@ export async function MarkbaseLanding() {
               <Link href="/login" className={ghostBtn}>
                 Get started <ArrowRight className="size-4" />
               </Link>
-              <MacDownload version={version} />
+              <DownloadButton version={version} />
             </div>
             {MAC_FIRST_OPEN_NOTE && (
               <p className="max-w-sm text-center text-xs text-zinc-500">{MAC_FIRST_OPEN_NOTE}</p>
@@ -531,7 +531,7 @@ function LandingNav() {
             GitHub
           </a>
         </div>
-        <MacDownload version={null} className={`${inkBtn} h-9 px-4`} />
+        <DownloadButton size="sm" />
       </nav>
     </div>
   );
@@ -751,28 +751,5 @@ function CommentCard({ who, agent, text }: { who: string; agent?: boolean; text:
       </span>
       <span className="text-xs leading-relaxed text-zinc-600">{text}</span>
     </div>
-  );
-}
-
-/**
- * "Download for Mac", when there is a build to download.
- *
- * Points at the `releases/latest/download/…` permalink, which GitHub resolves to
- * the newest release — so publishing a build (apps/app/scripts/publish-dmg.sh)
- * needs no change here and nothing already linking to it goes stale. The
- * first-open note sits under the buttons in the closing section.
- */
-function MacDownload({ version, className = inkBtn }: { version: string | null; className?: string }) {
-  // Defaults to the public permalink, so a deploy needs no environment change to
-  // offer the current build. The env var stays as an override for pointing a
-  // preview at some other build.
-  const href = process.env.NEXT_PUBLIC_MAC_DOWNLOAD_URL ?? MAC_DOWNLOAD_URL;
-  if (!href) return null;
-  return (
-    <a href={href} className={className}>
-      <Apple className="size-4" />
-      Download for Mac
-      {version && <span className="font-normal text-zinc-400">· v{version}</span>}
-    </a>
   );
 }
