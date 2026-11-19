@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { claudeCodeCommand, codexCommand, connectOptions, cursorInstallLink, vscodeInstallLink } from "../src/connect-links";
+import {
+  claudeCodeCommand,
+  codexCommand,
+  connectOptions,
+  cursorConfigEntry,
+  cursorInstallLink,
+  vscodeAddCommand,
+  vscodeInstallLink,
+} from "../src/connect-links";
 
 const URL_ = "https://markbase.so/mcp";
 
@@ -36,5 +44,17 @@ describe("connect links", () => {
     }
     expect(options.find((o) => o.id === "claude")?.copy).toBe("https://docs.example.com/mcp");
     expect(options.find((o) => o.id === "codex")?.copy).toContain("https://docs.example.com/mcp");
+  });
+
+  it("gives each app link a way to do it by hand", () => {
+    expect(JSON.parse(cursorConfigEntry(URL_))).toEqual({ mcpServers: { "markbase-docs": { url: URL_ } } });
+    const cmd = vscodeAddCommand(URL_);
+    expect(cmd.startsWith("code --add-mcp '")).toBe(true);
+    expect(JSON.parse(cmd.slice("code --add-mcp '".length, -1))).toEqual({ name: "markbase-docs", type: "http", url: URL_ });
+    for (const o of connectOptions(URL_).filter((o) => o.kind === "link")) {
+      expect(o.fallback?.text).toContain(URL_);
+      expect(o.fallback?.getApp).toMatch(/^https:\/\//);
+      expect(o.after).not.toMatch(/ opens and/);
+    }
   });
 });

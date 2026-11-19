@@ -21,6 +21,19 @@ export interface ConnectOption {
   copy?: string;
   /** Said once the click has done its part. */
   after: string;
+  /**
+   * For a link: what to do when the app did not open. A page cannot tell
+   * whether it did (the app is not installed, or the browser keeps app links
+   * to itself, as some built-in browsers do), so this is shown every time.
+   */
+  fallback?: {
+    /** The command, or the settings entry, that adds the server by hand. */
+    text: string;
+    /** Where that goes. */
+    where: string;
+    /** Where to get the app. */
+    getApp: string;
+  };
 }
 
 function base64(text: string): string {
@@ -36,6 +49,16 @@ export function cursorInstallLink(mcpUrl: string): string {
 /** VS Code's install link: the server as URL-encoded JSON after the `?`. */
 export function vscodeInstallLink(mcpUrl: string): string {
   return `vscode:mcp/install?${encodeURIComponent(JSON.stringify({ name: MCP_SERVER_NAME, type: "http", url: mcpUrl }))}`;
+}
+
+/** VS Code's own command line adds a server too (`code --add-mcp`), for when the link does nothing. */
+export function vscodeAddCommand(mcpUrl: string): string {
+  return `code --add-mcp '${JSON.stringify({ name: MCP_SERVER_NAME, type: "http", url: mcpUrl })}'`;
+}
+
+/** The entry for Cursor's ~/.cursor/mcp.json, for when the link does nothing. */
+export function cursorConfigEntry(mcpUrl: string): string {
+  return JSON.stringify({ mcpServers: { [MCP_SERVER_NAME]: { url: mcpUrl } } }, null, 2);
 }
 
 export function claudeCodeCommand(mcpUrl: string): string {
@@ -82,7 +105,12 @@ export function connectOptions(mcpUrl: string): ConnectOption[] {
       caption: "IDE",
       kind: "link",
       href: cursorInstallLink(mcpUrl),
-      after: "Cursor opens and asks you to install the server.",
+      after: "Asked Cursor to add Markbase. Cursor should open and ask you to install it.",
+      fallback: {
+        text: cursorConfigEntry(mcpUrl),
+        where: "Cursor did not open? Add this to ~/.cursor/mcp.json (or Cursor Settings, MCP), then sign in when Cursor asks.",
+        getApp: "https://cursor.com/download",
+      },
     },
     {
       id: "vscode",
@@ -90,7 +118,12 @@ export function connectOptions(mcpUrl: string): ConnectOption[] {
       caption: "IDE",
       kind: "link",
       href: vscodeInstallLink(mcpUrl),
-      after: "VS Code opens and asks you to install the server.",
+      after: "Asked VS Code to add Markbase. VS Code should open and ask you to install it.",
+      fallback: {
+        text: vscodeAddCommand(mcpUrl),
+        where: "VS Code did not open? Run this in a terminal instead, then sign in when VS Code asks.",
+        getApp: "https://code.visualstudio.com/download",
+      },
     },
   ];
 }
