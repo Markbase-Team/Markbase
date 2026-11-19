@@ -123,6 +123,8 @@ export interface DocSummary {
   /** Carried into the vault index so a local tree can render without the API. */
   version?: number;
   updated_at?: string;
+  /** The opening prose, for the preview line under the title. Carried likewise. */
+  excerpt?: string;
   // ---- The Shared Vault's list only (GET /docs?scope=shared) ----------------
   /** What the person may do with it. Viewer and commenter files are written read-only. */
   capability?: DocCapability;
@@ -612,6 +614,7 @@ export function indexEntries(
         version: d.version ?? 0,
         updated_at: d.updated_at ?? "",
       };
+      if (d.excerpt) entry.excerpt = d.excerpt;
       const ino = inodeOf(file);
       if (ino !== null) entry.ino = ino;
       if (d.capability && d.capability !== "owner") entry.capability = d.capability;

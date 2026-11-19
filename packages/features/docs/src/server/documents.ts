@@ -61,10 +61,18 @@ export type DocumentListRow = Pick<
   | "updated_at"
   | "path"
   | "vault_id"
-> & { content?: string };
+> & {
+  content?: string;
+  /**
+   * The first kilobyte of `content`, a column Postgres keeps (see the
+   * content_head migration). What the sidebar's preview line is made from —
+   * raw markdown here; the handler turns it into prose.
+   */
+  content_head: string;
+};
 
 const LIST_COLUMNS =
-  "id,title,version,owner_id,tab_group_id,position,created_at,updated_at,path,vault_id";
+  "id,title,version,owner_id,tab_group_id,position,created_at,updated_at,path,vault_id,content_head";
 const listColumns = (withContent: boolean) =>
   withContent ? `${LIST_COLUMNS},content` : LIST_COLUMNS;
 

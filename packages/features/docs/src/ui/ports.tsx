@@ -73,6 +73,8 @@ export interface VaultIndexEntry {
   file: string;
   version: number;
   updated_at: string;
+  /** The opening prose, for the preview under the title. Absent when there is none. */
+  excerpt?: string;
 }
 
 /** What the vault folder on disk knows about itself. */
