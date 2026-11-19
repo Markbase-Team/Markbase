@@ -29,6 +29,14 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "see-what-agents-did",
+    kind: "Update",
+    title: "See which agents read a doc, and which lines they wrote",
+    date: "2026-11-19",
+    summary:
+      "Each document's Analytics panel now shows which agents read it and for whom, and who wrote each line. Useful on call, in investigations and when you review a design.",
+  },
+  {
     slug: "ai-sre-tools-late-2026",
     kind: "Note",
     title: "AI SRE tools in late 2026: who keeps what your agent learned",
