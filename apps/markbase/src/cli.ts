@@ -43,11 +43,13 @@ Usage:
                              e.g. markbase api editDoc id=<doc> quote="a" insert="b"
   markbase mcp install         Add the doc tools to Claude Desktop, Claude Code,
                              Codex + Cursor (--desktop / --claude-code / --codex
-                             / --cursor to pick specific ones)
+                             / --cursor to pick specific ones), and the audit
+                             hooks to every agent they land on
   markbase mcp                 Run the MCP server (stdio) — Claude Desktop runs this
   markbase audit install       Add the read-audit and write-audit hooks to Claude Code,
-                             Codex + Cursor, so document history says which agent
-                             wrote a version
+                             Codex + Cursor by hand (mcp install and the desktop
+                             app add them on their own), so document history
+                             says which agent wrote a version
   markbase read-audit          Record which agent read which vault file — run by an
                              agent's hook (report to see the counts)
   markbase write-audit         Record which agent changed which characters of which

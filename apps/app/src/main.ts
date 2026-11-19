@@ -31,6 +31,7 @@ import {
   defaultMarkdownOpener,
   shouldOfferDefaultOpener,
 } from "./default-opener";
+import { ensureAuditHooks } from "./audit-hooks";
 import {
   appendFileSync,
   chmodSync,
@@ -644,6 +645,9 @@ function storeApiKey(key: string): void {
   ticketWorker?.poke();
   // And keep starting after the next reboot.
   ensureLaunchAgent();
+  // A machine that signs in for the first time has vaults to attribute from
+  // now on; the agents on it get the audit hooks without waiting for a relaunch.
+  ensureAuditHooks({ log: logVault, signedIn: true });
 }
 
 /** Forget the key, and remember that this was asked for (see Settings.signedOut). */
@@ -3790,6 +3794,13 @@ app.whenReady().then(async () => {
   // Last: an install from before the agent existed, already signed in, gets
   // its agent here; the switch, once turned off, is respected.
   ensureLaunchAgent();
+
+  // The read-audit and write-audit hooks for Claude Code, Codex and Cursor —
+  // what tells an agent's direct edit of a vault file from the person's own.
+  // The same idempotent installer `markbase mcp install` and `markbase audit
+  // install` run; a launch after the first adds nothing and logs nothing.
+  // MARKBASE_AUDIT_HOOKS=off leaves the agents' files alone.
+  ensureAuditHooks({ log: logVault, signedIn: signedIn() });
 });
 
 // Registered after the ready callback above, so it runs once that one has
