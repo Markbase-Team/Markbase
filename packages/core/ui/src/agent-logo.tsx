@@ -1,11 +1,12 @@
 // The agents' own marks, for the buttons that connect them: a person looks for
 // the logo of the app they use, not for an icon we chose to stand for it.
 //
-// The artwork is from Simple Icons (simpleicons.org, CC0), which carries each
-// mark as its owner publishes it. The marks remain their owners' trademarks
-// and are used here only to name the product a button connects. An agent with
-// no entry here has no mark we may ship: Simple Icons does not carry OpenAI's
-// or Visual Studio Code's, at their owners' request.
+// Claude's, Claude Code's and Cursor's are from Simple Icons (simpleicons.org,
+// CC0) and are drawn here. OpenAI's and Visual Studio Code's are not in that
+// set, at their owners' request: they are the owners' own files, unmodified,
+// served from the web app's /agent-logos (see the README there for where each
+// came from and the terms it is used under). All of them remain their owners'
+// trademarks and are used only to name the product a button connects.
 
 /** One mark: its 24x24 path and the colour its owner uses, or null to follow the text colour. */
 interface AgentMark {
@@ -20,13 +21,39 @@ const MARKS: { [agent: string]: AgentMark } = {
   cursor: { color: null, path: "M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23" },
 };
 
+/** A mark shipped as its owner's file. `dark` is the file for a dark background, when it differs. */
+interface AgentLogoFile {
+  light: string;
+  dark?: string;
+}
+
+const FILES: { [agent: string]: AgentLogoFile } = {
+  // Codex is OpenAI's; the Blossom is black or white and takes no colour.
+  codex: { light: "/agent-logos/openai-blossom-black.svg", dark: "/agent-logos/openai-blossom-white.svg" },
+  vscode: { light: "/agent-logos/vscode.svg" },
+};
+
 /** Is there a mark for this agent? */
 export function hasAgentLogo(agent: string): boolean {
-  return agent in MARKS;
+  return agent in MARKS || agent in FILES;
 }
 
 /** The agent's mark, or nothing when there is none to show. */
 export function AgentLogo({ agent, className }: { agent: string; className?: string }) {
+  const file = FILES[agent];
+  if (file) {
+    // A plain <img>: the file is shown exactly as it was published.
+    return (
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={file.light} alt="" aria-hidden="true" className={file.dark ? `${className ?? ""} dark:hidden` : className} />
+        {file.dark && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={file.dark} alt="" aria-hidden="true" className={`${className ?? ""} hidden dark:block`} />
+        )}
+      </>
+    );
+  }
   const mark = MARKS[agent];
   if (!mark) return null;
   return (
