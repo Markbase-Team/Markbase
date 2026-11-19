@@ -338,7 +338,7 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
     ],
     "summary": "Comment on a passage / ask the human a question",
     "skill": {
-      "whenToUse": "When you have a real question or a suggestion you shouldn’t just apply. Anchor it to text with `quotedText`.",
+      "whenToUse": "When you have a real question or a suggestion you shouldn’t just apply. Anchor it to text with `quotedText`. Calls the Markbase API, POST /api/v1/docs/{id}/comments; see https://markbase.so/docs/agents.",
       "input": "{ body: markdown, quotedText?: string, parentId?: uuid }",
       "output": "{ comment: { … } }",
       "example": "curl -s -X POST -H \"$AUTH\" -H \"$CLIENT\" -H 'content-type: application/json' \\\n  -d '{\"body\":\"X or Y?\",\"quotedText\":\"the passage\"}' \"$BASE/docs/$ID/comments\""

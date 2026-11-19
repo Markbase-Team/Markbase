@@ -143,7 +143,7 @@ curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/analytics" | jq '.credit.shares'
 
 - **When:** To find a document or see what you can access. `?scope=shared` lists what others shared with you, with your capability on each.
 - **Input:** `?scope=shared · ?vault=<id> · (nothing: your own documents)`
-- **Output:** { docs: [{ id, title, version, updated_at, capability? }] }
+- **Output:** { docs: [{ id, title, excerpt, version, updated_at, capability? }] }
 
 ```bash
 curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs" | jq '.docs'
@@ -198,7 +198,7 @@ curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
 ### Comment on a passage / ask the human a question
 `POST /docs/:id/comments` · role: **commenter** · scope: write
 
-- **When:** When you have a real question or a suggestion you shouldn’t just apply. Anchor it to text with `quotedText`.
+- **When:** When you have a real question or a suggestion you shouldn’t just apply. Anchor it to text with `quotedText`. Calls the Markbase API, POST /api/v1/docs/{id}/comments; see https://markbase.so/docs/agents.
 - **Input:** `{ body: markdown, quotedText?: string, parentId?: uuid }`
 - **Output:** { comment: { … } }
 
