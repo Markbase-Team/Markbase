@@ -68,10 +68,10 @@ export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; app
               >
                 {hasAgentLogo(option.id) ? (
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg border bg-background">
-                    <AgentLogo agent={option.id} className="size-5" />
+                    <AgentLogo agent={option.id} className={option.id === "codex" ? "size-8" : "size-5"} />
                   </span>
                 ) : (
-                  // No mark we may ship for this one: an icon for the kind of app it is.
+                  // No mark for this one: an icon for the kind of app it is.
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#e5ff6e] text-zinc-900">
                     <Icon className="size-4" />
                   </span>
