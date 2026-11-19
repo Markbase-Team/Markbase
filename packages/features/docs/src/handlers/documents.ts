@@ -12,6 +12,7 @@ import {
 } from "../logic";
 import {
   adoptedFileActor,
+  countApiRead,
   createDocument,
   deleteDocumentGroup,
   fileWriterOf,
@@ -257,8 +258,12 @@ export const readDocEndpoint = endpoint({
   // would show stale text that then jumps.
   const derive = new URL(req.url).searchParams.get("derive") !== "0";
 
-  const [tabs, derived] = await Promise.all([
+  const [tabs, , derived] = await Promise.all([
     listTabs(auth.doc.tab_group_id),
+    // An agent reading through the API (an MCP tool) is counted in the
+    // document's "Read by agents" tally, as its file hooks count a read of the
+    // file. Alongside the read, so it costs no extra wait; it never fails it.
+    countApiRead(id, auth.actor),
     derive
       ? readDocCrdt(id, auth.doc.content, (doc) => ({
           content: getMarkdown(doc),
