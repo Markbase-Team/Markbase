@@ -78,10 +78,15 @@ connected this way gets a key of its own, listed under **API keys** in the
 dashboard, where you can change its access or revoke it without touching the
 others.
 
+<!-- connect-agents -->
+
+The same thing by hand:
+
 | Agent | How |
 | --- | --- |
 | Claude (desktop, web, mobile) | **Settings › Connectors › Add custom connector**, and paste the address |
 | Claude Code | `claude mcp add --transport http markbase-docs https://markbase.so/mcp`, then `/mcp` to sign in |
+| Codex | `codex mcp add markbase-docs --url https://markbase.so/mcp`, then `codex mcp login markbase-docs` |
 | Cursor, VS Code | A server with `"url": "https://markbase.so/mcp"` in the MCP settings file |
 
 An agent that cannot open a browser can send a key instead: make one under

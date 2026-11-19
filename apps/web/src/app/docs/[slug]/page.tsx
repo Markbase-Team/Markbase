@@ -1,7 +1,10 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
 import { Markdown } from "@markbase/ui/markdown";
+import { ConnectAgents } from "@/components/connect-agents";
 import { DocsBody } from "@/components/docs/docs-body";
 import { DocsOutline } from "@/components/docs/docs-outline";
 import { DocsQuestions } from "@/components/docs/docs-questions";
@@ -13,6 +16,11 @@ import { SITE_PROSE } from "@/lib/site-prose";
 // page's outline and a way to ask a question on the right; and Previous / Next
 // at the foot of the page in sidebar order — at the bottom of the window when
 // the page is shorter than it. The content is apps/web/content/docs/<slug>.md.
+
+// A page may ask for the connect buttons where this line stands in its
+// markdown. A comment, so the markdown still reads cleanly wherever else it
+// goes: "Copy markdown", llms.txt, an agent reading the file.
+const CONNECT_AGENTS = "<!-- connect-agents -->";
 
 export function generateStaticParams() {
   return docsPages().map((p) => ({ slug: p.slug }));
@@ -43,7 +51,16 @@ export default async function DocsPageView({ params }: { params: Promise<{ slug:
     <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_16rem] xl:gap-12">
       <article className="mx-auto flex min-h-[calc(100svh-8rem)] w-full max-w-3xl min-w-0 flex-col lg:min-h-[calc(100svh-6rem)]">
         <DocsBody markdown={markdown} section={page.section}>
-          <Markdown content={markdown} headingIds className={SITE_PROSE} />
+          {markdown.split(CONNECT_AGENTS).map((part, i) => (
+            <Fragment key={i}>
+              {i > 0 && (
+                <div className="my-6">
+                  <ConnectAgents mcpUrl={`${DEFAULT_APP_URL}/mcp`} />
+                </div>
+              )}
+              <Markdown content={part} headingIds className={SITE_PROSE} />
+            </Fragment>
+          ))}
         </DocsBody>
 
         <div className="mt-auto pt-16">
