@@ -84,11 +84,14 @@ The same thing by hand:
 
 | Agent | How |
 | --- | --- |
-| Claude (desktop, web, mobile) | **Settings › Connectors › Add custom connector**, and paste the address |
+| Claude (desktop, web, mobile) | [Markbase in Claude's connectors directory](https://claude.ai/directory/markbase): choose **Connect**. On your own instance, **Settings › Connectors › Add custom connector**, and paste the address |
 | Claude Code | `claude mcp add --transport http markbase-docs https://markbase.so/mcp`, then `/mcp` to sign in |
 | Codex | `codex mcp add markbase-docs --url https://markbase.so/mcp`, then `codex mcp login markbase-docs` |
 | Cursor | A server with `"url": "https://markbase.so/mcp"` in `~/.cursor/mcp.json` |
 | VS Code | `code --add-mcp '{"name":"markbase-docs","type":"http","url":"https://markbase.so/mcp"}'`, then the steps below |
+| opencode | `opencode mcp add markbase-docs --url https://markbase.so/mcp`, then `opencode mcp auth markbase-docs` |
+| Pi (1.0 or later) | A server with `"url": "https://markbase.so/mcp"` under `mcpServers` in `~/.pi/agent/mcp.json`, then `/mcp login markbase-docs` |
+| OpenClaw | `openclaw mcp add markbase-docs --url https://markbase.so/mcp --transport streamable-http`, then `openclaw mcp login markbase-docs` |
 
 VS Code adds the server without starting it. After adding it:
 
@@ -97,6 +100,9 @@ VS Code adds the server without starting it. After adding it:
 2. When VS Code asks to let it sign in to markbase.so, click **Allow**. Then
    approve in the browser tab that opens.
 3. In Copilot Chat, switch to **Agent** mode and ask "List my Markbase vaults".
+
+OpenClaw needs `--transport streamable-http`: without it, it assumes the older
+SSE transport, which Markbase does not serve.
 
 An agent that cannot open a browser can send a key instead: make one under
 **API keys** and send it as `Authorization: Bearer <key>`.
