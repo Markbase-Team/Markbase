@@ -20,7 +20,18 @@ function iconFor(option: ConnectOption) {
 // `appLinks={false}` leaves out the agents that are added by a link their own
 // app opens (`cursor://…`). The desktop app's window only lets web addresses
 // out, so there those buttons would do nothing.
-export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; appLinks?: boolean }) {
+//
+// `onAction` hears which agent was pressed, before anything else happens, for
+// a caller that counts it.
+export function ConnectAgents({
+  mcpUrl,
+  appLinks = true,
+  onAction,
+}: {
+  mcpUrl: string;
+  appLinks?: boolean;
+  onAction?: (agentId: string) => void;
+}) {
   const [done, setDone] = useState<string | null>(null);
   // The last command or address a button copied, kept on the page: it says
   // what was copied, and it is there to copy by hand when the browser would
@@ -37,6 +48,7 @@ export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; app
   }
 
   async function act(option: ConnectOption) {
+    onAction?.(option.id);
     setShown(option);
     if (option.kind === "link" && option.href) {
       // Followed in place, the way an app's own link has to be. Whether the
