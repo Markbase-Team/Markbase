@@ -65,4 +65,14 @@ describe("connect links", () => {
     expect(steps[1]).toContain("docs.example.com");
     expect(steps[2]).toContain("Agent mode");
   });
+
+  it("sends Claude to the directory listing on markbase.so, and to a custom connector elsewhere", () => {
+    const hosted = connectOptions(URL_).find((o) => o.id === "claude");
+    expect(hosted?.kind).toBe("page");
+    expect(hosted?.href).toBe("https://claude.ai/directory/markbase");
+    expect(hosted?.copy).toBeUndefined();
+    const own = connectOptions("https://docs.example.com/mcp").find((o) => o.id === "claude");
+    expect(own?.kind).toBe("paste");
+    expect(own?.href).toBe("https://claude.ai/settings/connectors");
+  });
 });
