@@ -249,7 +249,8 @@ export function installAuditHooks(opts: AuditHookOptions = {}): AuditHookResult[
  * and never fire, so its reads and edits go unrecorded.
  */
 const APPROVAL: Partial<Record<HookAgent, string>> = {
-  codex: "Codex runs new hooks only after you approve them: in Codex, type /hooks and approve the Markbase ones.",
+  codex:
+    "Codex runs new hooks only after you approve them: in the Codex app, click Review hooks by the message box and allow the Markbase ones (in the Codex CLI, type /hooks).",
 };
 
 /**

@@ -159,8 +159,9 @@ from touching the agents' files, start it with `MARKBASE_AUDIT_HOOKS=off`.
 Codex is the one agent with a step of its own: it runs a new hook only after
 you approve it. Until you do, the hooks sit in its file and record nothing, so
 Codex's reads and edits of vault files go uncounted (its reads through the MCP
-tools still count). In Codex, type `/hooks` and approve the three Markbase
-hooks. `markbase mcp install` and `markbase audit install` remind you each time.
+tools still count). In the Codex app, click **Review hooks** by the message
+box and allow the three Markbase hooks; in the Codex CLI, type `/hooks`.
+`markbase mcp install` and `markbase audit install` remind you each time.
 
 To set the hooks up by hand, on a machine without the app, or for an agent
 installed later:
@@ -226,8 +227,8 @@ In `~/.claude/settings.json` (or a project's `.claude/settings.json`):
 
 In `~/.codex/hooks.json`. Codex edits with `apply_patch` and reads files with
 shell commands, so reads are found by looking for vault files in the command
-and are marked as inferred. Approve the hooks in Codex (`/hooks`) before they
-run.
+and are marked as inferred. Codex runs them only once you approve them
+(**Review hooks** in the Codex app, `/hooks` in the CLI).
 
 ```json
 {

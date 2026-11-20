@@ -175,8 +175,8 @@ describe("hookApprovals", () => {
   });
 
   it("asks for Codex's approval whenever its hooks are in place, new or not", () => {
-    expect(hookApprovals([r("codex", "installed")])).toEqual([expect.stringContaining("/hooks")]);
-    expect(hookApprovals([r("codex", "unchanged")])).toEqual([expect.stringContaining("/hooks")]);
+    expect(hookApprovals([r("codex", "installed")])).toEqual([expect.stringContaining("Review hooks")]);
+    expect(hookApprovals([r("codex", "unchanged")])).toEqual([expect.stringContaining("Review hooks")]);
   });
 
   it("asks nothing for hooks that are not there, or for agents that run them as written", () => {

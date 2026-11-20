@@ -68,7 +68,7 @@ describe("runMcpInstall", () => {
       { target: "codex", name: "Codex", path: "/home/me/.codex/hooks.json", status: "unchanged", added: 0, detail: "" },
     ]);
     await runMcpInstall([], d);
-    expect(output.join("\n")).toContain("in Codex, type /hooks and approve the Markbase ones");
+    expect(output.join("\n")).toContain("click Review hooks by the message box and allow the Markbase ones");
   });
 
   it("says nothing about approval when Codex got no hooks", async () => {

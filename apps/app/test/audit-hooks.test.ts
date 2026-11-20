@@ -48,7 +48,7 @@ describe("ensureAuditHooks", () => {
     const codex = (status: AuditHookResult["status"]): AuditHookResult => ({ ...result("Codex", status), target: "codex" });
     const added = vi.fn();
     ensureAuditHooks({ log: added, signedIn: true, env: {}, install: () => [codex("installed")] });
-    expect(added.mock.calls.map((c) => c[0])).toContainEqual(expect.stringContaining("type /hooks"));
+    expect(added.mock.calls.map((c) => c[0])).toContainEqual(expect.stringContaining("Review hooks"));
     const again = vi.fn();
     ensureAuditHooks({ log: again, signedIn: true, env: {}, install: () => [codex("unchanged")] });
     expect(again).not.toHaveBeenCalled();
