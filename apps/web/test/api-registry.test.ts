@@ -30,6 +30,7 @@ const apiRoot = join(dirname(fileURLToPath(import.meta.url)), "../src/app/api/v1
  */
 const NOT_REGISTERED: { [prefix: string]: string } = {
   "/": "The public discovery manifest: what an agent reads before it has a key.",
+  "/events": "Product analytics the app reports about itself (a modal shown, a button pressed); not an API for agents, and never an MCP tool.",
   "/instance": "How a client finds and joins an instance before it has a key; nothing to do once it has one.",
   "/keys": "The sign-in handshake that confirms a freshly minted key arrived.",
   "/repos": "The ticket worker's repository list, part of the projects feature, which the desktop app does not show.",
