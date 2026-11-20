@@ -1,5 +1,7 @@
 Markbase now has an MCP server at an address: `https://markbase.so/mcp`. Add it to your agent, sign in once in the browser, and the agent can find, read, edit and comment on your documents. There is nothing to install, no Node, and no key to paste.
 
+Markbase is also listed in [Claude's connectors directory](https://claude.ai/directory/markbase), so in Claude it is one click.
+
 ## What the agent can do
 
 - **Read and search.** Find a document, search across a vault, and read any document as markdown.
@@ -16,7 +18,9 @@ When you sign in, Markbase asks how much the agent may do: view, comment, edit, 
 
 ## Claude
 
-Claude on the web, on the desktop and on your phone share one list of connectors. Open **Settings › Connectors**, choose **Add custom connector**, paste `https://markbase.so/mcp`, and sign in when Claude asks.
+Markbase is in Claude's connectors directory, reviewed by Anthropic. Open [Markbase in the directory](https://claude.ai/directory/markbase), or search for Markbase among Claude's connectors, and choose **Connect**. Sign in, pick what Claude may do, and it is ready on the web, the desktop app and your phone, which share one list of connectors.
+
+If you run your own Markbase, add it by hand instead: **Settings › Connectors › Add custom connector**, and paste your instance's `/mcp` address.
 
 ## Claude Code
 

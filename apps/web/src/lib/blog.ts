@@ -34,7 +34,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Connect any agent to Markbase with one address",
     date: "2026-11-20",
     summary:
-      "Markbase's MCP server now runs at markbase.so/mcp. Add it to Claude, Claude Code, Codex, Cursor, VS Code, opencode, Pi or OpenClaw, sign in once, and choose what the agent may do.",
+      "Markbase's MCP server now runs at markbase.so/mcp. It is in Claude's connectors directory, and works with Claude Code, Codex, Cursor, VS Code, opencode, Pi and OpenClaw: sign in once and choose what the agent may do.",
   },
   {
     slug: "see-what-agents-did",
