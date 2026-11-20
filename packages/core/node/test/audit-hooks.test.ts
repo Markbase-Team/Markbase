@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, it, expect } from "vitest";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CLAUDE_HOOKS, hookAgentsOf, installAuditHooks, withCursorHooks, withToolHooks } from "../src/audit-hooks";
+import { CLAUDE_HOOKS, hookAgentsOf, hookApprovals, installAuditHooks, withCursorHooks, withToolHooks } from "../src/audit-hooks";
+import type { AuditHookResult } from "../src/audit-hooks";
 import type { McpInstallResult } from "../src/mcp-install";
 
 // The installer merges into files people already keep settings and hooks in,
@@ -160,5 +161,26 @@ describe("hookAgentsOf", () => {
     ];
     expect(hookAgentsOf(results)).toEqual(["claude-code", "cursor"]);
     expect(hookAgentsOf([])).toEqual([]);
+  });
+});
+
+describe("hookApprovals", () => {
+  const r = (target: AuditHookResult["target"], status: AuditHookResult["status"]): AuditHookResult => ({
+    target,
+    name: target,
+    path: `/home/me/${target}`,
+    status,
+    added: status === "installed" ? 2 : 0,
+    detail: "",
+  });
+
+  it("asks for Codex's approval whenever its hooks are in place, new or not", () => {
+    expect(hookApprovals([r("codex", "installed")])).toEqual([expect.stringContaining("/hooks")]);
+    expect(hookApprovals([r("codex", "unchanged")])).toEqual([expect.stringContaining("/hooks")]);
+  });
+
+  it("asks nothing for hooks that are not there, or for agents that run them as written", () => {
+    expect(hookApprovals([r("codex", "skipped"), r("codex", "failed")])).toEqual([]);
+    expect(hookApprovals([r("claude-code", "installed"), r("cursor", "unchanged")])).toEqual([]);
   });
 });
