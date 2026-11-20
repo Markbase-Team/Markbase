@@ -62,6 +62,20 @@ describe("runMcpInstall", () => {
     expect(text).toContain("cursor       hooks → /home/me/cursor");
   });
 
+  it("tells a Codex user to approve the hooks, even ones an earlier install wrote", async () => {
+    const d = deps(MCP);
+    d.installAuditHooks = vi.fn((): AuditHookResult[] => [
+      { target: "codex", name: "Codex", path: "/home/me/.codex/hooks.json", status: "unchanged", added: 0, detail: "" },
+    ]);
+    await runMcpInstall([], d);
+    expect(output.join("\n")).toContain("click Review hooks by the message box and allow the Markbase ones");
+  });
+
+  it("says nothing about approval when Codex got no hooks", async () => {
+    await runMcpInstall([], deps(MCP));
+    expect(output.join("\n")).not.toContain("/hooks");
+  });
+
   it("adds no hooks when the server reached no agent with file tools", async () => {
     const d = deps(MCP.filter((r) => r.target === "desktop"));
     await runMcpInstall(["--desktop"], d);

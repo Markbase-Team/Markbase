@@ -1,4 +1,4 @@
-import { auditBin, installAuditHooks, withToolPath, type AuditHookOptions, type AuditHookResult } from "@markbase/node";
+import { auditBin, hookApprovals, installAuditHooks, withToolPath, type AuditHookOptions, type AuditHookResult } from "@markbase/node";
 
 // The audit hooks at launch. An agent that edits a mounted vault's files
 // directly (Claude Code, Codex, Cursor) looks, to the sync, exactly like the
@@ -58,5 +58,8 @@ export function ensureAuditHooks(deps: EnsureAuditHooksDeps): AuditHookResult[] 
       deps.log(`audit hooks not added for ${r.name}: ${r.detail}`);
     }
   }
+  // Only for hooks added this launch: the reminder on every launch would bury
+  // the log, and the CLI's installers repeat it for hooks already in place.
+  for (const note of hookApprovals(results.filter((r) => r.status === "installed"))) deps.log(note);
   return results;
 }

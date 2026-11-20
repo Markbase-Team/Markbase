@@ -1,4 +1,4 @@
-import { HOOK_AGENTS, installAuditHooks, type AuditHookResult, type HookAgent } from "@markbase/node";
+import { HOOK_AGENTS, hookApprovals, installAuditHooks, type AuditHookResult, type HookAgent } from "@markbase/node";
 
 // `markbase audit install` — add the read-audit and write-audit hooks to the
 // agents on this machine, so what they read and write in a vault is on record
@@ -32,7 +32,10 @@ is for setting them up by hand.
 Then:  markbase read-audit report   and   markbase write-audit report
 `;
 
-/** One line per agent, the way every installer in this CLI reports. */
+/**
+ * One line per agent, the way every installer in this CLI reports, then what
+ * an agent still needs from the person before its hooks run (Codex's approval).
+ */
 export function printHookResults(results: AuditHookResult[]): void {
   for (const r of results) {
     const name = r.name.padEnd(12);
@@ -41,6 +44,7 @@ export function printHookResults(results: AuditHookResult[]): void {
     else if (r.status === "skipped") console.log(`  • ${name} hooks skipped (${r.detail})`);
     else console.log(`  ✗ ${name} hooks: ${r.detail}`);
   }
+  for (const note of hookApprovals(results)) console.log(`\n⚠ ${note}`);
 }
 
 export async function runAudit(argv: string[]): Promise<void> {
@@ -59,6 +63,6 @@ export async function runAudit(argv: string[]): Promise<void> {
   printHookResults(results);
   if (results.some((r) => r.status === "failed")) process.exitCode = 1;
   if (results.some((r) => r.status === "installed")) {
-    console.log("\nRestart the agent so it picks the hooks up. Codex asks you to review new hooks (/hooks).");
+    console.log("\nRestart the agent so it picks the hooks up.");
   }
 }

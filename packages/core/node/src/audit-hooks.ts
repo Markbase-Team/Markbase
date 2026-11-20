@@ -243,6 +243,29 @@ export function installAuditHooks(opts: AuditHookOptions = {}): AuditHookResult[
 }
 
 /**
+ * What an agent asks of the person before it runs hooks it was given. Codex
+ * runs a hook from ~/.codex/hooks.json only once the person has approved it in
+ * Codex, and approves the exact command: until then the hooks sit in the file
+ * and never fire, so its reads and edits go unrecorded.
+ */
+const APPROVAL: Partial<Record<HookAgent, string>> = {
+  codex:
+    "Codex runs new hooks only after you approve them: in the Codex app, click Review hooks by the message box and allow the Markbase ones (in the Codex CLI, type /hooks).",
+};
+
+/**
+ * The approval each agent still needs, one line per agent whose hooks are in
+ * place. `unchanged` counts too: hooks written by an earlier install may never
+ * have been approved, and nothing here can tell.
+ */
+export function hookApprovals(results: AuditHookResult[]): string[] {
+  return results
+    .filter((r) => r.status === "installed" || r.status === "unchanged")
+    .map((r) => APPROVAL[r.target])
+    .filter((note): note is string => note !== undefined);
+}
+
+/**
  * The agents an MCP install just landed on that can take hooks: `markbase mcp
  * install` adds the hooks to exactly these, so an agent that got the document
  * tools also gets its file edits attributed.
