@@ -130,6 +130,16 @@ export function ConnectAgents({ mcpUrl, appLinks = true }: { mcpUrl: string; app
           </div>
         </div>
       )}
+      {shown?.steps && (
+        <div className="mt-3 rounded-xl border bg-muted/50 p-3" aria-live="polite">
+          <div className="text-xs font-medium">Then, in {shown.name}</div>
+          <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
+            {shown.steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      )}
       <p className="mt-3 text-xs text-muted-foreground">
         Each one ends with a sign-in in your browser, where you choose what the agent may do. Any other agent: add{" "}
         <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] break-all">{mcpUrl}</code> as a remote

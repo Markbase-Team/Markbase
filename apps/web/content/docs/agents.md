@@ -87,7 +87,16 @@ The same thing by hand:
 | Claude (desktop, web, mobile) | **Settings › Connectors › Add custom connector**, and paste the address |
 | Claude Code | `claude mcp add --transport http markbase-docs https://markbase.so/mcp`, then `/mcp` to sign in |
 | Codex | `codex mcp add markbase-docs --url https://markbase.so/mcp`, then `codex mcp login markbase-docs` |
-| Cursor, VS Code | A server with `"url": "https://markbase.so/mcp"` in the MCP settings file |
+| Cursor | A server with `"url": "https://markbase.so/mcp"` in `~/.cursor/mcp.json` |
+| VS Code | `code --add-mcp '{"name":"markbase-docs","type":"http","url":"https://markbase.so/mcp"}'`, then the steps below |
+
+VS Code adds the server without starting it. After adding it:
+
+1. Open the Command Palette (⌘⇧P), run **MCP: List Servers**, pick
+   `markbase-docs`, and choose **Start Server**.
+2. When VS Code asks to let it sign in to markbase.so, click **Allow**. Then
+   approve in the browser tab that opens.
+3. In Copilot Chat, switch to **Agent** mode and ask "List my Markbase vaults".
 
 An agent that cannot open a browser can send a key instead: make one under
 **API keys** and send it as `Authorization: Bearer <key>`.

@@ -21,6 +21,8 @@ export interface ConnectOption {
   copy?: string;
   /** Said once the click has done its part. */
   after: string;
+  /** What to do in the app once the server is added, in order, when it takes more than a sign-in prompt. */
+  steps?: string[];
   /**
    * For a link: what to do when the app did not open. A page cannot tell
    * whether it did (the app is not installed, or the browser keeps app links
@@ -67,6 +69,15 @@ export function claudeCodeCommand(mcpUrl: string): string {
 
 export function codexCommand(mcpUrl: string): string {
   return `codex mcp add ${MCP_SERVER_NAME} --url ${mcpUrl}`;
+}
+
+/** VS Code adds the server stopped: it is started, and signed in, from the Command Palette. */
+export function vscodeSteps(mcpUrl: string): string[] {
+  return [
+    `Open the Command Palette (⌘⇧P), run MCP: List Servers, pick ${MCP_SERVER_NAME}, and choose Start Server.`,
+    `When VS Code asks to let it sign in to ${new URL(mcpUrl).host}, click Allow. Then approve in the browser tab that opens.`,
+    "In Copilot Chat, switch to Agent mode and ask “List my Markbase vaults”.",
+  ];
 }
 
 /** Where Claude's connectors are added. It has no link that adds one, so the address is pasted there. */
@@ -121,9 +132,10 @@ export function connectOptions(mcpUrl: string): ConnectOption[] {
       after: "Asked VS Code to add Markbase. VS Code should open and ask you to install it.",
       fallback: {
         text: vscodeAddCommand(mcpUrl),
-        where: "VS Code did not open? Run this in a terminal instead, then sign in when VS Code asks.",
+        where: "VS Code did not open? Run this in a terminal instead.",
         getApp: "https://code.visualstudio.com/download",
       },
+      steps: vscodeSteps(mcpUrl),
     },
   ];
 }

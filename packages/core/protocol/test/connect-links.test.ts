@@ -57,4 +57,12 @@ describe("connect links", () => {
       expect(o.after).not.toMatch(/ opens and/);
     }
   });
+
+  it("tells VS Code users how to start the server and sign in, on the instance's own host", () => {
+    const steps = connectOptions("https://docs.example.com/mcp").find((o) => o.id === "vscode")?.steps ?? [];
+    expect(steps).toHaveLength(3);
+    expect(steps[0]).toContain("MCP: List Servers");
+    expect(steps[1]).toContain("docs.example.com");
+    expect(steps[2]).toContain("Agent mode");
+  });
 });
