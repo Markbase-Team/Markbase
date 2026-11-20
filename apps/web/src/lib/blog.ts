@@ -29,6 +29,14 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "hosted-mcp-server",
+    kind: "Update",
+    title: "Connect any agent to Markbase with one address",
+    date: "2026-11-20",
+    summary:
+      "Markbase's MCP server now runs at markbase.so/mcp. Add it to Claude, Claude Code, Codex, Cursor, VS Code, opencode, Pi or OpenClaw, sign in once, and choose what the agent may do.",
+  },
+  {
     slug: "see-what-agents-did",
     kind: "Update",
     title: "See which agents read a doc, and which lines they wrote",
