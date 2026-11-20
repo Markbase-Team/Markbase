@@ -23,6 +23,7 @@
     "./instance": "./src/instance.ts",
     "./jobs": "./src/jobs.ts",
     "./plans": "./src/plans.ts",
+    "./product-events": "./src/product-events.ts",
     "./poll-backoff": "./src/poll-backoff.ts",
     "./project-docs": "./src/project-docs.ts",
     "./shared-vault": "./src/shared-vault.ts",
