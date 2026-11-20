@@ -104,18 +104,9 @@ const inkBtn =
 const ghostBtn =
   "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-5 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50";
 
-// "Available now" first; the rest are marked soon.
-const AGENTS: { name: string; live?: boolean }[] = [
-  { name: "Claude Code", live: true },
-  { name: "Claude Desktop", live: true },
-  { name: "Codex", live: true },
-  { name: "Cursor", live: true },
-  { name: "VS Code", live: true },
-  { name: "Claude on the web", live: true },
-  { name: "opencode" },
-  { name: "Pi" },
-  { name: "OpenClaw" },
-];
+// Every agent here connects to the hosted MCP address (/mcp) and signs in in
+// the browser.
+const AGENTS = ["Claude Code", "Claude", "Codex", "Cursor", "VS Code", "opencode", "Pi", "OpenClaw"];
 
 // Four things that are true of every document, said once, with dividers between
 // them the way a product spec sheet does it.
@@ -149,7 +140,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which agents can work on them?",
-    a: "Claude Code, Claude Desktop, Claude on the web, Codex, Cursor and VS Code today, over MCP: one click from the dashboard, or one install command for the ones on your machine. Any other agent that speaks MCP can be connected by adding the Markbase server to its settings; one-command setup for opencode, Pi and OpenClaw is coming.",
+    a: "Claude, Claude Code, Codex, Cursor, VS Code, opencode, Pi and OpenClaw, over MCP. Add the address https://markbase.so/mcp to the agent and sign in in your browser; the dashboard has one-click buttons for the common ones. Any other agent that speaks MCP connects the same way.",
   },
   {
     q: "Can an agent rewrite my whole document?",
@@ -417,16 +408,13 @@ export async function MarkbaseLanding() {
             </p>
           </div>
           <ul className="flex max-w-3xl flex-wrap justify-center gap-3">
-            {AGENTS.map(({ name, live }) => (
+            {AGENTS.map((name) => (
               <li
                 key={name}
-                className={`inline-flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-[15px] font-semibold ${live ? "text-zinc-900" : "text-zinc-500"}`}
+                className="inline-flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-[15px] font-semibold text-zinc-900"
               >
-                {live && <span className="size-2 rounded-full bg-[#a3d100]" />}
+                <span className="size-2 rounded-full bg-[#a3d100]" />
                 {name}
-                {!live && (
-                  <span className="text-[10px] font-semibold tracking-[0.06em] text-zinc-400 uppercase">soon</span>
-                )}
               </li>
             ))}
           </ul>
