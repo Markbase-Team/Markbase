@@ -110,6 +110,8 @@ const AGENTS: { name: string; live?: boolean }[] = [
   { name: "Claude Desktop", live: true },
   { name: "Codex", live: true },
   { name: "Cursor", live: true },
+  { name: "VS Code", live: true },
+  { name: "Claude on the web", live: true },
   { name: "opencode" },
   { name: "Pi" },
   { name: "OpenClaw" },
@@ -147,7 +149,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which agents can work on them?",
-    a: "Claude Code, Claude Desktop, Codex and Cursor today, over MCP, with one install command. Run it again when you install another of them. Any other agent that speaks MCP can be connected by adding the Markbase server to its settings; one-command setup for opencode, Pi and OpenClaw is coming.",
+    a: "Claude Code, Claude Desktop, Claude on the web, Codex, Cursor and VS Code today, over MCP: one click from the dashboard, or one install command for the ones on your machine. Any other agent that speaks MCP can be connected by adding the Markbase server to its settings; one-command setup for opencode, Pi and OpenClaw is coming.",
   },
   {
     q: "Can an agent rewrite my whole document?",
