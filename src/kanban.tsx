@@ -162,6 +162,37 @@ function Column({
   );
 }
 
+/**
+ * Move the cards whose column changed outside the board into that column,
+ * leaving every other card where it is.
+ *
+ * A drag moves a card in `order` first and the parent's data follows, so by
+ * the time the data says "this card is in Done" the card is already there and
+ * nothing moves: the position it was dropped at is kept. A change that did
+ * not come from a drag (another person, an agent, a reload) finds the card
+ * still in its old column, and it is appended to the new one. Returns `order`
+ * itself when nothing has to move.
+ */
+export function placeByColumn<T extends { id: string }>(
+  order: Record<string, string[]>,
+  items: T[],
+  getColumnId: (item: T) => string
+): Record<string, string[]> {
+  let next: Record<string, string[]> | null = null;
+  for (const item of items) {
+    const target = getColumnId(item);
+    const current = next ?? order;
+    if (!(target in current) || current[target].includes(item.id)) continue;
+    const moved: Record<string, string[]> = {};
+    for (const [col, ids] of Object.entries(current)) {
+      moved[col] = ids.filter((id) => id !== item.id);
+    }
+    moved[target] = [...moved[target], item.id];
+    next = moved;
+  }
+  return next ?? order;
+}
+
 export function Kanban<T extends { id: string }>({
   columns,
   items,
@@ -200,6 +231,15 @@ export function Kanban<T extends { id: string }>({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);
+
+  // The same cards, but one of them now belongs to another column: a status
+  // changed somewhere other than a drag here. Without this the column's count
+  // (the parent's) changed and the card (ours) stayed put until a reload.
+  const placement = items.map((i) => `${i.id}@${getColumnId(i)}`).join("|");
+  React.useEffect(() => {
+    setOrder((prev) => placeByColumn(prev, items, getColumnId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placement]);
 
   // Mouse: start dragging after a small move. Touch: require a long press
   // (hold ~250ms without moving past the tolerance) before a drag begins — so a
