@@ -65,7 +65,7 @@ than adding a fourth. `docs` is the largest — 9 files in `handlers/`, 17 in
 `server/`, 62 in `ui/` — and it still has only the three. It used to have a
 fourth, `logic/`: the document engine (CRDT, markdown, diffing), which is
 neither HTTP nor database nor React. That engine is shared with the vault on
-the user's machine, so it now lives in core as `@markbase/shared/docs`. A
+the user's machine, so it now lives in `packages/shared` as `@markbase/shared/docs`. A
 body of logic that several places share goes there, not into a fourth
 directory of one feature.
 
@@ -141,7 +141,7 @@ one shell forever. The port is `@markbase/ui/navigation`.
 three, so these are checked rather than hoped for:
 
 - no package imports `next/*`
-- no feature imports another feature — shared things move to `packages/core/`
+- no feature imports another feature — shared things move to `packages/platform/`
   (`ui` and `llm` are shared capabilities, not features)
 - no `"use client"` file imports a node-only package, which is what stops a
   service-role database client reaching a browser bundle

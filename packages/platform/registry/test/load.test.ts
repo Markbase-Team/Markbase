@@ -7,7 +7,7 @@ import { loadFeatures, enabledFeatures, repoRoot } from "../src/load";
 /**
  * A throwaway `packages/features/` tree, so these tests never depend on the
  * real one. The path matters: the loader scans `packages/features/*` and
- * deliberately skips `packages/core/*`, because the kernel ships in every
+ * deliberately skips `packages/platform/*`, because the kernel ships in every
  * release and has nothing for a manifest to decide.
  */
 function fixture(
@@ -88,13 +88,13 @@ describe("loadFeatures", () => {
   });
 
   // The kernel ships in every release, so a manifest there would declare
-  // something no build can act on. Scanning it would also make every core
+  // something no build can act on. Scanning it would also make every platform
   // package look droppable to the boundary test.
-  it("does not scan packages/core", () => {
+  it("does not scan packages/platform", () => {
     const root = fixture({ docs: { manifest: manifest("docs") } });
-    const core = join(root, "packages", "core", "vault");
+    const core = join(root, "packages", "platform", "local");
     mkdirSync(core, { recursive: true });
-    writeFileSync(join(core, "package.json"), JSON.stringify({ name: "@markbase/vault" }));
+    writeFileSync(join(core, "package.json"), JSON.stringify({ name: "@markbase/local" }));
     writeFileSync(join(core, "markbase.json"), JSON.stringify(manifest("vault")));
     expect(loadFeatures(root).map((f) => f.manifest.id)).toEqual(["docs"]);
     rmSync(root, { recursive: true });

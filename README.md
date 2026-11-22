@@ -66,7 +66,7 @@ packages/shared/     One package (@markbase/shared) that runs everywhere: types,
                      pure logic. No Node.js built-ins, no secrets. Imports
                      nothing else in packages/.
 
-packages/core/       What everything is built on, split by where code runs.
+packages/platform/   What everything is built on, split by where code runs.
                      May import shared; never a feature.
   ui/                React components. Runs where there is a screen.
   server/            Runs on the web server only: the database client and
@@ -79,7 +79,7 @@ packages/core/       What everything is built on, split by where code runs.
                      and the runner still share.
   agent/  registry/  Self-contained: the agent rail, and the feature manifests.
 
-packages/features/   Things that live in the kernel. May import core and shared.
+packages/features/   Things that live in the kernel. May import platform and shared.
   docs/              Collaborative documents: the editor, comments, history,
                      publishing, and the API behind them. Released.
   agents/ attention/ diary/ email/ projects/ reader/ skills/ terms/ today/
@@ -92,8 +92,8 @@ docs/            Design notes: the shared vault, the workspace layout, how
                  get it as a tool (docs/adding-an-endpoint.md).
 ```
 
-Imports run one way: features may import core and shared, core may import
-shared, and shared imports neither. Inside core, `ui`, `server` and `local`
+Imports run one way: features may import platform and shared, platform may import
+shared, and shared imports neither. Inside platform, `ui`, `server` and `local`
 never import each other; they meet over HTTP.
 `packages/shared/test/package-boundary.test.ts` fails if an edge is
 added back.

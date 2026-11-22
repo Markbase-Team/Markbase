@@ -258,7 +258,7 @@ process.on("uncaughtException", (e) => {
 interface Settings {
   /**
    * Mounted vaults are NOT here. They live in the machine-wide registry the CLI
-   * also uses (packages/core/src/vault-registry.ts) — one list, so mounting in
+   * also uses (packages/platform/local/src/vault/vault-registry.ts) — one list, so mounting in
    * either place is visible to both. `legacyVaults` is only read once, to move
    * an older install's list over.
    */

@@ -58,7 +58,7 @@ function readManifest(file: string): FeatureManifest {
  *
  * - `packages/features/<name>/markbase.json` — a feature that owns a package.
  *   Colocated with its code, and exactly the shape a third-party plugin ships.
- *   `packages/core/*` is deliberately not scanned: the kernel ships in every
+ *   `packages/platform/*` is deliberately not scanned: the kernel ships in every
  *   release, so there is nothing for a manifest to decide.
  * - `features/<id>.json` — a feature whose code still sits in `apps/web`. Most
  *   of them: the reader, terms, the diary, skills, agents, today, the board.

@@ -11,4 +11,4 @@ redraw them; replace a file only with a newer one from the same source.
 | `vscode.svg` | Microsoft | `visual-studio-code-icons.zip` from https://code.visualstudio.com/brand | The guidelines on that page: the blue stable icon, unmodified, to point at Visual Studio Code, never as part of our own branding. |
 
 The Claude, Claude Code and Cursor marks are drawn inline in
-`packages/core/ui/src/agent-logo.tsx`, from Simple Icons (CC0).
+`packages/platform/ui/src/agent-logo.tsx`, from Simple Icons (CC0).

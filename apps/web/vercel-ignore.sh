@@ -18,11 +18,11 @@ if ! git rev-parse "HEAD^" >/dev/null 2>&1; then
 fi
 
 # apps/web + every workspace package it compiles in + the root manifests.
-# Packages live under packages/shared, packages/core/* and packages/features/* now; the old
+# Packages live under packages/shared, packages/platform/* and packages/features/* now; the old
 # flat packages/<name>/ list silently matched nothing after the move, so every
 # push that changed only a package — the docs feature included — was
 # "no web-relevant changes" and production stayed on the last apps/web edit.
-RELEVANT='^(apps/web/|packages/(shared|core|features)/|package(-lock)?\.json$)'
+RELEVANT='^(apps/web/|packages/(shared|platform|features)/|package(-lock)?\.json$)'
 
 if git diff --name-only "HEAD^" "HEAD" | grep -qE "$RELEVANT"; then
   echo "Web app or a transpiled dependency changed — building."

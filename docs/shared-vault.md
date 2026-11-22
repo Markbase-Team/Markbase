@@ -114,12 +114,12 @@ ever talks to the API.
   `docMembershipHandler`; `server/members.ts` — the data layer;
   `handlers/assets.ts` — `?doc=`.
 - `packages/shared/src/docs/vault-sync.ts` — read-only mode and the fork.
-- `packages/core/local/src/vault/vault-sync-run.ts` — the shared-mode rules, the fork
+- `packages/platform/local/src/vault/vault-sync-run.ts` — the shared-mode rules, the fork
   bookkeeping, the per-document media pass.
 - `apps/app/src/main.ts` — the host: notifications, tray, IPC;
   `packages/features/docs/src/ui/local-fork-banner.tsx` — the banner.
 - `apps/markbase/src/vault.ts` — `mount --shared`, `status`.
-- Tests: `packages/core/local/test/vault/shared-vault-scenarios.test.ts`,
+- Tests: `packages/platform/local/test/vault/shared-vault-scenarios.test.ts`,
   `packages/features/docs/test/vault-sync-readonly.test.ts`,
   `packages/features/docs/test/shared-vault-handlers.test.ts`,
   `supabase/tests/security_lockdown.test.sql` §7.

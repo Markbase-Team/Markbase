@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
-// The same rule packages/core keeps: "." is isomorphic, "./node" is everything
+// The same rule packages/platform keeps: "." is isomorphic, "./node" is everything
 // that needs a machine.
 //
 // The first version of this test only looked for `node:` specifiers, and that

@@ -4,7 +4,7 @@ import type { MountedVault } from "../../src/vault/vault-registry";
 /**
  * A stand-in for the shared registry, for flows that change it.
  *
- * The real one (packages/core/src/vault-registry.ts) takes a mutator and applies
+ * The real one (packages/platform/local/src/vault/vault-registry.ts) takes a mutator and applies
  * it under a lock, against the list as it is at the moment of writing — not as
  * the caller last saw it. This models that, so a test can say what another
  * process did in between.

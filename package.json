@@ -5,7 +5,7 @@
   "workspaces": [
     "apps/*",
     "packages/shared",
-    "packages/core/*",
+    "packages/platform/*",
     "packages/features/*"
   ],
   "scripts": {

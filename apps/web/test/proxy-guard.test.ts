@@ -9,7 +9,7 @@ import { CALLER_HEADER, parseCaller } from "@markbase/shared/auth";
 // caller.
 //
 // `resolveCaller` is mocked: which credential wins is tested at its own level
-// (packages/core/node/test/caller.test.ts). What is under test here is what the
+// (packages/platform/node/test/caller.test.ts). What is under test here is what the
 // proxy does with the answer. `offersToken` and `forwardedCaller` are the real
 // ones: whether a token was offered is read off the request, and what a key is
 // reduced to on the header is part of what is being proved here.

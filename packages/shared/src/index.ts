@@ -1,6 +1,6 @@
 // @markbase/shared (packages/shared), formerly @markbase/protocol: shapes,
 // contracts and pure logic that run everywhere, in a browser, on a server and
-// in a daemon alike. It sits below packages/core and packages/features and
+// in a daemon alike. It sits below packages/platform and packages/features and
 // imports neither. Nothing here queries the
 // database: the Supabase client and every query live in @markbase/server
 // (src/supabase.ts and src/db/), which imports the shapes from here.

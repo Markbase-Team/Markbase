@@ -16,13 +16,13 @@ import { dirname, join, resolve } from "node:path";
 // (crdt-supabase, vault-sync-manager) live in the packages that own them.
 
 // The three top-level folders, and the one direction imports may run:
-//   packages/features/*  may import core and shared
-//   packages/core/*      may import shared
+//   packages/features/*  may import platform and shared
+//   packages/platform/*  may import shared
 //   packages/shared      imports neither. It is ONE package (src/ directly
 //                        inside), not a folder of packages.
 const PKGS = resolve(__dirname, "../..");
 const SHARED = join(PKGS, "shared");
-const CORE = join(PKGS, "core");
+const PLATFORM = join(PKGS, "platform");
 const FEATURES = join(PKGS, "features");
 const REPO = resolve(PKGS, "..");
 
@@ -37,7 +37,7 @@ const REPO = resolve(PKGS, "..");
  */
 const PKG_DIR: Record<string, string> = Object.fromEntries([
   ["@markbase/shared", SHARED],
-  ...[CORE, FEATURES].flatMap((group) =>
+  ...[PLATFORM, FEATURES].flatMap((group) =>
     readdirSync(group, { withFileTypes: true })
       .filter((e) => e.isDirectory())
       .map((e): [string, string] => [
@@ -49,7 +49,7 @@ const PKG_DIR: Record<string, string> = Object.fromEntries([
 ]);
 
 /**
- * The package directory a workspace file belongs to: core/<x> and features/<x>
+ * The package directory a workspace file belongs to: platform/<x> and features/<x>
  * both give <x>, and anything under shared/ gives "shared".
  */
 const pkgOf = (file: string): string => {
@@ -121,7 +121,7 @@ function packagesReached(entry: string): string[] {
  * lists of that would drift the first time someone added a feature and updated
  * only one of them.
  *
- * The vault is core: the memory layer, owning the container (which files exist,
+ * The vault is platform: the memory layer, owning the container (which files exist,
  * what appears on disk). docs is a feature: it supplies what goes INSIDE a vault
  * file. ui and server's llm folder are shared capabilities rather than features —
  * everything may depend on them, and nothing ships without them.
@@ -258,9 +258,9 @@ describe("package boundary", () => {
 
   // The barrel is one entry of many: most of shared is imported by subpath
   // (@markbase/shared/api-client), so the layering rule is checked on every
-  // file. Nothing in packages/shared may import packages/core or
+  // file. Nothing in packages/shared may import packages/platform or
   // packages/features.
-  it("no file in shared imports a core or feature package", () => {
+  it("no file in shared imports a platform or feature package", () => {
     const found: string[] = [];
     for (const f of sourceFiles(join(SHARED, "src"))) {
       for (const m of readFileSync(f, "utf8").matchAll(/from\s+"(@markbase\/[a-z-]+)/g)) {
@@ -281,31 +281,31 @@ describe("package boundary", () => {
     expect([...new Set(DOC_ENGINE.flatMap(nodeDependents))]).toEqual([]);
   });
 
-  // It used to be the docs feature's logic/ layer, which made the vault (core)
+  // It used to be the docs feature's logic/ layer, which made the vault (platform)
   // import a feature. Inside shared it may reach nothing outside shared.
   it("the document engine depends on no other workspace package", () => {
     expect([...new Set(DOC_ENGINE.flatMap(packagesReached))]).toEqual([]);
   });
 
   /**
-   * Core is split by where code runs, and the three places only meet over
+   * Platform is split by where code runs, and the three places only meet over
    * HTTP: ui (where there is a screen), server (the web server) and local (the
-   * user's machine) may each import shared and nothing in core.
+   * user's machine) may each import shared and nothing in platform.
    *
    * The one edge listed is what is left of @markbase/node: repo-state, repos
    * and vercel-preview, which the runner in local and the projects feature's
    * handlers on the web server both run. See node/src/index.ts. It is pinned
    * so that it can only shrink.
    */
-  it("ui, server and local import no other core package", () => {
-    const coreDirs = readdirSync(CORE, { withFileTypes: true })
+  it("ui, server and local import no other platform package", () => {
+    const platformDirs = readdirSync(PLATFORM, { withFileTypes: true })
       .filter((e) => e.isDirectory())
       .map((e) => e.name);
     const found: string[] = [];
     for (const pkg of ["ui", "server", "local"]) {
-      for (const f of sourceFiles(join(CORE, pkg, "src"))) {
+      for (const f of sourceFiles(join(PLATFORM, pkg, "src"))) {
         for (const m of readFileSync(f, "utf8").matchAll(/from\s+"@markbase\/([a-z-]+)/g)) {
-          if (m[1] !== pkg && coreDirs.includes(m[1])) {
+          if (m[1] !== pkg && platformDirs.includes(m[1])) {
             found.push(`${pkg} → ${m[1]}`);
           }
         }
@@ -314,12 +314,12 @@ describe("package boundary", () => {
     expect([...new Set(found)].sort()).toEqual(["local → node"]);
   });
 
-  // The rule the layout exists for: core never imports a feature.
-  it("no core package imports a feature", () => {
+  // The rule the layout exists for: platform never imports a feature.
+  it("no platform package imports a feature", () => {
     const found: string[] = [];
-    for (const pkg of readdirSync(CORE, { withFileTypes: true })) {
+    for (const pkg of readdirSync(PLATFORM, { withFileTypes: true })) {
       if (!pkg.isDirectory()) continue;
-      for (const f of sourceFiles(join(CORE, pkg.name, "src"))) {
+      for (const f of sourceFiles(join(PLATFORM, pkg.name, "src"))) {
         for (const m of readFileSync(f, "utf8").matchAll(/from\s+"@markbase\/([a-z-]+)/g)) {
           if (FEATURE_PKG_DIRS.includes(m[1])) found.push(`${f.slice(PKGS.length + 1)} → @markbase/${m[1]}`);
         }
@@ -330,8 +330,8 @@ describe("package boundary", () => {
 
   // The node packages are allowed — expected — to reach builtins. These assert
   // the entries are real and wired, not that they are pure.
-  it.each(NODE_PKGS)("packages/core/%s exists and does touch node", (dir) => {
-    const entry = join(CORE, dir, "src/index.ts");
+  it.each(NODE_PKGS)("packages/platform/%s exists and does touch node", (dir) => {
+    const entry = join(PLATFORM, dir, "src/index.ts");
     expect(existsSync(entry)).toBe(true);
     expect(importGraph(entry).length).toBeGreaterThan(1);
   });
@@ -375,8 +375,8 @@ describe("package boundary", () => {
    * rather than a package, so this also checks it imports nothing else in there.
    */
   it("llm depends on nothing", () => {
-    const reached = importGraph(join(CORE, "server/src/llm/index.ts"));
-    expect(reached.filter((f) => !f.startsWith(join(CORE, "server/src/llm/")))).toEqual([]);
+    const reached = importGraph(join(PLATFORM, "server/src/llm/index.ts"));
+    expect(reached.filter((f) => !f.startsWith(join(PLATFORM, "server/src/llm/")))).toEqual([]);
   });
 });
 
@@ -500,7 +500,7 @@ describe("the three folders", () => {
   });
 
   /**
-   * The reorg's own invariant. `packages/shared` and `packages/core/*` ship in
+   * The reorg's own invariant. `packages/shared` and `packages/platform/*` ship in
    * every release; `packages/features/*` is what a release may leave out. Anything under
    * features/ without a manifest is invisible to the build composer — it would
    * never reach `transpilePackages`, and the failure looks like a missing module
@@ -514,10 +514,10 @@ describe("the three folders", () => {
     expect(dirs).toEqual(FEATURE_PKG_DIRS);
   });
 
-  it("no package under core/ declares one", () => {
-    const withManifest = readdirSync(CORE, { withFileTypes: true })
+  it("no package under platform/ declares one", () => {
+    const withManifest = readdirSync(PLATFORM, { withFileTypes: true })
       .filter(
-        (e) => e.isDirectory() && existsSync(join(CORE, e.name, "markbase.json"))
+        (e) => e.isDirectory() && existsSync(join(PLATFORM, e.name, "markbase.json"))
       )
       .map((e) => e.name);
     expect(withManifest).toEqual([]);

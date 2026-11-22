@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 // resolves through node_modules when it loads this config, and Node then cannot
 // follow the package's extensionless relative imports. A relative path is
 // bundled along with them. Build-time only; the registry walks up from cwd.
-import { featuresEnvValue } from "../../packages/core/registry/src/web";
+import { featuresEnvValue } from "../../packages/platform/registry/src/web";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
