@@ -13,8 +13,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const verifyApiKey = vi.fn();
 vi.mock("../src/api-keys", () => ({ verifyApiKey: (t: string) => verifyApiKey(t) }));
-vi.mock("@markbase/protocol", () => ({
+vi.mock("../src/db/agent-sessions", () => ({
   setConnectionProvider: vi.fn(async () => {}),
+}));
+vi.mock("@markbase/protocol", () => ({
   providerFromClient: () => "claude_code",
 }));
 

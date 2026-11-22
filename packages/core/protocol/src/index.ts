@@ -1,5 +1,7 @@
-// The isomorphic half of the old `core`: data access and pure logic that runs in
-// a browser, on a server, and in a daemon alike.
+// The isomorphic half of the old `core`: shapes, contracts and pure logic that
+// run in a browser, on a server, and in a daemon alike. Nothing here queries the
+// database: the Supabase client and every query live in @markbase/server
+// (src/supabase.ts and src/db/), which imports the shapes from here.
 //
 // Anything that opens a file, spawns a process or reads the home directory lives
 // in @markbase/node, @markbase/server, @markbase/vault or @markbase/runner instead. This package
@@ -46,11 +48,5 @@ export {
 // cannot drift apart — and so neither has to import the other to agree.
 export type { VaultFs, VaultSyncFs, VaultBaseStore } from "./storage";
 
-export { configureSupabase } from "./supabase";
-export {
-  listWorkerRepos,
-  requestRepoRescan,
-  type RepoStatus,
-  type WorkerRepo,
-} from "./worker-repos";
+export { type RepoStatus, type WorkerRepo } from "./worker-repos";
 export { planReconcile, type ReconcilePlan, type VaultDocRef } from "./vault-reconcile";

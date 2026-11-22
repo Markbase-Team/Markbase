@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
-import { configureSupabase } from "@markbase/protocol/supabase";
+import { configureSupabase } from "@markbase/server/supabase";
 import { SupabaseDocPubSub, bytesToBase64, base64ToBytes } from "../src/logic/crdt-supabase";
 import { createDoc, getMarkdown, setMarkdown } from "../src/logic/crdt";
 import { restore, snapshot } from "../src/logic/sync";

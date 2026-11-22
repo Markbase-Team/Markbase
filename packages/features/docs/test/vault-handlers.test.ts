@@ -39,8 +39,8 @@ vi.mock("../src/server/members", () => ({
 }));
 vi.mock("../src/server/links", () => ({ getLinkByToken: async () => null }));
 vi.mock("../src/server/owner-name", () => ({ ownerDisplayName: async (u: string) => u }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

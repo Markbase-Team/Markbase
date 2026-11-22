@@ -1,5 +1,6 @@
 import { verifyApiKey, type ApiKey, type ApiScope } from "./api-keys";
-import { providerFromClient, setConnectionProvider } from "@markbase/protocol";
+import { providerFromClient } from "@markbase/protocol";
+import { setConnectionProvider } from "./db/agent-sessions";
 import type { Caller as ForwardedCaller } from "@markbase/protocol/auth";
 
 /**

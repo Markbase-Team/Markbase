@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 
 // A person's name, as others see it: on a published page, on a version, in a
 // share invitation.

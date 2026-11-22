@@ -1,4 +1,5 @@
-import { isDay, reorderTodos } from "@markbase/protocol/todos";
+import { isDay } from "@markbase/protocol/todos";
+import { reorderTodos } from "@markbase/server/db/todos";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // POST /api/v1/todos/reorder — persist a drag-reordered day list.

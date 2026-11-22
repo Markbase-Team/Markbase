@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Node } from "prosemirror-model";
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import { docSchema } from "../logic/schema";
 import { applySteps } from "../logic/steps";
 import { docToMarkdown, deriveTitle, isUntitled, markdownToDoc } from "../logic/markdown";

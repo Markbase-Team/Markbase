@@ -1,4 +1,4 @@
-import { deleteTodo, getTodo, updateTodo } from "@markbase/protocol/todos";
+import { deleteTodo, getTodo, updateTodo } from "@markbase/server/db/todos";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // PATCH /api/v1/todos/:id — toggle done, rename, or edit markdown details.

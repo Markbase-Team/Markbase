@@ -1,4 +1,7 @@
-import { createAgentMessageRequest, getAgentSessionById } from "@markbase/protocol";
+import {
+  createAgentMessageRequest,
+  getAgentSessionById,
+} from "@markbase/server/db/agent-sessions";
 import { parseMentions, stripMentionSyntax } from "@markbase/docs";
 import type { Actor, DocumentRow } from "@markbase/docs/server";
 import { featureEnabled } from "@markbase/server/features";

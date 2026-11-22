@@ -28,8 +28,8 @@ vi.mock("../src/server/owner-name", () => ({
 vi.mock("../src/server/crdt-store", () => ({
   loadCrdtSnapshot: (id: string) => loadCrdtSnapshot(id),
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

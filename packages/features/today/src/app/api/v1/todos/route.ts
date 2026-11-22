@@ -1,4 +1,5 @@
-import { createTodo, isDay, listTodos } from "@markbase/protocol/todos";
+import { isDay } from "@markbase/protocol/todos";
+import { createTodo, listTodos } from "@markbase/server/db/todos";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // Authentication happens in the shell's proxy — /api/v1/todos is a `required`

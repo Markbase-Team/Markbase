@@ -26,8 +26,8 @@ vi.mock("../src/server/owner-name", () => ({
   ownerDisplayName: async (userId: string, email: string | null = null) =>
     email ? `name-of(${email})` : `name-of(${userId})`,
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: (input: { token: string }) => claimAgentSession(input),
 }));
 

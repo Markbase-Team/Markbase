@@ -1,12 +1,12 @@
-import { cancelTicketJobs, createJob, hasPendingJob } from "@markbase/protocol/jobs";
+import { cancelTicketJobs, createJob, hasPendingJob } from "@markbase/server/db/jobs";
+import { ticketBranch } from "@markbase/protocol/tickets";
 import {
   addMessage,
   getProject,
   getTicket,
-  ticketBranch,
   updateTicket,
   updateTicketCc,
-} from "@markbase/protocol/tickets";
+} from "@markbase/server/db/tickets";
 import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 import { getRepoState } from "@markbase/node/repo-state";
 import { resolvePreviewUrl } from "@markbase/node/vercel-preview";

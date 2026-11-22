@@ -32,8 +32,8 @@ vi.mock("../src/server/crdt-store", () => ({
   broadcastCrdt: (id: string, u: Uint8Array) => broadcastCrdt(id, u),
   listCrdtChanges: (u: string, s: string | null, v?: string) => listCrdtChanges(u, s, v),
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

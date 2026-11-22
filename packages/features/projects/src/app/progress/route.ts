@@ -1,4 +1,4 @@
-import { getTicket, updateTicketCc } from "@markbase/protocol/tickets";
+import { getTicket, updateTicketCc } from "@markbase/server/db/tickets";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 import type { TicketCommit } from "@markbase/protocol/types";
 

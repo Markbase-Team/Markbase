@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { serverSupabaseKey } from "@markbase/protocol/supabase";
+import { serverSupabaseKey } from "@markbase/server/supabase";
 import type { OAuthError } from "@markbase/server/mcp-oauth";
 
 // The web app's half of sign-in for the hosted MCP server: where the secret

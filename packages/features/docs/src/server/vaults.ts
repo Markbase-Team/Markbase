@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import { rebaseToVaultRoot, filesUnder, normalizePath } from "@markbase/protocol/folders";
 
 // Data layer for docs.vaults.

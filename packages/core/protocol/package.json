@@ -30,7 +30,6 @@
     "./skill-files": "./src/skill-files.ts",
     "./skills": "./src/skills.ts",
     "./storage": "./src/storage.ts",
-    "./supabase": "./src/supabase.ts",
     "./tickets": "./src/tickets.ts",
     "./timeout-fetch": "./src/timeout-fetch.ts",
     "./todos": "./src/todos.ts",

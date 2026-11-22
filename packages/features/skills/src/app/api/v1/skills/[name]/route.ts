@@ -1,5 +1,6 @@
-import { buildSkillMd, getSkillByName } from "@markbase/protocol/skills";
-import { listSkillFiles } from "@markbase/protocol/skill-files";
+import { buildSkillMd } from "@markbase/protocol/skills";
+import { getSkillByName } from "@markbase/server/db/skills";
+import { listSkillFiles } from "@markbase/server/db/skill-files";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // GET /api/v1/skills/:name — the skill as JSON, or the raw SKILL.md when

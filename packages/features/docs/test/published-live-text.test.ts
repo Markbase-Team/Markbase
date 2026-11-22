@@ -50,7 +50,7 @@ function query(table: Row[]) {
   return q;
 }
 
-vi.mock("@markbase/protocol/supabase", () => ({
+vi.mock("@markbase/server/supabase", () => ({
   supabase: { schema: () => ({ from: () => query(rows) }) },
 }));
 vi.mock("../src/server/crdt-store", () => ({

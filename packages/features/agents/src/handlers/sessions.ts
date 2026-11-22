@@ -1,12 +1,12 @@
+import { isProvider } from "@markbase/protocol";
 import {
   createAgentSession,
   createAgentSpawnRequest,
   endAgentSession,
-  getProject,
-  isProvider,
   listAgentSessions,
   renameAgentSession,
-} from "@markbase/protocol";
+} from "@markbase/server/db/agent-sessions";
+import { getProject } from "@markbase/server/db/tickets";
 import { endpointSet, signedIn, type EndpointDef } from "@markbase/protocol/endpoint";
 import { listApiKeys } from "@markbase/server/api-keys";
 import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";

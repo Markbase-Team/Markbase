@@ -1,5 +1,5 @@
-import { getSkillByName } from "@markbase/protocol/skills";
-import { listSkillFiles } from "@markbase/protocol/skill-files";
+import { getSkillByName } from "@markbase/server/db/skills";
+import { listSkillFiles } from "@markbase/server/db/skill-files";
 import { buildSkillTarball } from "@markbase/server/skill-bundle";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 

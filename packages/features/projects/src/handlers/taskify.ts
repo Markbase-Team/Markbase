@@ -5,7 +5,7 @@ import {
   listProjectProperties,
   listTicketsInRange,
   updateProject,
-} from "@markbase/protocol/tickets";
+} from "@markbase/server/db/tickets";
 import {
   isStatus,
   STATUS_LABELS,

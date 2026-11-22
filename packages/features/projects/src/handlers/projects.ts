@@ -3,7 +3,7 @@ import {
   getProject,
   listProjects,
   updateProject,
-} from "@markbase/protocol/tickets";
+} from "@markbase/server/db/tickets";
 import {
   getRemoteOrigin,
   listBranches,

@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import { emptyDoc } from "../logic/markdown";
 import { collapseToPrimary } from "../logic/tab-group";
 import type { DocJSON } from "../logic/types";

@@ -24,7 +24,6 @@
 // grants.
 
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
-import { supabase } from "@markbase/protocol/supabase";
 import type { DocPubSub } from "./transport";
 
 export {
@@ -83,8 +82,10 @@ interface DocChannels {
 export class SupabaseDocPubSub implements DocPubSub {
   private readonly channels = new Map<string, DocChannels>();
 
+  // The client is always handed in: the browser passes its session client, the
+  // server its secret-key one. This file runs in both, so it names neither.
   constructor(
-    private readonly client: SupabaseClient = supabase,
+    private readonly client: SupabaseClient,
     private readonly legacyRelay: boolean = LEGACY_PUBLIC_RELAY
   ) {}
 

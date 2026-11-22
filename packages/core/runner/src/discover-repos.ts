@@ -53,23 +53,15 @@ export interface DiscoverOptions {
 // This file SCANS. What it finds goes to the web API (POST /api/v1/worker/repos
 // and /worker/sessions, see run-ticket-worker.ts), and the server writes the
 // tables — the runner holds no database credential since security lockdown
-// stage 2. The shapes and the server-side reads and writes live in
-// @markbase/protocol/worker-repos; re-exported so existing importers of
-// @markbase/runner keep resolving.
+// stage 2. The shapes live in @markbase/protocol/worker-repos (re-exported so
+// existing importers of @markbase/runner keep resolving); the reads and writes
+// are the web server's, in @markbase/server/db/worker-repos.
 export type {
   DiscoveredRepo,
   DiscoveredSession,
   RepoStatus,
   WorkerRepo,
   WorkerSession,
-} from "@markbase/protocol/worker-repos";
-export {
-  listWorkerRepos,
-  listWorkerSessions,
-  reportWorkerRepos,
-  reportWorkerSessions,
-  requestRepoRescan,
-  takeRepoRescan,
 } from "@markbase/protocol/worker-repos";
 import type { DiscoveredRepo, DiscoveredSession, RepoStatus } from "@markbase/protocol/worker-repos";
 

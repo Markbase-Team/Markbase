@@ -1,7 +1,8 @@
 import type { Caller } from "@markbase/protocol/auth";
 import { ownerDisplayName } from "./owner-name";
 import { agentLabel } from "@markbase/protocol/attribution";
-import { claimAgentSession, providerFromClient, type Provider } from "@markbase/protocol";
+import { providerFromClient, type Provider } from "@markbase/protocol";
+import { claimAgentSession } from "@markbase/server/db/agent-sessions";
 import { docEndpoint } from "../logic/endpoints";
 import { accountOf } from "../logic/types";
 import {

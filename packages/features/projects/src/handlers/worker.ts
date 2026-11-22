@@ -5,7 +5,7 @@ import {
   getOwnedJob,
   heartbeatJob,
   reclaimStale,
-} from "@markbase/protocol/jobs";
+} from "@markbase/server/db/jobs";
 import {
   claimMessageRequest,
   claimSpawnRequest,
@@ -14,17 +14,19 @@ import {
   getAgentSessionById,
   listQueuedAgentRequests,
   setAgentSessionExternalId,
-} from "@markbase/protocol/agent-sessions";
-import { getProject, updateTicketCc } from "@markbase/protocol/tickets";
-import { getUserPlan } from "@markbase/protocol/plans";
+} from "@markbase/server/db/agent-sessions";
+import { getProject, updateTicketCc } from "@markbase/server/db/tickets";
+import { getUserPlan } from "@markbase/server/db/plans";
 import {
   isRepoStatus,
-  reportWorkerRepos,
-  reportWorkerSessions,
-  takeRepoRescan,
   type DiscoveredRepo,
   type DiscoveredSession,
 } from "@markbase/protocol/worker-repos";
+import {
+  reportWorkerRepos,
+  reportWorkerSessions,
+  takeRepoRescan,
+} from "@markbase/server/db/worker-repos";
 import { setClaudeVersion } from "@markbase/server/api-keys";
 import { connection, owner, type HandlerHost } from "./host";
 

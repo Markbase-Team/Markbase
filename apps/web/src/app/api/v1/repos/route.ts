@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import os from "node:os";
 import path from "node:path";
-import { listWorkerRepos, requestRepoRescan } from "@markbase/protocol/worker-repos";
+import { listWorkerRepos, requestRepoRescan } from "@markbase/server/db/worker-repos";
 import { authenticateAgent } from "@/lib/agent-auth";
 
 export const runtime = "nodejs";

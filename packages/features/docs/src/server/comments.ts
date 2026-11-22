@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import { accountOf, type Author } from "../logic/types";
 
 // Anchored review comments. A root comment pins to a text range (positions +

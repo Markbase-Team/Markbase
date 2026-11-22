@@ -21,7 +21,7 @@ const selects = vi.fn();
 const updates = vi.fn();
 let row: KeyRow | null = null;
 
-vi.mock("@markbase/protocol/supabase", () => ({
+vi.mock("../src/supabase", () => ({
   supabase: {
     from: () => ({
       select: () => ({

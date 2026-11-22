@@ -1,4 +1,5 @@
-import { listSkills, upsertSkill, SKILL_NAME_RE } from "@markbase/protocol/skills";
+import { SKILL_NAME_RE } from "@markbase/protocol/skills";
+import { listSkills, upsertSkill } from "@markbase/server/db/skills";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // Authentication happens in the shell's proxy — /api/admin/skills is a

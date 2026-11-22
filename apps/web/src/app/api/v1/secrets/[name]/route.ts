@@ -1,4 +1,4 @@
-import { deleteVaultSecret, getVaultSecret } from "@markbase/protocol/vault";
+import { deleteVaultSecret, getVaultSecret } from "@markbase/server/db/vault";
 import { agentJson, authenticateAgent, preflight } from "@/lib/agent-auth";
 
 export const runtime = "nodejs";

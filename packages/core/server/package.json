@@ -7,18 +7,21 @@
     ".": "./src/index.ts",
     "./api-keys": "./src/api-keys.ts",
     "./caller": "./src/caller.ts",
+    "./db/*": "./src/db/*.ts",
     "./features": "./src/features.ts",
     "./generated-files": "./src/generated-files.ts",
     "./llm": "./src/llm/index.ts",
     "./mcp-oauth": "./src/mcp-oauth.ts",
-    "./skill-bundle": "./src/skill-bundle.ts"
+    "./skill-bundle": "./src/skill-bundle.ts",
+    "./supabase": "./src/supabase.ts"
   },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@markbase/protocol": "*"
+    "@markbase/protocol": "*",
+    "@supabase/supabase-js": "^2.106.2"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

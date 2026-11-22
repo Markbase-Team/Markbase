@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "./supabase";
 import { isProvider, type Provider } from "@markbase/protocol/agent-sessions";
 import type { KeyCapability } from "@markbase/protocol/auth";
 

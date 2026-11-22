@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import type { ProductEvent } from "@markbase/protocol/product-events";
 
 // Product events — the server half. Writes one reported event to

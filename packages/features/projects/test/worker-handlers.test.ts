@@ -40,16 +40,15 @@ const repos = {
 };
 const keys = { setClaudeVersion: vi.fn() };
 
-vi.mock("@markbase/protocol/jobs", () => jobs);
-vi.mock("@markbase/protocol/agent-sessions", () => sessions);
-vi.mock("@markbase/protocol", () => ({ listAgentSessions: sessions.listAgentSessions }));
-vi.mock("@markbase/protocol/tickets", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol/tickets")>()),
+vi.mock("@markbase/server/db/jobs", () => jobs);
+vi.mock("@markbase/server/db/agent-sessions", () => sessions);
+vi.mock("@markbase/server/db/tickets", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/tickets")>()),
   ...tickets,
 }));
-vi.mock("@markbase/protocol/plans", () => plans);
-vi.mock("@markbase/protocol/worker-repos", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol/worker-repos")>()),
+vi.mock("@markbase/server/db/plans", () => plans);
+vi.mock("@markbase/server/db/worker-repos", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/worker-repos")>()),
   ...repos,
 }));
 vi.mock("@markbase/server/api-keys", () => keys);

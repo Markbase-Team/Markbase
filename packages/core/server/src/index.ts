@@ -12,5 +12,11 @@
 // The barrel carries api-keys only, which is what the old @markbase/node barrel
 // re-exported from this half. Everything else is subpath-only, as it was:
 // caller, features, generated-files, mcp-oauth, skill-bundle, llm.
+//
+// The database lives here too: supabase.ts is the secret-key client, and db/
+// holds the queries (tickets, todos, skills, jobs, agent sessions, ...), one
+// file per table family. The row shapes they return stay in @markbase/protocol
+// under the same file name, so a browser can import a type without importing
+// a query.
 
 export * from "./api-keys";

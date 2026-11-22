@@ -1,15 +1,7 @@
-import {
-  buildSkillMd,
-  listSkills,
-  parseSkillMd,
-  upsertSkill,
-  SKILL_NAME_RE,
-} from "@markbase/protocol/skills";
-import {
-  isSafeSkillPath,
-  replaceSkillFiles,
-  type SkillFileInput,
-} from "@markbase/protocol/skill-files";
+import { buildSkillMd, parseSkillMd, SKILL_NAME_RE } from "@markbase/protocol/skills";
+import { listSkills, upsertSkill } from "@markbase/server/db/skills";
+import { isSafeSkillPath, type SkillFileInput } from "@markbase/protocol/skill-files";
+import { replaceSkillFiles } from "@markbase/server/db/skill-files";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // Authentication and CORS happen in the shell's proxy. /api/v1/skills is an

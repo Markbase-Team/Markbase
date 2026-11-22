@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import { createHash } from "node:crypto";
 import { selectOrphans, type StoredObject } from "../logic/media";
 

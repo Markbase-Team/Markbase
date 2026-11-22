@@ -236,8 +236,8 @@ describe("package boundary", () => {
     expect(nodeDependents(join(CORE, "protocol/src/index.ts"))).toEqual([]);
   });
 
-  // The cycle this split exists to break: docs imports protocol for the Supabase
-  // client, so protocol must not import docs back. Nor may the isomorphic half
+  // The cycle this split exists to break: docs imports protocol, so protocol
+  // must not import docs back. Nor may the isomorphic half
   // reach the node half — that is the whole point of separating them.
   it("protocol depends on no other workspace package", () => {
     expect(packagesReached(join(CORE, "protocol/src/index.ts"))).toEqual([]);

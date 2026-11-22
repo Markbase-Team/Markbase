@@ -1,8 +1,5 @@
-import {
-  listVaultSecretNames,
-  upsertVaultSecret,
-  VAULT_NAME_RE,
-} from "@markbase/protocol/vault";
+import { VAULT_NAME_RE } from "@markbase/protocol/vault";
+import { listVaultSecretNames, upsertVaultSecret } from "@markbase/server/db/vault";
 import { agentJson, authenticateAgent, preflight } from "@/lib/agent-auth";
 
 export const runtime = "nodejs";

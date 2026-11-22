@@ -1,4 +1,4 @@
-import { getWorkerPresence } from "@markbase/protocol";
+import { getWorkerPresence } from "@markbase/server/db/jobs";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // GET /api/v1/worker — is this owner's worker connected? Used by the

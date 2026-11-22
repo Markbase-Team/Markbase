@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 
 // GET /api/projects/lookup?q=... — resolve a project by slug or name.
 // Returns { slug, name } if found, 404 otherwise. Only public fields.
