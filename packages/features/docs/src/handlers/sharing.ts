@@ -1,4 +1,4 @@
-import { accountOf } from "@markbase/protocol/docs";
+import { accountOf } from "@markbase/shared/docs";
 import {
   createComment,
   createLink,

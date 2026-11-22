@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
+import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 
 // One vault, asked about by id. The two refusals are different answers and
 // stay different: 404 is "there is no such vault" and 403 is "there is, and it

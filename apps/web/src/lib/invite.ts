@@ -1,5 +1,5 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { joinLink } from "@markbase/protocol/instance";
+import { joinLink } from "@markbase/shared/instance";
 import { supabase } from "@markbase/server/supabase";
 import { instanceUrl } from "@/lib/instance-url";
 

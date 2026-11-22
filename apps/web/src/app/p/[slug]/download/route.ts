@@ -1,5 +1,5 @@
 import { getPublishedTabs } from "@markbase/docs/server";
-import { combineTabMarkdown, docFileSlug } from "@markbase/protocol/docs";
+import { combineTabMarkdown, docFileSlug } from "@markbase/shared/docs";
 
 export const runtime = "nodejs";
 // Match the published page's ISR window.

@@ -1,5 +1,5 @@
-// The database half of @markbase/protocol/plans: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/plans: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
 

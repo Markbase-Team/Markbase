@@ -10,7 +10,7 @@ import {
   versionCount,
   type DocJSON,
   type VersionCredit,
-} from "@markbase/protocol/docs";
+} from "@markbase/shared/docs";
 import type { Actor } from "./auth";
 import { mirrorDocContent } from "./documents";
 import { broadcastCrdt, loadCrdtSnapshot, saveCrdtSnapshot } from "./crdt-store";

@@ -15,7 +15,7 @@
 //
 // The database lives here too: supabase.ts is the secret-key client, and db/
 // holds the queries (tickets, todos, skills, jobs, agent sessions, ...), one
-// file per table family. The row shapes they return stay in @markbase/protocol
+// file per table family. The row shapes they return stay in @markbase/shared
 // under the same file name, so a browser can import a type without importing
 // a query.
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, Check, Lock, Terminal } from "lucide-react";
-import { CLAUDE_CODE_FEATURES, type FeatureId } from "@markbase/protocol";
+import { CLAUDE_CODE_FEATURES, type FeatureId } from "@markbase/shared";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { getFeatureEnv } from "@/lib/features";
 import { AppHeader } from "@markbase/ui/app-header";

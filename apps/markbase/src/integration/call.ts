@@ -1,6 +1,6 @@
-import type { HttpMethod } from "@markbase/protocol/docs/endpoints";
-import { pathParams } from "@markbase/protocol/docs/agent-tools";
-import { toolRequest, type Json } from "@markbase/protocol/endpoint-tools";
+import type { HttpMethod } from "@markbase/shared/docs/endpoints";
+import { pathParams } from "@markbase/shared/docs/agent-tools";
+import { toolRequest, type Json } from "@markbase/shared/endpoint-tools";
 import { appUrl, loadConfig } from "../config";
 
 // Build + send a request for a registry endpoint from a flat param map. Path

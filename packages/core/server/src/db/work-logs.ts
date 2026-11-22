@@ -1,12 +1,12 @@
-// The database half of @markbase/protocol/work-logs: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/work-logs: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
 import type {
   WorkLog,
   CreateWorkLogInput,
   UpdateWorkLogInput,
-} from "@markbase/protocol/work-logs";
+} from "@markbase/shared/work-logs";
 
 // A project's logs. Undated logs sort first (treated as ongoing/current), then
 // dated newest-first, with newest-created as the tiebreak.

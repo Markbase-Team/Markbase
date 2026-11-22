@@ -1,4 +1,4 @@
-import { DEFAULT_APP_URL, joinLink } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL, joinLink } from "@markbase/shared/instance";
 
 // Runs once when the server starts (Next's instrumentation hook).
 //

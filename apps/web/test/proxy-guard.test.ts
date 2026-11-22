@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { CALLER_HEADER, parseCaller } from "@markbase/protocol/auth";
+import { CALLER_HEADER, parseCaller } from "@markbase/shared/auth";
 
 // The gate. Two channels reach one API, and everything behind /api/v1/terms
 // trusts that a request which got there was already authenticated — so the

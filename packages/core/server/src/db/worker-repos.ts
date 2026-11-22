@@ -1,5 +1,5 @@
-// The database half of @markbase/protocol/worker-repos: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/worker-repos: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
 import { reconcileAgentSessions } from "./agent-sessions";
@@ -9,7 +9,7 @@ import type {
   DiscoveredRepo,
   DiscoveredSession,
   WorkerSession,
-} from "@markbase/protocol/worker-repos";
+} from "@markbase/shared/worker-repos";
 
 /** Read an owner's discovered repos (newest-active first) for the admin picker. */
 export async function listWorkerRepos(ownerId: string): Promise<WorkerRepo[]> {

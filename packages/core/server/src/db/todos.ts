@@ -1,8 +1,8 @@
-// The database half of @markbase/protocol/todos: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/todos: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
-import type { Todo } from "@markbase/protocol/todos";
+import type { Todo } from "@markbase/shared/todos";
 
 const TABLE = "today_todos";
 

@@ -19,7 +19,7 @@ import {
   reachableDocIds,
   type DocTab,
   type OpenIntent,
-} from "@markbase/protocol/docs/workspace-tabs";
+} from "@markbase/shared/docs/workspace-tabs";
 import { DocView } from "./doc-view";
 import { ShareDialog } from "./share-dialog";
 import { DocClientProvider } from "./doc-client";

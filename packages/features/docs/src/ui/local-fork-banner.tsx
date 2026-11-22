@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { Copy, GitCompare, Loader2, Trash2, X } from "lucide-react";
-import { diffSegments, type DiffSegment } from "@markbase/protocol/docs";
+import { diffSegments, type DiffSegment } from "@markbase/shared/docs";
 import { cn } from "@markbase/ui/utils";
 import { useDocsPorts, type LocalFork } from "./ports";
 import { DiffBody } from "./version-preview";

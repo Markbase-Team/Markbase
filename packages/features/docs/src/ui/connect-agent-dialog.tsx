@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Bot } from "lucide-react";
-import { trackEvent } from "@markbase/protocol/product-events";
+import { trackEvent } from "@markbase/shared/product-events";
 import { Button } from "@markbase/ui/button";
 import { ConnectAgents } from "@markbase/ui/connect-agents";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@markbase/ui/dialog";

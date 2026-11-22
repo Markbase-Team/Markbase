@@ -1,8 +1,8 @@
-// The database half of @markbase/protocol/jobs: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/jobs: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
-import type { JobKind, JobPayload, Job, WorkerPresence } from "@markbase/protocol/jobs";
+import type { JobKind, JobPayload, Job, WorkerPresence } from "@markbase/shared/jobs";
 
 // Enqueue a job for the local worker to pick up.
 export async function createJob(

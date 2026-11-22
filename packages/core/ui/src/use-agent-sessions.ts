@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { OwnerKind, Ticket } from "@markbase/protocol/types";
+import type { OwnerKind, Ticket } from "@markbase/shared/types";
 import { refreshGet } from "@markbase/ui/app-cache";
 
 const SESSIONS_URL = "/api/v1/agent-sessions";
@@ -19,7 +19,7 @@ export type AgentSessionLite = {
 };
 
 // The owner's agent sessions, newest first, and whether work can be handed to
-// them at all (Claude Code installed — see @markbase/protocol features.ts).
+// them at all (Claude Code installed — see @markbase/shared features.ts).
 // `reload` refetches after one is created. `enabled: false` asks nothing and
 // answers an empty roster — for a surface with no API behind it, such as the
 // desktop's file window, where the request would only be refused.

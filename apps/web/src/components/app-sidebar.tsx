@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, LogOut, Settings } from "lucide-react";
 import type { SidebarEntry } from "@markbase/registry";
-import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL } from "@markbase/shared/instance";
 import { DisplayNameField } from "@markbase/ui/display-name-field";
 import { JoinLinkField } from "@markbase/ui/join-link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";

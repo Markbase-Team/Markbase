@@ -1,5 +1,5 @@
-import { AGENT_ENDPOINTS, docEndpoint, type DocEndpoint } from "@markbase/protocol/docs/endpoints";
-import type { Json } from "@markbase/protocol/endpoint-tools";
+import { AGENT_ENDPOINTS, docEndpoint, type DocEndpoint } from "@markbase/shared/docs/endpoints";
+import type { Json } from "@markbase/shared/endpoint-tools";
 import { callEndpoint, pathParams } from "./call";
 
 // `markbase api <endpoint> [key=value] [key:=json]` — call any document endpoint

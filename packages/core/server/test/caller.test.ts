@@ -16,7 +16,7 @@ vi.mock("../src/api-keys", () => ({ verifyApiKey: (t: string) => verifyApiKey(t)
 vi.mock("../src/db/agent-sessions", () => ({
   setConnectionProvider: vi.fn(async () => {}),
 }));
-vi.mock("@markbase/protocol", () => ({
+vi.mock("@markbase/shared", () => ({
   providerFromClient: () => "claude_code",
 }));
 

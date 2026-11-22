@@ -10,7 +10,7 @@ import {
   CALLER_HEADER,
   CALLER_HEADER_PREFIX,
   serializeCaller,
-} from "@markbase/protocol/auth";
+} from "@markbase/shared/auth";
 import { updateSession } from "@/lib/supabase/middleware";
 import { CORS_HEADERS } from "@/lib/agent-auth";
 import {

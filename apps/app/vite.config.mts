@@ -31,7 +31,7 @@ export default defineConfig({
   root: here("./src/renderer"),
   base: "./",
   plugins: [react(), tailwindcss()],
-  // @markbase/protocol/browser reads the Supabase project from the names the
+  // @markbase/shared/browser reads the Supabase project from the names the
   // website's build gives it. These pages have no Next build, and the pair
   // cannot be baked in either: this app is built once and the machine it runs
   // on may have been pointed at a self-hosted instance (SELF-HOSTING.md). So

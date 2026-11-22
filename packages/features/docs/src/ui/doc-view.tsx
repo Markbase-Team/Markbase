@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useDocsPorts } from "./ports";
 import { CachedCopyBadge, useCachedCopy } from "./use-cached-copy";
@@ -11,13 +11,13 @@ import {
   setMarkdown,
   observeMarkdown,
   type DocJSON,
-} from "@markbase/protocol/docs";
+} from "@markbase/shared/docs";
 import { docCrdtPool, type CrdtEntry } from "./doc-crdt-pool";
 import { isLocalDocId } from "./local-file-crdt";
 import { DocMarkdownEditor } from "./doc-markdown-editor";
 import type { Capability } from "@markbase/docs/server";
 import { cn } from "@markbase/ui/utils";
-import type { OpenIntent } from "@markbase/protocol/docs/workspace-tabs";
+import type { OpenIntent } from "@markbase/shared/docs/workspace-tabs";
 import {
   DocEditor,
   type EditorSelection,

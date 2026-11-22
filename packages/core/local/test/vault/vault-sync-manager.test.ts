@@ -5,8 +5,8 @@ import {
   type DocStore,
   type DocPubSub,
   type VaultSyncFs,
-} from "@markbase/protocol/docs";
-import { renameFolder, moveFolder, filesUnder } from "@markbase/protocol/folders";
+} from "@markbase/shared/docs";
+import { renameFolder, moveFolder, filesUnder } from "@markbase/shared/folders";
 import {
   VaultSyncManager,
   type VaultDocRef,

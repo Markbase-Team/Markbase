@@ -56,7 +56,7 @@ export interface VaultSyncOpenOptions {
   onConflict?: (conflict: { path: string; copy: string }) => void;
 }
 
-// Declared in @markbase/protocol, not here: the vault daemon implements these
+// Declared in @markbase/shared, not here: the vault daemon implements these
 // and used to import them from this package, which pointed the dependency the
 // wrong way round. Re-exported because callers (and these tests) import them
 // from here.

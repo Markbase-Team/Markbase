@@ -21,7 +21,7 @@ import {
   isRepoStatus,
   type DiscoveredRepo,
   type DiscoveredSession,
-} from "@markbase/protocol/worker-repos";
+} from "@markbase/shared/worker-repos";
 import {
   reportWorkerRepos,
   reportWorkerSessions,

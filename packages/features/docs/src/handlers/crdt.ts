@@ -1,4 +1,4 @@
-import { base64ToBytes, bytesToBase64 } from "@markbase/protocol/docs";
+import { base64ToBytes, bytesToBase64 } from "@markbase/shared/docs";
 import {
   broadcastCrdt,
   listCrdtChanges,

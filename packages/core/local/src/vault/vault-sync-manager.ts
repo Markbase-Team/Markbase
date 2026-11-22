@@ -12,15 +12,15 @@
 // supplies the opener. What is left is pure routing, which is why these tests
 // need no CRDT at all to exercise it.
 
-import { filesUnder, normalizePath } from "@markbase/protocol/folders";
-import type { VaultSyncFs } from "@markbase/protocol/storage";
+import { filesUnder, normalizePath } from "@markbase/shared/folders";
+import type { VaultSyncFs } from "@markbase/shared/storage";
 import type { AgentCredit, AgentReads, OpenSyncedFile, SyncedFile } from "./synced-file";
 
-// VaultDocRef is a document's identity, so it belongs to the protocol rather
+// VaultDocRef is a document's identity, so it belongs to @markbase/shared rather
 // than to the sync engine. Re-exported here because every existing caller
 // imports it alongside VaultSyncManager.
-export type { VaultDocRef } from "@markbase/protocol/vault-reconcile";
-import type { VaultDocRef } from "@markbase/protocol/vault-reconcile";
+export type { VaultDocRef } from "@markbase/shared/vault-reconcile";
+import type { VaultDocRef } from "@markbase/shared/vault-reconcile";
 
 /** A file whose edits the source of truth has not got (see SyncedFile). */
 export interface LocalFork {

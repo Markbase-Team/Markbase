@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Input } from "@markbase/ui/input";
 import { reportSignupSource } from "@/components/signup-source-capture";

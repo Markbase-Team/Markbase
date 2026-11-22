@@ -11,8 +11,8 @@ import {
   session,
   type IpcMainEvent,
 } from "electron";
-import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/protocol/docs/crdt-api";
-import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
+import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/shared/docs/crdt-api";
+import { fetchWithTimeout } from "@markbase/shared/timeout-fetch";
 import type { MenuItemConstructorOptions } from "electron";
 import { startTicketWorkerHost, type TicketWorkerHost, type TicketWorkerStatus } from "./ticket-worker";
 import { reportClaudeRun } from "@markbase/local/runner";
@@ -51,7 +51,7 @@ import { homedir } from "node:os";
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { SUPABASE_KEY_DEFAULT, SUPABASE_URL_DEFAULT } from "./supabase-defaults";
-import { DEFAULT_APP_URL, parseConnectLink } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL, parseConnectLink } from "@markbase/shared/instance";
 import { connectToInstance, instanceStatus, type InstanceStatus } from "./instance";
 import {
   awaitDeviceAuth,
@@ -100,7 +100,7 @@ import {
   SHARED_VAULT_ID,
   SHARED_VAULT_NAME,
   sanitizePathSegment,
-} from "@markbase/protocol/shared-vault";
+} from "@markbase/shared/shared-vault";
 import {
   mountVault,
   folderRefusal,
@@ -3173,7 +3173,7 @@ function openSettings(): void {
 
 // ---- Join links -------------------------------------------------------------
 // An instance's /join page offers markbase://connect?instance=<url>&code=<invite>
-// (@markbase/protocol/instance). The OS hands it to this app — `open-url` on
+// (@markbase/shared/instance). The OS hands it to this app — `open-url` on
 // macOS, argv on Windows and Linux, and on either the second process when one
 // is already running — and the app does what "Change Instance…" did: confirms,
 // signs out, saves, restarts on the instance. Nobody types the address.

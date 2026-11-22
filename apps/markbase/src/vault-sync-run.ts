@@ -1,5 +1,5 @@
 // `markbase vault-sync` — keep every mounted vault in sync, driven by the shared
-// engine in @markbase/protocol (which the desktop app's main process also drives).
+// engine in @markbase/shared (which the desktop app's main process also drives).
 // This file is only the CLI's config + lifecycle: read config.json, start a
 // daemon per vault, stop them all on Ctrl-C.
 
@@ -29,7 +29,7 @@ import {
   terminalOperator,
   type ReconcileDeps,
 } from "@markbase/local/flows/node";
-import { SHARED_VAULT_ID } from "@markbase/protocol/shared-vault";
+import { SHARED_VAULT_ID } from "@markbase/shared/shared-vault";
 import { DEFAULT_MIRROR_DIR, loadConfig } from "./config";
 import { notify } from "./notify";
 

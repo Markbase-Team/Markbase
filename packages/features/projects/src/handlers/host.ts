@@ -1,5 +1,5 @@
 import type { ApiScope } from "@markbase/server/api-keys";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 /**
  * What every projects handler needs from whichever shell is serving it.

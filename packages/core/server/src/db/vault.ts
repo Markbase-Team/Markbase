@@ -1,8 +1,8 @@
-// The database half of @markbase/protocol/vault: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/vault: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
-import type { VaultBlob } from "@markbase/protocol/vault";
+import type { VaultBlob } from "@markbase/shared/vault";
 
 export async function listVaultSecretNames(
   ownerId: string

@@ -22,7 +22,7 @@
 // to resolve against and no cookie to carry. The client knows the base URL and
 // the credential; this file never does.
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 
 type Cached = { value: unknown; at: number };
 

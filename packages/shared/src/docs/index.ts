@@ -1,4 +1,4 @@
-// @markbase/protocol/docs — the collaborative-doc engine. Framework-agnostic and
+// @markbase/shared/docs — the collaborative-doc engine. Framework-agnostic and
 // headless: the shared ProseMirror schema, markdown <-> doc, the step transform
 // core, and comment anchoring. Imported by the web app's editor (client) and the
 // edit API / authority (server) so both sides agree on schema, steps, and

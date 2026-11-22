@@ -52,7 +52,7 @@ export interface AgentSession {
 // two can't be confused and a session can be re-pointed without changing handle.
 export function mintSessionToken(): string {
   // Web Crypto, not node:crypto — this module is imported by the browser bundle
-  // through @markbase/protocol, and a node builtin here would put the whole
+  // through @markbase/shared, and a node builtin here would put the whole
   // package back behind the node boundary for the sake of one UUID.
   return `sess_${crypto.randomUUID().replace(/-/g, "")}`;
 }

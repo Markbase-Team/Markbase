@@ -6,7 +6,7 @@ and the `markbase api` command. You do not write any of those separately, and
 you cannot ship one without the others.
 
 The machinery is shared by every feature and lives in the core:
-`@markbase/protocol/endpoint`. Two features use it today:
+`@markbase/shared/endpoint`. Two features use it today:
 
 | Feature | Endpoints | Agents get them as tools |
 | --- | --- | --- |
@@ -114,7 +114,7 @@ It writes three things from your definition:
 
 | File | For |
 | --- | --- |
-| `packages/core/protocol/src/docs/endpoints.generated.ts` | The plain description. The CLI, the MCP server and the browser read this; they cannot import the handler, which is server code. |
+| `packages/shared/src/docs/endpoints.generated.ts` | The plain description. The CLI, the MCP server and the browser read this; they cannot import the handler, which is server code. |
 | `skills/markbase/SKILL.md` | The agent skill. |
 | `apps/web/src/app/api/v1/…/route.ts` | The route file, one line per method. |
 
@@ -157,7 +157,7 @@ A feature keeps its own set of endpoints and names its own access checks. The
 agents feature is the smallest example (`packages/features/agents/src/handlers/sessions.ts`):
 
 ```ts
-import { endpointSet, signedIn, type EndpointDef } from "@markbase/protocol/endpoint";
+import { endpointSet, signedIn, type EndpointDef } from "@markbase/shared/endpoint";
 
 const agents = endpointSet<EndpointDef>("agents");   // every id starts agents_
 export const agentsRoute = agents.route;
@@ -181,14 +181,14 @@ export const listSessionsEndpoint = agents.define(
   (`packages/features/docs/src/handlers/define.ts`), wrapped so its
   `endpoint(def, run)` picks the check from `capability`.
 - **Route files are generated** with `routeFiles` from
-  `@markbase/protocol/endpoint-gen`, into the feature's own `src/app/api/v1`
+  `@markbase/shared/endpoint-gen`, into the feature's own `src/app/api/v1`
   where its manifest contributes them. Copy
   `packages/features/agents/src/handlers/routes.ts` and
   `packages/features/agents/scripts/gen-endpoints.ts`, add the script to
   `gen:endpoints` in the root `package.json`, and copy its test.
 - **Tools.** A feature whose endpoints agents may call also needs its
   descriptions in the list the tools are built from (`AGENT_ENDPOINTS` in
-  `packages/core/protocol/src/docs/endpoints.ts`), as a generated copy like
+  `packages/shared/src/docs/endpoints.ts`), as a generated copy like
   documents'. Agents does not, because all of its endpoints are hidden. The
   first feature that does should move that list to the core as well.
 
@@ -196,7 +196,7 @@ export const listSessionsEndpoint = agents.define(
 
 `/me`, `/me/profile` and `/agent/tools` are hand-written route files in
 `apps/web`, described in `ACCOUNT_ENDPOINTS` in
-`packages/core/protocol/src/docs/endpoints.ts`. Add the entry there and the
+`packages/shared/src/docs/endpoints.ts`. Add the entry there and the
 route file yourself. `apps/web/test/api-registry.test.ts` fails if a route
 under `apps/web/src/app/api/v1` has no entry, or an entry has no route. A
 route that should not be an endpoint at all (sign-in plumbing, say) goes in

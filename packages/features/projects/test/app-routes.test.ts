@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { WORKER_ENDPOINTS } from "@markbase/protocol/docs/endpoints";
+import { WORKER_ENDPOINTS } from "@markbase/shared/docs/endpoints";
 
 // Security lockdown stage 2: the ticket worker reaches the database only
 // through these routes. The registry says what exists; this says each entry is

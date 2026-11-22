@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus, RefreshCw, X } from "lucide-react";
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { Button } from "./button";
 import { CopyButton } from "./copy-button";
 import { Input } from "./input";

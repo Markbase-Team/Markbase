@@ -1,5 +1,5 @@
-// The database half of @markbase/protocol/tickets: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/tickets: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
 import {
@@ -12,7 +12,7 @@ import {
   type ProjectProperty,
   type Ticket,
   type TicketStatus,
-} from "@markbase/protocol/types";
+} from "@markbase/shared/types";
 import {
   isPropertyId,
   type CreateProjectInput,
@@ -26,7 +26,7 @@ import {
   type UpdateTicketInput,
   type TicketCcPatch,
   type TicketMessage,
-} from "@markbase/protocol/tickets";
+} from "@markbase/shared/tickets";
 
 // Keep only valid id→string entries; drop blanks so an unset value is "missing"
 // in the JSONB map (which sorts/filters as null) rather than an empty string.

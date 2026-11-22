@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import type { TicketCommit } from "@markbase/protocol/types";
+import type { TicketCommit } from "@markbase/shared/types";
 
 const exec = promisify(execFile);
 

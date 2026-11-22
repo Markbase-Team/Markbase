@@ -1,13 +1,13 @@
 import { createHash, randomBytes } from "node:crypto";
 import { supabase } from "./supabase";
-import { isProvider, type Provider } from "@markbase/protocol/agent-sessions";
-import type { KeyCapability } from "@markbase/protocol/auth";
+import { isProvider, type Provider } from "@markbase/shared/agent-sessions";
+import type { KeyCapability } from "@markbase/shared/auth";
 
 export type ApiScope = "read" | "write";
 
 // A key/agent's capability ceiling on docs (owner > editor > commenter >
 // viewer). NULL means full owner (backward-compatible default). The type is
-// protocol's, because the gate forwards the ceiling to features on the caller
+// @markbase/shared's, because the gate forwards the ceiling to features on the caller
 // header and the reader there must agree with the column here.
 export type ApiCapability = KeyCapability;
 

@@ -1,5 +1,5 @@
 import { deleteTodo, getTodo, updateTodo } from "@markbase/server/db/todos";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // PATCH /api/v1/todos/:id — toggle done, rename, or edit markdown details.
 export async function PATCH(

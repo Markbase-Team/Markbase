@@ -1,6 +1,6 @@
 import { gzipSync } from "node:zlib";
-import { buildSkillMd, type Skill } from "@markbase/protocol/skills";
-import type { SkillFile } from "@markbase/protocol/skill-files";
+import { buildSkillMd, type Skill } from "@markbase/shared/skills";
+import type { SkillFile } from "@markbase/shared/skill-files";
 
 // Assemble a skill's full directory into a .tar.gz, in memory, with no external
 // tar dependency. The archive expands to <name>/SKILL.md plus every bundled

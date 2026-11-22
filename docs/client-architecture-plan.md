@@ -29,7 +29,7 @@ The low layer is already shared, and since 2026-09-21 it is four packages rather
 than one. Both node hosts draw on `@markbase/vault` (`startVaultSync`,
 `checkMount`, `readMountedVaults`, `readVaultMarker`, `markbaseHome`,
 `migrateHome`, `MountedVault`) and `@markbase/node` (`awaitDeviceAuth`,
-`detectClaudeVersion`), with `@markbase/protocol` underneath both.
+`detectClaudeVersion`), with `@markbase/shared` underneath both.
 
 (`writeMountedVaults` is gone: replacing the whole list from a stale read is how
 a concurrent mount got erased, so every writer goes through `updateMountedVaults`
@@ -67,7 +67,7 @@ Six packages, each declaring what it needs from its environment. Hosts become
 thin.
 
 ```
-@markbase/protocol   isomorphic   types · endpoint registry · API client · connection identity
+@markbase/shared   isomorphic   types · endpoint registry · API client · connection identity
 @markbase/docs       isomorphic   CRDT · markdown · editor model
 @markbase/vault      node         watcher · lock · materialise · sync engine
 @markbase/agent      node         provider-neutral agent execution (today's agent-chat)
@@ -141,7 +141,7 @@ the single biggest de-duplication available: roughly 15 Electron functions and
 Today: the browser uses a session, the CLI uses an API key against `/api/v1`
 *and* the database, the desktop uses the publishable key against the database.
 Target: **everyone speaks `/api/v1`**, with the browser's session or the
-client's connection key. `@markbase/protocol` owns that client, and the
+client's connection key. `@markbase/shared` owns that client, and the
 endpoint registry stays the single declaration that generates routes, auth,
 MCP tools and docs. This is the same work as stage 2 — the refactor and the
 lockdown are one job, not two.
@@ -174,7 +174,7 @@ Each step ships on its own and leaves the product working.
 
 1. **Split `core`.** ✅ Done 2026-09-21. It was 49 files, 23 touching node
    builtins, exported through a `"./*"` wildcard so anything was importable
-   anywhere. Split into **four** packages, not three: `@markbase/protocol`
+   anywhere. Split into **four** packages, not three: `@markbase/shared`
    (isomorphic), `@markbase/node` (node, but imported by `apps/web` — api-keys,
    repos, the Claude probe), `@markbase/vault` and `@markbase/runner`. The fourth
    package exists because `agent-sessions`, `api-keys` and `repos` are node-bound

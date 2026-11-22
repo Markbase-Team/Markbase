@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { Project } from "@markbase/protocol/types";
+import type { Project } from "@markbase/shared/types";
 
 type ProjectsContextValue = {
   projects: Project[];

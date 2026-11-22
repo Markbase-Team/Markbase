@@ -184,7 +184,7 @@ export class VaultDoc {
  * is unit-testable and browser-safe; the real chokidar/node-fs adapter lives in
  * the worker and implements this.
  */
-// Declared in @markbase/protocol so the daemon that implements it and the engine
+// Declared in @markbase/shared so the daemon that implements it and the engine
 // that consumes it share one definition without importing each other.
 import type { VaultFs } from "../storage";
 export type { VaultFs };

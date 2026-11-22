@@ -16,7 +16,7 @@
 // wrong and an image a note really does reference silently fails to upload, which
 // is a worse bug than uploading too much: it looks like nothing happened.
 //
-// Here in the isomorphic protocol rather than the node vault, because the API
+// Here in the isomorphic shared package rather than the node vault, because the API
 // answers the same question for a MEMBER of a document — which of its vault's
 // assets may this person fetch — and the answer has to be the one the daemon
 // computes, or an image the daemon wants is one the API withholds.

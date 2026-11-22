@@ -33,7 +33,7 @@ import {
   SHARED_VAULT_DIRNAME,
   SHARED_VAULT_ID,
   SHARED_VAULT_NAME,
-} from "@markbase/protocol/shared-vault";
+} from "@markbase/shared/shared-vault";
 import { loadConfig, type MountedVault } from "./config";
 
 const HELP = `Usage:

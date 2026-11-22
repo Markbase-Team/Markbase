@@ -18,9 +18,9 @@
 // Owners are recorded lazily — in the registry entry and in the folder's
 // marker — so no existing mount has to be touched by hand.
 
-import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
-import { resolveWorkerConnection } from "@markbase/protocol/worker-connection";
-import { isSharedVault } from "@markbase/protocol/shared-vault";
+import { fetchWithTimeout } from "@markbase/shared/timeout-fetch";
+import { resolveWorkerConnection } from "@markbase/shared/worker-connection";
+import { isSharedVault } from "@markbase/shared/shared-vault";
 import { readVaultMarkerInfo, writeVaultMarker } from "./vault-fs";
 import { readVaultIndex } from "./vault-index";
 import { readMountedVaults, setMountedVaultOwner, type MountedVault } from "./vault-registry";

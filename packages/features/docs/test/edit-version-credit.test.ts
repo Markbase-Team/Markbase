@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { setMarkdown } from "@markbase/protocol/docs/crdt";
-import { checkpoint } from "@markbase/protocol/docs/versions";
-import { lineCredit, writerText } from "@markbase/protocol/docs/analytics";
+import { setMarkdown } from "@markbase/shared/docs/crdt";
+import { checkpoint } from "@markbase/shared/docs/versions";
+import { lineCredit, writerText } from "@markbase/shared/docs/analytics";
 import { versionCredit } from "../src/server/doc-crdt";
 
 // An edit made through the API is credited to whoever made it: an agent's edit

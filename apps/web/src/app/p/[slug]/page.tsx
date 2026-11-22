@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import { getPublishedTabs, getUserDisplay } from "@markbase/docs/server";
-import { markdownToHtml, excerpt } from "@markbase/protocol/docs/html";
+import { markdownToHtml, excerpt } from "@markbase/shared/docs/html";
 import { cn } from "@/lib/utils";
 import { PublishedTabs } from "@markbase/docs/ui/published-tabs";
 // Reuse the editor's content styling so published pages look identical.

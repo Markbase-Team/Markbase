@@ -1,12 +1,12 @@
-// The database half of @markbase/protocol/skill-files: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/skill-files: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
 import {
   type SkillFile,
   type SkillFileInput,
   isSafeSkillPath,
-} from "@markbase/protocol/skill-files";
+} from "@markbase/shared/skill-files";
 
 // True when the error is "the skill_files table doesn't exist yet" — i.e. the
 // migration hasn't run. Lets read paths degrade to "no files" so the rest of

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Check, Code, Copy, Download, ExternalLink, MessageSquare, Terminal } from "lucide-react";
-import { connectOptions, type ConnectOption } from "@markbase/protocol/connect-links";
+import { connectOptions, type ConnectOption } from "@markbase/shared/connect-links";
 import { AgentLogo, hasAgentLogo } from "./agent-logo";
 
 const ICONS = { "Custom connector": MessageSquare, CLI: Terminal, IDE: Code } as const;

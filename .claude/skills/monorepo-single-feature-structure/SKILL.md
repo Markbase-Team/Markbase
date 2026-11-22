@@ -65,7 +65,7 @@ than adding a fourth. `docs` is the largest — 9 files in `handlers/`, 17 in
 `server/`, 62 in `ui/` — and it still has only the three. It used to have a
 fourth, `logic/`: the document engine (CRDT, markdown, diffing), which is
 neither HTTP nor database nor React. That engine is shared with the vault on
-the user's machine, so it now lives in core as `@markbase/protocol/docs`. A
+the user's machine, so it now lives in core as `@markbase/shared/docs`. A
 body of logic that several places share goes there, not into a fourth
 directory of one feature.
 
@@ -95,7 +95,7 @@ unauthenticated caller, that is a routing mistake, and it gets caught where
 routing is configured rather than in forty handler bodies.
 
 The gate attaches who the caller is as headers. Read them through
-`@markbase/protocol/auth`, never `request.headers.get` — the names have one
+`@markbase/shared/auth`, never `request.headers.get` — the names have one
 definition and one writer, and a feature reaching for the raw string is a
 feature that can be handed a forged one.
 
@@ -115,10 +115,10 @@ codes. This layer is usually already clean, because it was never tempted.
 ### `ui/` — React, and no idea where it is running
 
 **It does not call `fetch`.** It goes through `api` from
-`@markbase/protocol/api-client`:
+`@markbase/shared/api-client`:
 
 ```ts
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 const BASE = "/api/v1/<name>";
 
 const rows = await api.json<{ rows: Row[] }>(BASE);
@@ -137,7 +137,7 @@ one shell forever. The port is `@markbase/ui/navigation`.
 
 ## Three rules a test already enforces
 
-`packages/core/protocol/test/package-boundary.test.ts` fails the build on all
+`packages/shared/test/package-boundary.test.ts` fails the build on all
 three, so these are checked rather than hoped for:
 
 - no package imports `next/*`

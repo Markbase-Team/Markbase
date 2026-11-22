@@ -11,7 +11,7 @@
 // `state` is the CSRF guard: anything can hit a loopback port, so a key arriving
 // without the exact value we generated is refused rather than saved.
 
-import { authorizeUrl } from "@markbase/protocol/device-auth-contract";
+import { authorizeUrl } from "@markbase/shared/device-auth-contract";
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import type { AddressInfo } from "node:net";

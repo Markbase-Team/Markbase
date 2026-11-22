@@ -2,7 +2,7 @@ import { callerFromHeaders } from "./auth";
 /**
  * The contract a route handler and its host agree on.
  *
- * Types only, and deliberately in protocol rather than beside the
+ * Types only, and deliberately in shared rather than beside the
  * implementation in @markbase/server: a feature's `handlers/` layer must be able to
  * state what it needs from its host without pulling in how a particular host
  * satisfies it. The implementation lives in `@markbase/server/caller`, and a

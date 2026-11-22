@@ -1,4 +1,4 @@
-import { VAULT_NAME_RE } from "@markbase/protocol/vault";
+import { VAULT_NAME_RE } from "@markbase/shared/vault";
 import { listVaultSecretNames, upsertVaultSecret } from "@markbase/server/db/vault";
 import { agentJson, authenticateAgent, preflight } from "@/lib/agent-auth";
 

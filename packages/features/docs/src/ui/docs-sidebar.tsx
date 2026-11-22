@@ -8,7 +8,7 @@ import { VaultSwitcher } from "./vault-switcher";
 import { DocSearchResults } from "./doc-search";
 import { isSharedScope } from "./scope";
 import type { VaultMeta } from "./new-vault-modal";
-import type { OpenIntent } from "@markbase/protocol/docs/workspace-tabs";
+import type { OpenIntent } from "@markbase/shared/docs/workspace-tabs";
 
 /**
  * Column 2 — the documentation sidebar. The focused vault's folder/doc tree on

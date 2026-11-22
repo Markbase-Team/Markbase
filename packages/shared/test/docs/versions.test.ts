@@ -61,7 +61,7 @@ describe("appendVersion / versionContent", () => {
   });
 
   // An agent's author names WHOSE agent it was — the label is composed upstream
-  // (see @markbase/protocol/attribution) and stored as an ordinary string, so the
+  // (see @markbase/shared/attribution) and stored as an ordinary string, so the
   // log needs no new shape to carry it.
   it("carries an agent's author verbatim", () => {
     const doc = createDoc("");

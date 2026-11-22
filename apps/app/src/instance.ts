@@ -3,7 +3,7 @@ import {
   fetchInstance,
   normalizeInstanceUrl,
   type InstanceFetch,
-} from "@markbase/protocol/instance";
+} from "@markbase/shared/instance";
 import type { SavedInstance } from "@markbase/local/vault";
 
 // Connecting this app to a team's instance (SELF-HOSTING.md) — the decision

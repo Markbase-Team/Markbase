@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL } from "@markbase/shared/instance";
 import { AuthForm } from "@/components/auth-form";
 import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";

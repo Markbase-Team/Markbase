@@ -22,7 +22,7 @@ import {
   parseOwnerValue,
   type AgentSessionLite,
 } from "@markbase/ui/use-agent-sessions";
-import type { OwnerKind } from "@markbase/protocol/types";
+import type { OwnerKind } from "@markbase/shared/types";
 
 // Sentinel option values (never a real assignee).
 const NEW = "__new__";

@@ -4,7 +4,7 @@ import {
   authorizeFraming,
   signedOutRedirect,
   type AuthorizeQuery,
-} from "@markbase/protocol/device-auth-contract";
+} from "@markbase/shared/device-auth-contract";
 import { CapabilitySelect } from "@/components/capability-select";
 import { pickedCapability } from "@/lib/capabilities";
 import { AutoApprove } from "./auto-approve";

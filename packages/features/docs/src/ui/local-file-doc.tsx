@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { markdownToDoc, type DocJSON } from "@markbase/protocol/docs";
+import { markdownToDoc, type DocJSON } from "@markbase/shared/docs";
 import { AppHeader, headerNoDrag } from "@markbase/ui/app-header";
 import { cn } from "@markbase/ui/utils";
 import { DocView, ViewModeSwitcher, type DocViewMode, type TabDoc } from "./doc-view";

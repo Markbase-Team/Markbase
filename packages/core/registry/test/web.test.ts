@@ -18,7 +18,7 @@ import { loadFeatures, enabledFeatures, repoRoot } from "../src/load";
 const HARDCODED_BEFORE = [
   "@markbase/agent",
   "@markbase/server",
-  "@markbase/protocol",
+  "@markbase/shared",
   "@markbase/node",
   "@markbase/vault",
   "@markbase/docs",
@@ -41,8 +41,8 @@ describe("transpilePackages", () => {
    */
   const ADDED_SINCE_HARDCODED = [
     // These three became packages: each one's UI left apps/web and its data
-    // layer left packages/core/protocol, so the web build now has a workspace
-    // package to compile where before it had app-local files. protocol no
+    // layer left packages/shared, so the web build now has a workspace
+    // package to compile where before it had app-local files. shared no
     // longer carries a droppable feature's schema for any of them.
     "@markbase/reader",
     "@markbase/terms",

@@ -12,7 +12,7 @@ import {
   type McpConfig,
   type Ticket,
   type TicketStatus,
-} from "@markbase/protocol/types";
+} from "@markbase/shared/types";
 import { owner, type HandlerHost } from "./host";
 
 // The three endpoints that are about a project as a whole rather than one

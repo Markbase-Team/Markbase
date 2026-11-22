@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ComponentType, ReactNode } from "react";
-import type { FeatureId } from "@markbase/protocol/features";
+import type { FeatureId } from "@markbase/shared/features";
 import type { ShellRoutes } from "./navigation";
 
 /**

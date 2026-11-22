@@ -1,5 +1,5 @@
-// The database half of @markbase/protocol/agent-sessions: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/agent-sessions: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
 import {
@@ -13,7 +13,7 @@ import {
   type AgentSpawnRequest,
   type AgentMessageRequest,
   type DiscoveredAgentSession,
-} from "@markbase/protocol/agent-sessions";
+} from "@markbase/shared/agent-sessions";
 
 /**
  * Most recent first — where "recent" is the later of last_active and created_at.

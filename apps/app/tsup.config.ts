@@ -14,7 +14,7 @@ export default defineConfig({
   clean: true,
   // Workspace TS packages must be inlined (Electron can't resolve them at runtime).
   noExternal: [
-    "@markbase/protocol",
+    "@markbase/shared",
     "@markbase/node",
     "@markbase/local",
     "@markbase/docs",

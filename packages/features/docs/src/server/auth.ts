@@ -1,11 +1,11 @@
-import type { Author } from "@markbase/protocol/docs/types";
+import type { Author } from "@markbase/shared/docs/types";
 
 // Capability model. Authorization is per-doc and capability-based, NOT a global
 // role — a "normal user" who can edit simply holds an `editor` grant. Pure
 // resolution lives here (no DB) so it's trivially testable; the DB lookups that
 // feed it live in members.ts / links.ts.
 
-import type { Capability } from "@markbase/protocol/docs/capability";
+import type { Capability } from "@markbase/shared/docs/capability";
 
 export type { Capability };
 

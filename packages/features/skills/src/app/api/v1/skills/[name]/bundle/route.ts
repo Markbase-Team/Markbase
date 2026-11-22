@@ -1,7 +1,7 @@
 import { getSkillByName } from "@markbase/server/db/skills";
 import { listSkillFiles } from "@markbase/server/db/skill-files";
 import { buildSkillTarball } from "@markbase/server/skill-bundle";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // GET /api/v1/skills/:name/bundle — the whole skill as a .tar.gz (SKILL.md +
 // scripts/ + references/ + assets/), assembled on the fly. Pipe straight to

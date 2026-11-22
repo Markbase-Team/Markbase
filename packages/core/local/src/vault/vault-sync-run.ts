@@ -14,13 +14,13 @@
 import { watchVault, type VaultWatcher } from "./fs-watcher";
 export type { VaultWatcher } from "./fs-watcher";
 import { basename, join, relative, sep } from "node:path";
-import { deriveTitle, type DocStore, type DocPubSub } from "@markbase/protocol/docs";
-import type { VaultFs } from "@markbase/protocol/storage";
-import { normalizePath, folderOf } from "@markbase/protocol/folders";
-import { nextPollDelay } from "@markbase/protocol/poll-backoff";
-import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/protocol/timeout-fetch";
+import { deriveTitle, type DocStore, type DocPubSub } from "@markbase/shared/docs";
+import type { VaultFs } from "@markbase/shared/storage";
+import { normalizePath, folderOf } from "@markbase/shared/folders";
+import { nextPollDelay } from "@markbase/shared/poll-backoff";
+import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/shared/timeout-fetch";
 import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
-import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/protocol/docs/crdt-api";
+import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/shared/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
 import { agentCredit, takeAgentReads } from "./agent-audit";
 import {
@@ -39,9 +39,9 @@ import {
 } from "./vault-boundary";
 import { readVaultIndex, writeVaultIndex, type VaultIndexEntry } from "./vault-index";
 import { acquireVaultLock } from "./vault-lock";
-import { planReconcile } from "@markbase/protocol/vault-reconcile";
-import { isSharedVault } from "@markbase/protocol/shared-vault";
-import { rawRefsIn, resolveRef } from "@markbase/protocol/asset-refs";
+import { planReconcile } from "@markbase/shared/vault-reconcile";
+import { isSharedVault } from "@markbase/shared/shared-vault";
+import { rawRefsIn, resolveRef } from "@markbase/shared/asset-refs";
 import {
   planAssetSync,
   listDiskAssets,
@@ -53,7 +53,7 @@ import {
   type AssetHashMemo,
 } from "./vault-assets";
 import { VaultSyncManager, type VaultDocRef, type AdoptFile } from "./vault-sync-manager";
-import { resolveWorkerConnection } from "@markbase/protocol/worker-connection";
+import { resolveWorkerConnection } from "@markbase/shared/worker-connection";
 import {
   VaultGoneError,
   VaultNotOursError,

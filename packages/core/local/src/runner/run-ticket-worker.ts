@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { extname, join } from "node:path";
-import type { Job } from "@markbase/protocol/jobs";
-import { nextPollDelay } from "@markbase/protocol/poll-backoff";
+import type { Job } from "@markbase/shared/jobs";
+import { nextPollDelay } from "@markbase/shared/poll-backoff";
 import { detectClaudeVersion } from "../detect-claude";
 import { syncMirror } from "../vault/mirror";
 import {
@@ -12,22 +12,22 @@ import {
   type VaultLock,
   type VaultLockInfo,
 } from "../vault/vault-lock";
-import type { TicketCcPatch } from "@markbase/protocol/tickets";
+import type { TicketCcPatch } from "@markbase/shared/tickets";
 import { buildChatPrompt, buildPrompt, startClaudeCodeSession } from "../claude-code";
 import { discoverClaude, sessionExists } from "./discover-repos";
 // Same /api/v1/me the owner lookup used, but it keeps the connection too — see
 // resolveIdentity.
-import { resolveWorkerConnection } from "@markbase/protocol/worker-connection";
+import { resolveWorkerConnection } from "@markbase/shared/worker-connection";
 import { getRepoState } from "@markbase/node/repo-state";
 import {
   WorkerApi,
   WorkerApiError,
   type ClaimedMessageRequest,
   type ClaimedSpawnRequest,
-} from "@markbase/protocol/worker-api";
+} from "@markbase/shared/worker-api";
 import { resolvePreviewUrl } from "@markbase/node/vercel-preview";
-import { fetchLatestCliVersion, isVersionBehind } from "@markbase/protocol/version";
-import type { McpConfig } from "@markbase/protocol/types";
+import { fetchLatestCliVersion, isVersionBehind } from "@markbase/shared/version";
+import type { McpConfig } from "@markbase/shared/types";
 
 // Caught values worth logging: real Errors, plain `{message, code, …}` objects
 // (these stringify to "[object Object]"), or a bare string.

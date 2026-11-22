@@ -3,7 +3,7 @@ import { AGENT_ENDPOINTS } from "./endpoints";
 
 // The tools this server offers agents: every endpoint in the registry that is
 // not hidden from them. What a tool is, and how one is read back from a
-// server's answer, is shared by every feature (@markbase/protocol/endpoint-tools).
+// server's answer, is shared by every feature (@markbase/shared/endpoint-tools).
 
 export {
   AGENT_TOOLS_PATH,

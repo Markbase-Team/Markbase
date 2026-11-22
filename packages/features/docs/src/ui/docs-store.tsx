@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import {
   createContext,
   useCallback,
@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { docJsonIsValid, emptyDoc, type DocJSON } from "@markbase/protocol/docs";
+import { docJsonIsValid, emptyDoc, type DocJSON } from "@markbase/shared/docs";
 import type { Capability } from "@markbase/docs/server";
 
 // Client-side cache of the data a document workspace needs — the same thing the

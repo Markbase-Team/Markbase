@@ -1,17 +1,18 @@
-// The isomorphic half of the old `core`: shapes, contracts and pure logic that
-// run in a browser, on a server, and in a daemon alike. Nothing here queries the
+// @markbase/shared (packages/shared), formerly @markbase/protocol: shapes,
+// contracts and pure logic that run everywhere, in a browser, on a server and
+// in a daemon alike. It sits below packages/core and packages/features and
+// imports neither. Nothing here queries the
 // database: the Supabase client and every query live in @markbase/server
 // (src/supabase.ts and src/db/), which imports the shapes from here.
 //
 // Anything that opens a file, spawns a process or reads the home directory lives
 // in @markbase/server (the web server) or @markbase/local (the user's machine)
-// instead. This package
-// has no node dependency at all, and test/package-boundary.test.ts fails if one
+// instead. This package has no node dependency at all, and test/package-boundary.test.ts fails if one
 // becomes reachable — the browser imports this entry, and a bundler's
 // tree-shaking is not a safety guarantee.
 //
 // The document engine (schema, markdown, CRDT, sync transport) is the folder
-// src/docs, imported as @markbase/protocol/docs. It is deliberately not
+// src/docs, imported as @markbase/shared/docs. It is deliberately not
 // re-exported here: it pulls in ProseMirror and Yjs, which most importers of
 // this barrel do not need.
 

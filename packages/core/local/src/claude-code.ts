@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
-import { ticketBranch } from "@markbase/protocol/tickets";
-import type { Ticket } from "@markbase/protocol/types";
+import { ticketBranch } from "@markbase/shared/tickets";
+import type { Ticket } from "@markbase/shared/types";
 
 export interface ClaudeCodeResult {
   ok: boolean;

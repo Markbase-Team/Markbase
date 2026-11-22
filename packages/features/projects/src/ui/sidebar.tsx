@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
-import { createSupabaseBrowserClient } from "@markbase/protocol/browser";
+import { createSupabaseBrowserClient } from "@markbase/shared/browser";
 import { useNavigation } from "@markbase/ui/navigation";
 import type {} from "./routes";
 import type { SidebarSlotProps } from "@markbase/ui/sidebar-slot";

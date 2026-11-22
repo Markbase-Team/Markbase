@@ -3,7 +3,7 @@
 //
 // Node-only, and the half of the old core that actually justified the split —
 // fs.watch, node:fs and the home directory all live behind here. It depends on
-// @markbase/docs for the CRDT itself and on @markbase/protocol for data access;
+// @markbase/docs for the CRDT itself and on @markbase/shared for data access;
 // nothing depends on it in return, which is what makes the graph acyclic.
 
 export {
@@ -125,9 +125,9 @@ export {
 // What a file looks like to the vault, and the adapter that makes a CRDT
 // document one. A host wiring its own container supplies an OpenSyncedFile.
 export type { SyncedFile, OpenSyncedFile, AgentCredit, AgentReads } from "./synced-file";
-// Declared in @markbase/protocol (one declaration, no cycle); re-exported here
+// Declared in @markbase/shared (one declaration, no cycle); re-exported here
 // because every host that wires a vault imports them alongside the vault itself.
-export type { VaultFs, VaultSyncFs, VaultBaseStore } from "@markbase/protocol/storage";
+export type { VaultFs, VaultSyncFs, VaultBaseStore } from "@markbase/shared/storage";
 export { docsSyncedFiles } from "./docs-synced-file";
 
 export * from "./mirror-format";

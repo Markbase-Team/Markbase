@@ -1,8 +1,8 @@
-// The database half of @markbase/protocol/skills: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/skills: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
-import type { Skill, UpsertSkillInput } from "@markbase/protocol/skills";
+import type { Skill, UpsertSkillInput } from "@markbase/shared/skills";
 
 // A skill is visible to its owner, plus public catalog skills are visible to
 // everyone. ownerId is a validated uuid, safe to inline in the .or() filter.

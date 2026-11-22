@@ -21,7 +21,7 @@ import {
   type DiffSegment,
   type DocJSON,
   type VersionMeta,
-} from "@markbase/protocol/docs";
+} from "@markbase/shared/docs";
 import * as Y from "yjs";
 import { docCrdtPool } from "./doc-crdt-pool";
 import { useDocsPorts } from "./ports";

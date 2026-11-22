@@ -32,7 +32,7 @@ import {
   setMountedVaultOwner,
   type MountedVault,
 } from "../../src/vault/vault-registry";
-import { SHARED_VAULT_ID } from "@markbase/protocol/shared-vault";
+import { SHARED_VAULT_ID } from "@markbase/shared/shared-vault";
 
 // Which account may sync which mount — the host's half of the account binding.
 // The registry is machine-wide and the folder marker travels with the folder;

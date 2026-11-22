@@ -1,6 +1,6 @@
 import { getTicket, updateTicketCc } from "@markbase/server/db/tickets";
-import { callerFromHeaders } from "@markbase/protocol/auth";
-import type { TicketCommit } from "@markbase/protocol/types";
+import { callerFromHeaders } from "@markbase/shared/auth";
+import type { TicketCommit } from "@markbase/shared/types";
 
 // POST /progress?ticket_id=xxx
 // Called by a Claude Code session (run by a worker) to report progress:

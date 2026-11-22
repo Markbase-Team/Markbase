@@ -5,7 +5,7 @@ import { EditorState } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { Node } from "@tiptap/pm/model";
 import { ArrowLeft, GitCompare, Loader2, RotateCcw } from "lucide-react";
-import { docSchema, type DiffSegment, type DocJSON } from "@markbase/protocol/docs";
+import { docSchema, type DiffSegment, type DocJSON } from "@markbase/shared/docs";
 import { DOC_SURFACE_CLASS } from "./doc-surface";
 import "prosemirror-view/style/prosemirror.css";
 import "./tiptap.css";

@@ -1,4 +1,4 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 import { runUnsubscribe } from "../../../../../server/browser-agent";
 import { getEmailAccount, getMessage } from "../../../../../server";
 

@@ -1,7 +1,7 @@
 // Claiming and executing work: the ticket worker loop, and discovering which
 // repos and agent sessions this machine can offer.
 //
-// Node-only, and the top of the dependency graph — it draws on @markbase/protocol
+// Node-only, and the top of the dependency graph — it draws on @markbase/shared
 // (jobs, tickets, connection identity), @markbase/node (API keys, the Claude
 // probe, repo state) and @markbase/vault (the mirror). Nothing imports it back.
 //

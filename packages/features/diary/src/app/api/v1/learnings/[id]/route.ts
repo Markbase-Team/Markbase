@@ -1,4 +1,4 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 import { getDiary, updateDiary, deleteDiary } from "../../../../../server";
 
 // Authentication and CORS happen in the shell's proxy — /api/v1/learnings is

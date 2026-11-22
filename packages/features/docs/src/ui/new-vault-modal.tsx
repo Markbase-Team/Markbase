@@ -1,8 +1,8 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { useState } from "react";
-import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL } from "@markbase/shared/downloads";
 import { FolderInput, Library, Loader2 } from "lucide-react";
 import { DownloadButton } from "@markbase/ui/download-button";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ import { Button } from "@markbase/ui/button";
 import { Input } from "@markbase/ui/input";
 import { Label } from "@markbase/ui/label";
 import { useDocsPorts } from "./ports";
-import { sanitizePathSegment } from "@markbase/protocol/shared-vault";
+import { sanitizePathSegment } from "@markbase/shared/shared-vault";
 
 export type VaultMeta = { id: string; name: string };
 

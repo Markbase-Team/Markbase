@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@markbase/email": "*",
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
     "@markbase/server": "*",
     "@markbase/ui": "*",
     "@supabase/supabase-js": "^2.106.2",

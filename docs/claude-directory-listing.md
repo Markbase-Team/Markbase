@@ -13,7 +13,7 @@ Anyone on a paid Claude plan can submit.
 ## Before submitting
 
 - [ ] The server is deployed with every tool titled and annotated
-      (`toolAnnotations` in `@markbase/protocol/endpoint-tools`; the test in
+      (`toolAnnotations` in `@markbase/shared/endpoint-tools`; the test in
       `packages/features/docs/test/tool-annotations.test.ts` checks it).
 - [ ] Added `https://markbase.so/mcp` as a custom connector in Claude and called
       every tool from a conversation. The **Test & launch** step asks you to

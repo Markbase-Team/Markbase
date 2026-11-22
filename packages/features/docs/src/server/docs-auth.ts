@@ -1,10 +1,10 @@
-import type { Caller } from "@markbase/protocol/auth";
+import type { Caller } from "@markbase/shared/auth";
 import { ownerDisplayName } from "./owner-name";
-import { agentLabel } from "@markbase/protocol/attribution";
-import { providerFromClient, type Provider } from "@markbase/protocol";
+import { agentLabel } from "@markbase/shared/attribution";
+import { providerFromClient, type Provider } from "@markbase/shared";
 import { claimAgentSession } from "@markbase/server/db/agent-sessions";
-import { docEndpoint } from "@markbase/protocol/docs/endpoints";
-import { accountOf } from "@markbase/protocol/docs/types";
+import { docEndpoint } from "@markbase/shared/docs/endpoints";
+import { accountOf } from "@markbase/shared/docs/types";
 import {
   atLeast,
   capabilityFor,

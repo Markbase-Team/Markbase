@@ -8,7 +8,7 @@ import {
   publishedMarkdown,
   versionCount,
   type VersionMeta,
-} from "@markbase/protocol/docs";
+} from "@markbase/shared/docs";
 import type { Actor } from "./auth";
 import { editDocCrdt, readDocCrdt, versionCredit } from "./doc-crdt";
 import { getDocument, type DocumentRow } from "./documents";

@@ -1,5 +1,5 @@
 import { getUserDisplay } from "./index";
-import { personName } from "@markbase/protocol/attribution";
+import { personName } from "@markbase/shared/attribution";
 
 // The owner's display name, cached.
 //

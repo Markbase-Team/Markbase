@@ -6,7 +6,7 @@ import { GENERATED_DOC_ENDPOINTS } from "./endpoints.generated";
 //
 // A documents endpoint is WRITTEN in one place: beside the code that answers
 // it, as `endpoint({ id, method, path, capability, … }, run)` in src/handlers
-// (the machinery is every feature's: @markbase/protocol/endpoint).
+// (the machinery is every feature's: @markbase/shared/endpoint).
 // That one definition is its description, its access rule (`capability`, which
 // the wrapper enforces before `run` is called — owner > editor > commenter >
 // viewer, any role at or above the declared one is allowed) and its code.
@@ -26,7 +26,7 @@ export type {
 } from "../endpoint";
 
 /**
- * A documents endpoint: what every endpoint says (@markbase/protocol/endpoint),
+ * A documents endpoint: what every endpoint says (@markbase/shared/endpoint),
  * plus the one thing that is this feature's own — the role a caller needs on
  * the document the path names.
  */

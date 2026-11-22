@@ -4,8 +4,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { AGENT_ENDPOINTS } from "@markbase/protocol/docs/endpoints";
-import { renderEndpointsDoc } from "@markbase/protocol/docs/skill-doc";
+import { AGENT_ENDPOINTS } from "@markbase/shared/docs/endpoints";
+import { renderEndpointsDoc } from "@markbase/shared/docs/skill-doc";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../../../..");

@@ -10,7 +10,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync
 import { createHash } from "node:crypto";
 import { baseStoreDir } from "./markbase-home";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
-import type { VaultFs, VaultBaseStore } from "@markbase/protocol/storage";
+import type { VaultFs, VaultBaseStore } from "@markbase/shared/storage";
 import { VAULT_MARKER, markerPathFor, type VaultMarker, GENERATED_DIRS } from "./vault-boundary";
 import { emptyIgnore, type VaultIgnore } from "./vault-ignore";
 

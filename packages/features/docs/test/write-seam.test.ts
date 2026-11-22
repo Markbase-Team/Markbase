@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { setMarkdown } from "@markbase/protocol/docs/crdt";
-import { restore, snapshot } from "@markbase/protocol/docs/sync";
-import { createDoc } from "@markbase/protocol/docs/crdt";
-import { listVersions, versionCount } from "@markbase/protocol/docs/versions";
-import { lineCredit, writerText } from "@markbase/protocol/docs/analytics";
+import { setMarkdown } from "@markbase/shared/docs/crdt";
+import { restore, snapshot } from "@markbase/shared/docs/sync";
+import { createDoc } from "@markbase/shared/docs/crdt";
+import { listVersions, versionCount } from "@markbase/shared/docs/versions";
+import { lineCredit, writerText } from "@markbase/shared/docs/analytics";
 import type { Actor } from "../src/server/auth";
 
 // Every change the API makes to a document's text goes through one seam,

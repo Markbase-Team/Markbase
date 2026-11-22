@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DOC_ENDPOINTS, type DocEndpoint } from "@markbase/protocol/docs/endpoints";
+import { DOC_ENDPOINTS, type DocEndpoint } from "@markbase/shared/docs/endpoints";
 import { GENERATED_API_DIRS, generatedApiRoutes } from "../scripts/api-routes";
 
 // The documents API's route files are generated from the endpoint registry

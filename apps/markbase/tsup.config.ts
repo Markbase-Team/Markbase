@@ -1,6 +1,6 @@
 import { defineConfig } from "tsup";
 
-// Bundle the CLI into a single executable file. @markbase/protocol is a workspace
+// Bundle the CLI into a single executable file. @markbase/shared is a workspace
 // package (not published), so we inline it; @supabase/supabase-js stays an
 // external runtime dependency that npm installs alongside this package.
 export default defineConfig({
@@ -11,7 +11,7 @@ export default defineConfig({
   bundle: true,
   clean: true,
   noExternal: [
-    "@markbase/protocol",
+    "@markbase/shared",
     "@markbase/node",
     "@markbase/local",
   ],

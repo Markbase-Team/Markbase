@@ -11,9 +11,9 @@
 // the way out, and an `upload` for pasted/dropped files. The lens is what keeps
 // Y.Text-is-truth honest: storage never sees a URL, the editor never sees a path.
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MediaRegistry, type AssetLink, type MarkdownLens } from "@markbase/protocol/docs";
+import { MediaRegistry, type AssetLink, type MarkdownLens } from "@markbase/shared/docs";
 import { cachedGet, invalidateCache } from "@markbase/ui/app-cache";
 import { useLatest } from "@markbase/ui/latest-ref";
 

@@ -15,7 +15,7 @@ vi.mock("node:child_process", async (importOriginal) => ({
     return child;
   },
 }));
-vi.mock("@markbase/protocol", () => ({
+vi.mock("@markbase/shared", () => ({
   CLI_PACKAGE: "@markbase/cli",
   fetchLatestCliVersion: async () => "9.9.9",
   isVersionBehind: () => true,

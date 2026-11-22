@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { createSupabaseBrowserClient } from "@markbase/protocol/browser";
+import { createSupabaseBrowserClient } from "@markbase/shared/browser";
 import {
   ArrowDownAZ,
   ArrowUpAZ,
@@ -32,7 +32,7 @@ import { ImageUpload } from "./image-upload";
 import { AttachmentThumb } from "./attachment-thumb";
 import { STATUS_STYLES } from "./status-badge";
 import { PRIORITY_VALUE_COLORS } from "./property-color";
-import { uploadImages } from "@markbase/protocol/upload";
+import { uploadImages } from "@markbase/shared/upload";
 import { cachedGet, peekGet, primeCache, refreshGet } from "@markbase/ui/app-cache";
 import { cn } from "@markbase/ui/utils";
 import { useNavigation } from "@markbase/ui/navigation";
@@ -78,7 +78,7 @@ import {
   type ProjectProperty,
   type Ticket,
   type TicketStatus,
-} from "@markbase/protocol/types";
+} from "@markbase/shared/types";
 import {
   useAgentSessions,
   ownerOptions,

@@ -22,7 +22,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@markbase/node": "*",
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
     "@markbase/server": "*",
     "@markbase/ui": "*",
     "lucide-react": "^1.17.0",

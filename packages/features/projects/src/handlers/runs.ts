@@ -1,5 +1,5 @@
 import { cancelTicketJobs, createJob, hasPendingJob } from "@markbase/server/db/jobs";
-import { ticketBranch } from "@markbase/protocol/tickets";
+import { ticketBranch } from "@markbase/shared/tickets";
 import {
   addMessage,
   getProject,

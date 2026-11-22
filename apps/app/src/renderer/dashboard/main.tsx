@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { FileText, Loader2 } from "lucide-react";
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { DocsShell, type DocsPorts, type DocsRouting } from "@markbase/docs/ui";
 import { Button } from "@markbase/ui/button";
 import { ComingSoonBadge } from "@markbase/ui/coming-soon";
@@ -34,7 +34,7 @@ import "./dashboard.css";
 // means the same thing in both, and a vault file handed to the app opens as
 // `/dashboard/documents/<id>` here exactly as it does there. Each shell spells
 // its own — the feature package is forbidden from knowing this (see the route
-// ownership test in @markbase/protocol).
+// ownership test in @markbase/shared).
 const DOCUMENTS = "/dashboard/documents";
 
 // This window's slice of the bridge: the API, sign-in, and what the documents

@@ -1,7 +1,7 @@
 "use client";
 
 import { Bot, UserRound } from "lucide-react";
-import type { AgentReadReport, LineWriter } from "@markbase/protocol/docs";
+import type { AgentReadReport, LineWriter } from "@markbase/shared/docs";
 import { cn } from "@markbase/ui/utils";
 import { useDocAnalytics } from "./use-doc-analytics";
 

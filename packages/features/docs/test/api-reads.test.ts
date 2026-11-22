@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as Y from "yjs";
-import { createDoc } from "@markbase/protocol/docs/crdt";
-import { restore, snapshot } from "@markbase/protocol/docs/sync";
-import { versionCount } from "@markbase/protocol/docs/versions";
-import { addApiRead, addAgentReads, listAgentReads, API_READ_WINDOW_MS } from "@markbase/protocol/docs/analytics";
+import { createDoc } from "@markbase/shared/docs/crdt";
+import { restore, snapshot } from "@markbase/shared/docs/sync";
+import { versionCount } from "@markbase/shared/docs/versions";
+import { addApiRead, addAgentReads, listAgentReads, API_READ_WINDOW_MS } from "@markbase/shared/docs/analytics";
 import type { Actor } from "../src/server/auth";
 
 // An agent that reads a document through the API (an MCP tool) is counted in

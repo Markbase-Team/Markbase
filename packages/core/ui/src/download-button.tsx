@@ -1,5 +1,5 @@
 import { Apple } from "lucide-react";
-import { MAC_DOWNLOAD_URL } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL } from "@markbase/shared/downloads";
 import { cn } from "./utils";
 
 /**

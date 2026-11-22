@@ -7,7 +7,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/protocol/docs/agent-tools";
+import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/shared/docs/agent-tools";
 import {
   hookAgentsOf,
   installAuditHooks,
@@ -21,7 +21,7 @@ import {
 import { canOpenBrowser } from "@markbase/local/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
-import { toolAnnotations, type Json } from "@markbase/protocol/endpoint-tools";
+import { toolAnnotations, type Json } from "@markbase/shared/endpoint-tools";
 import { callEndpoint } from "./call";
 import { printHookResults } from "../audit-install";
 import { mcpAuth } from "./mcp-auth";

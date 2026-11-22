@@ -1,4 +1,4 @@
-import { applyAnchoredEdit, restoreVersion } from "@markbase/protocol/docs";
+import { applyAnchoredEdit, restoreVersion } from "@markbase/shared/docs";
 import { editDocCrdt, setDocContent } from "../server";
 import { endpoint } from "./define";
 import { json } from "./respond";

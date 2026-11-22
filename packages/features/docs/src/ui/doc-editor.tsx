@@ -1,6 +1,6 @@
 "use client";
 
-import { intentFromClick, type OpenIntent } from "@markbase/protocol/docs/workspace-tabs";
+import { intentFromClick, type OpenIntent } from "@markbase/shared/docs/workspace-tabs";
 
 import { useCallback,
   forwardRef,
@@ -43,7 +43,7 @@ import {
   commentHighlightRanges,
   type DocJSON,
   type CommentView,
-} from "@markbase/protocol/docs";
+} from "@markbase/shared/docs";
 import type * as Y from "yjs";
 import { useCrdtSync } from "./use-crdt-sync";
 import { YUndo } from "./y-undo";

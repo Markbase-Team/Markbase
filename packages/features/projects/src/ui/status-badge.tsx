@@ -1,5 +1,5 @@
 import { Badge } from "@markbase/ui/badge";
-import { STATUS_LABELS, type TicketStatus } from "@markbase/protocol/types";
+import { STATUS_LABELS, type TicketStatus } from "@markbase/shared/types";
 
 export const STATUS_STYLES: Record<TicketStatus, string> = {
   requested: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",

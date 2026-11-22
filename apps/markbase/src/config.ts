@@ -8,7 +8,7 @@ import {
   type MountedVault,
   type SavedInstance,
 } from "@markbase/local/vault";
-import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL } from "@markbase/shared/instance";
 import { usableApiKey } from "@markbase/local";
 
 // Where the per-user config lives. Holds the API key, so it's written 0600.

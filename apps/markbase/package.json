@@ -62,7 +62,7 @@
     "tsx": "^4.19.2",
     "typescript": "^5",
     "@markbase/local": "*",
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
     "vitest": "^2.1.8"
   }
 }

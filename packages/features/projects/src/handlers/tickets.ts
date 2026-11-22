@@ -3,7 +3,7 @@ import {
   isPropertyId,
   ticketCcPatchFrom,
   type TicketCcPatchBody,
-} from "@markbase/protocol/tickets";
+} from "@markbase/shared/tickets";
 import {
   addMessage,
   deleteTicket,
@@ -16,7 +16,7 @@ import {
   updateTicket,
   updateTicketCc,
 } from "@markbase/server/db/tickets";
-import { isOwnerKind, isStatus } from "@markbase/protocol/types";
+import { isOwnerKind, isStatus } from "@markbase/shared/types";
 import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 import { owner, type HandlerHost } from "./host";
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { FeatureId } from "@markbase/protocol";
+import type { FeatureId } from "@markbase/shared";
 import { featureEnabled } from "@markbase/server/features";
 import { getCurrentUser } from "@/lib/supabase/server";
 

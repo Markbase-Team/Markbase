@@ -1,5 +1,5 @@
 import { Markdown } from "@markbase/ui/markdown";
-import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE } from "@markbase/shared/downloads";
 import { SiteHeader } from "@/components/site-header";
 import { pageMetadata } from "@/lib/seo";
 
@@ -10,7 +10,7 @@ export const metadata = pageMetadata({
 });
 
 // The desktop app's releases, newest first. The download button everywhere on
-// the site follows GitHub's "latest" release (see @markbase/protocol/downloads),
+// the site follows GitHub's "latest" release (see @markbase/shared/downloads),
 // so it needs no edit when a version ships — this page is where the version
 // gets a name and a list of what changed. Add the new one at the top when
 // apps/app/scripts/publish-dmg.sh publishes it.

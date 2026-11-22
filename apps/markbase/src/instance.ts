@@ -2,7 +2,7 @@ import {
   fetchInstance,
   normalizeInstanceUrl,
   type InstanceInfo,
-} from "@markbase/protocol/instance";
+} from "@markbase/shared/instance";
 import {
   appUrl,
   CONFIG_PATH,
@@ -25,7 +25,7 @@ import {
 // key — in the file the desktop app reads at launch.
 //
 // What the URL means and whether the instance's answer is usable is shared with
-// the desktop app (@markbase/protocol/instance), which has the same control in
+// the desktop app (@markbase/shared/instance), which has the same control in
 // its window; this file is the command around it.
 
 export { fetchInstance, normalizeInstanceUrl, type InstanceInfo };

@@ -26,7 +26,7 @@
     "@codemirror/legacy-modes": "^6.5.3",
     "@markbase/agent": "*",
     "@markbase/docs": "*",
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
     "@markbase/registry": "*",
     "@markbase/server": "*",
     "@markbase/ui": "*",

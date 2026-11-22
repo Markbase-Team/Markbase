@@ -1,12 +1,12 @@
-// The database half of @markbase/protocol/project-docs: every query here runs on the web
-// server with the secret key. The shapes these return stay in protocol.
+// The database half of @markbase/shared/project-docs: every query here runs on the web
+// server with the secret key. The shapes these return stay in @markbase/shared.
 
 import { supabase } from "../supabase";
 import type {
   ProjectDoc,
   CreateProjectDocInput,
   UpdateProjectDocInput,
-} from "@markbase/protocol/project-docs";
+} from "@markbase/shared/project-docs";
 
 export async function listProjectDocs(
   project: string,

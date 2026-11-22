@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { agentTools } from "@markbase/protocol/docs/agent-tools";
+import { agentTools } from "@markbase/shared/docs/agent-tools";
 import { offersToken } from "@markbase/server/caller";
 import { signInChallenge } from "@markbase/server/mcp-oauth";
-import { toolRequest, type Json } from "@markbase/protocol/endpoint-tools";
+import { toolRequest, type Json } from "@markbase/shared/endpoint-tools";
 import {
   MCP_SESSION_HEADER,
   answerMcp,
@@ -11,7 +11,7 @@ import {
   sessionIdFor,
   type JsonObject,
   type McpHost,
-} from "@markbase/protocol/mcp-http";
+} from "@markbase/shared/mcp-http";
 import { authenticateAgent } from "@/lib/agent-auth";
 import { instanceUrl } from "@/lib/instance-url";
 
@@ -19,7 +19,7 @@ export const runtime = "nodejs";
 
 // The hosted MCP server: the document tools at a URL, for an agent that cannot
 // run `npx @markbase/cli mcp` — a chat app, a browser, a machine without Node.
-// It is the same server (@markbase/protocol/mcp-http) with the same tools; only
+// It is the same server (@markbase/shared/mcp-http) with the same tools; only
 // the way in differs.
 //
 // A tool call is answered by calling this deployment's own API with the

@@ -1,4 +1,4 @@
-import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL } from "@markbase/shared/instance";
 import { agentJson, preflight } from "@/lib/agent-auth";
 import { instanceUrl } from "@/lib/instance-url";
 import { createInvitedUser, instanceHasAccounts, isInvited, verifyInviteCode } from "@/lib/invite";

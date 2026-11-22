@@ -1,4 +1,4 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 import { getProject } from "@markbase/server/db/tickets";
 import { revealProjectSecrets } from "../../../../../../server";
 

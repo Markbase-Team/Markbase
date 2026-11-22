@@ -79,7 +79,7 @@
     "@markbase/agent": "*",
     "@markbase/docs": "*",
     "@markbase/local": "*",
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
     "@markbase/registry": "*",
     "@markbase/terms": "*",
     "@markbase/ui": "*",

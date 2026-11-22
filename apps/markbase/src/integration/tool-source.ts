@@ -1,4 +1,4 @@
-import { agentTools, parseAgentTools, type AgentTool } from "@markbase/protocol/docs/agent-tools";
+import { agentTools, parseAgentTools, type AgentTool } from "@markbase/shared/docs/agent-tools";
 
 // Where the MCP server's tools come from. Its own file so it can be tested
 // without starting a server.

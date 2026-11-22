@@ -49,7 +49,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import "./markdown-editor.css";
-import { uploadImages } from "@markbase/protocol/upload";
+import { uploadImages } from "@markbase/shared/upload";
 
 export interface MarkdownEditorProps {
   value: string;

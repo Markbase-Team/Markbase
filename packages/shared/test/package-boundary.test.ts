@@ -15,13 +15,19 @@ import { dirname, join, resolve } from "node:path";
 // barrel makes about itself, and the two modules that used to straddle it
 // (crdt-supabase, vault-sync-manager) live in the packages that own them.
 
-const PKGS = resolve(__dirname, "../../..");
+// The three top-level folders, and the one direction imports may run:
+//   packages/features/*  may import core and shared
+//   packages/core/*      may import shared
+//   packages/shared      imports neither. It is ONE package (src/ directly
+//                        inside), not a folder of packages.
+const PKGS = resolve(__dirname, "../..");
+const SHARED = join(PKGS, "shared");
 const CORE = join(PKGS, "core");
 const FEATURES = join(PKGS, "features");
 const REPO = resolve(PKGS, "..");
 
 /**
- * Published package name → its directory, across both groups.
+ * Published package name → its directory, across all three folders.
  *
  * Scanned rather than listed, and keyed by the name an import specifier
  * actually says. The previous version carried two hand-kept arrays plus an
@@ -29,20 +35,27 @@ const REPO = resolve(PKGS, "..");
  * disagreed with the package they published. The reorg aligned every directory
  * with its name so the fixups are gone — scanning is what keeps them gone.
  */
-const PKG_DIR: Record<string, string> = Object.fromEntries(
-  [CORE, FEATURES].flatMap((group) =>
+const PKG_DIR: Record<string, string> = Object.fromEntries([
+  ["@markbase/shared", SHARED],
+  ...[CORE, FEATURES].flatMap((group) =>
     readdirSync(group, { withFileTypes: true })
       .filter((e) => e.isDirectory())
-      .map((e) => [
+      .map((e): [string, string] => [
         JSON.parse(readFileSync(join(group, e.name, "package.json"), "utf8"))
           .name as string,
         join(group, e.name),
       ])
-  )
-);
+  ),
+]);
 
-/** The package directory a workspace file belongs to: core/<x> and features/<x> both give <x>. */
-const pkgOf = (file: string): string => file.slice(PKGS.length + 1).split("/")[1];
+/**
+ * The package directory a workspace file belongs to: core/<x> and features/<x>
+ * both give <x>, and anything under shared/ gives "shared".
+ */
+const pkgOf = (file: string): string => {
+  const [group, name] = file.slice(PKGS.length + 1).split("/");
+  return group === "shared" ? "shared" : name;
+};
 
 /** Resolve one import specifier to a file, or null if it leaves the workspace. */
 function resolveSpec(fromFile: string, spec: string): string | null {
@@ -90,8 +103,8 @@ const nodeDependents = (entry: string): string[] =>
  * Which OTHER workspace packages an entry pulls in.
  *
  * Excluding the entry's own package, not a hardcoded name — the first version
- * filtered out "protocol" literally, so asking about docs reported ["docs"]
- * (itself) and silently dropped the real protocol edge it was meant to check.
+ * filtered out one package name literally, so asking about docs reported
+ * ["docs"] (itself) and silently dropped the real edge it was meant to check.
  */
 function packagesReached(entry: string): string[] {
   const own = pkgOf(entry);
@@ -232,22 +245,36 @@ function packagesImportingNext(): string[] {
 }
 
 describe("package boundary", () => {
-  it("protocol reaches no node builtins, even through another package", () => {
-    expect(nodeDependents(join(CORE, "protocol/src/index.ts"))).toEqual([]);
+  it("shared reaches no node builtins, even through another package", () => {
+    expect(nodeDependents(join(SHARED, "src/index.ts"))).toEqual([]);
   });
 
-  // The cycle this split exists to break: docs imports protocol, so protocol
+  // The cycle this split exists to break: docs imports shared, so shared
   // must not import docs back. Nor may the isomorphic half
   // reach the node half — that is the whole point of separating them.
-  it("protocol depends on no other workspace package", () => {
-    expect(packagesReached(join(CORE, "protocol/src/index.ts"))).toEqual([]);
+  it("shared depends on no other workspace package", () => {
+    expect(packagesReached(join(SHARED, "src/index.ts"))).toEqual([]);
+  });
+
+  // The barrel is one entry of many: most of shared is imported by subpath
+  // (@markbase/shared/api-client), so the layering rule is checked on every
+  // file. Nothing in packages/shared may import packages/core or
+  // packages/features.
+  it("no file in shared imports a core or feature package", () => {
+    const found: string[] = [];
+    for (const f of sourceFiles(join(SHARED, "src"))) {
+      for (const m of readFileSync(f, "utf8").matchAll(/from\s+"(@markbase\/[a-z-]+)/g)) {
+        if (m[1] !== "@markbase/shared") found.push(`${f.slice(PKGS.length + 1)} → ${m[1]}`);
+      }
+    }
+    expect(found).toEqual([]);
   });
 
   // The document engine (src/docs) is imported by the browser editor, so it
   // carries the same obligation. It is not re-exported from the barrel, so the
   // two tests above never walk it: every file in the folder is an entry here,
-  // because most are imported by subpath (@markbase/protocol/docs/crdt-api).
-  const DOC_ENGINE = sourceFiles(join(CORE, "protocol/src/docs"));
+  // because most are imported by subpath (@markbase/shared/docs/crdt-api).
+  const DOC_ENGINE = sourceFiles(join(SHARED, "src/docs"));
 
   it("the document engine reaches no node builtins", () => {
     expect(DOC_ENGINE.length).toBeGreaterThan(30);
@@ -255,7 +282,7 @@ describe("package boundary", () => {
   });
 
   // It used to be the docs feature's logic/ layer, which made the vault (core)
-  // import a feature. Inside protocol it may reach nothing outside protocol.
+  // import a feature. Inside shared it may reach nothing outside shared.
   it("the document engine depends on no other workspace package", () => {
     expect([...new Set(DOC_ENGINE.flatMap(packagesReached))]).toEqual([]);
   });
@@ -263,14 +290,14 @@ describe("package boundary", () => {
   /**
    * Core is split by where code runs, and the three places only meet over
    * HTTP: ui (where there is a screen), server (the web server) and local (the
-   * user's machine) may each import protocol and nothing else in core.
+   * user's machine) may each import shared and nothing in core.
    *
    * The one edge listed is what is left of @markbase/node: repo-state, repos
    * and vercel-preview, which the runner in local and the projects feature's
    * handlers on the web server both run. See node/src/index.ts. It is pinned
    * so that it can only shrink.
    */
-  it("ui, server and local import only protocol among core packages", () => {
+  it("ui, server and local import no other core package", () => {
     const coreDirs = readdirSync(CORE, { withFileTypes: true })
       .filter((e) => e.isDirectory())
       .map((e) => e.name);
@@ -278,7 +305,7 @@ describe("package boundary", () => {
     for (const pkg of ["ui", "server", "local"]) {
       for (const f of sourceFiles(join(CORE, pkg, "src"))) {
         for (const m of readFileSync(f, "utf8").matchAll(/from\s+"@markbase\/([a-z-]+)/g)) {
-          if (m[1] !== pkg && m[1] !== "protocol" && coreDirs.includes(m[1])) {
+          if (m[1] !== pkg && coreDirs.includes(m[1])) {
             found.push(`${pkg} → ${m[1]}`);
           }
         }
@@ -309,7 +336,7 @@ describe("package boundary", () => {
     expect(importGraph(entry).length).toBeGreaterThan(1);
   });
 
-  // The package graph above keeps protocol clean, but nothing in it stops a
+  // The package graph above keeps shared clean, but nothing in it stops a
   // browser component importing @markbase/local directly — which is how chokidar
   // and node:fs reach a client bundle. The plan asks for a lint rule; this is a
   // test instead, because ESLint conditions on paths and `"use client"` is a
@@ -363,13 +390,10 @@ describe("package boundary", () => {
  */
 function packagesReadingDesktopBridge(): string[] {
   const found: string[] = [];
-  for (const base of [CORE, FEATURES]) {
-    for (const pkg of readdirSync(base, { withFileTypes: true })) {
-      if (!pkg.isDirectory()) continue;
-      for (const f of sourceFiles(join(base, pkg.name, "src"))) {
-        if (!/\bwindow\.markbase\b/.test(readFileSync(f, "utf8"))) continue;
-        found.push(f.slice(REPO.length + 1));
-      }
+  for (const dir of Object.values(PKG_DIR)) {
+    for (const f of sourceFiles(join(dir, "src"))) {
+      if (!/\bwindow\.markbase\b/.test(readFileSync(f, "utf8"))) continue;
+      found.push(f.slice(REPO.length + 1));
     }
   }
   return found.sort();
@@ -465,10 +489,19 @@ describe("route ownership", () => {
   });
 });
 
-describe("the two groups", () => {
+describe("the three folders", () => {
+  // packages/shared is one package, not a folder of packages: its
+  // package.json and src/ sit directly inside it.
+  it("shared is a single package with no manifest", () => {
+    const pkg = JSON.parse(readFileSync(join(SHARED, "package.json"), "utf8"));
+    expect(pkg.name).toBe("@markbase/shared");
+    expect(existsSync(join(SHARED, "src/index.ts"))).toBe(true);
+    expect(existsSync(join(SHARED, "markbase.json"))).toBe(false);
+  });
+
   /**
-   * The reorg's own invariant. `packages/core/*` ships in every release;
-   * `packages/features/*` is what a release may leave out. Anything under
+   * The reorg's own invariant. `packages/shared` and `packages/core/*` ship in
+   * every release; `packages/features/*` is what a release may leave out. Anything under
    * features/ without a manifest is invisible to the build composer — it would
    * never reach `transpilePackages`, and the failure looks like a missing module
    * at build time rather than a missing manifest.
@@ -513,7 +546,7 @@ describe("feature manifests", () => {
     expect(FEATURE_PKG_DIRS).toContain("docs");
     expect(FEATURE_PKG_DIRS).toContain("attention");
     for (const kernel of [
-      "protocol", "ui", "server", "node", "local", "registry",
+      "shared", "ui", "server", "node", "local", "registry",
       // Demoted from features deliberately: every release ships them.
       // agent is the agent rail.
       "agent",

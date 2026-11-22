@@ -1,7 +1,7 @@
 import { verifyApiKey, type ApiKey, type ApiScope } from "./api-keys";
-import { providerFromClient } from "@markbase/protocol";
+import { providerFromClient } from "@markbase/shared";
 import { setConnectionProvider } from "./db/agent-sessions";
-import type { Caller as ForwardedCaller } from "@markbase/protocol/auth";
+import type { Caller as ForwardedCaller } from "@markbase/shared/auth";
 
 /**
  * Who is making this request — resolved the same way for every route.

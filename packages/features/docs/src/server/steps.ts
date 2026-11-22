@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { Node } from "prosemirror-model";
 import { supabase } from "@markbase/server/supabase";
-import { docSchema } from "@markbase/protocol/docs/schema";
-import { applySteps } from "@markbase/protocol/docs/steps";
-import { docToMarkdown, deriveTitle, isUntitled, markdownToDoc } from "@markbase/protocol/docs/markdown";
-import { diffCounts, diffSegments, type DiffSegment } from "@markbase/protocol/docs/diff";
-import { docReplaceSteps } from "@markbase/protocol/docs/restore";
-import { accountOf, type Author, type DocJSON, type StepJSON } from "@markbase/protocol/docs/types";
+import { docSchema } from "@markbase/shared/docs/schema";
+import { applySteps } from "@markbase/shared/docs/steps";
+import { docToMarkdown, deriveTitle, isUntitled, markdownToDoc } from "@markbase/shared/docs/markdown";
+import { diffCounts, diffSegments, type DiffSegment } from "@markbase/shared/docs/diff";
+import { docReplaceSteps } from "@markbase/shared/docs/restore";
+import { accountOf, type Author, type DocJSON, type StepJSON } from "@markbase/shared/docs/types";
 import { getDocument } from "./documents";
 
 // The collab authority. Every edit — human or agent — flows through receiveSteps.

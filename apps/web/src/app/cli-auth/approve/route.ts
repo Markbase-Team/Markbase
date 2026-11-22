@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   // The CLI probed `claude --version` on the machine and passed the result
   // through. Recording it on the key is what unlocks the Claude-Code-only
-  // features (see @markbase/protocol features.ts); the worker refreshes it later.
+  // features (see @markbase/shared features.ts); the worker refreshes it later.
   const probed = form.get("claude");
   const claudeVersion =
     typeof probed === "string" && probed.trim() ? probed.trim().slice(0, 100) : null;

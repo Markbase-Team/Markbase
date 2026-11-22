@@ -6,7 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { TICKET_PROMPT_PREFIX } from "../claude-code";
 import { getRemoteOrigin, normalizeRemote } from "@markbase/node/repos";
-import { WorkerApi } from "@markbase/protocol/worker-api";
+import { WorkerApi } from "@markbase/shared/worker-api";
 
 const exec = promisify(execFile);
 
@@ -53,7 +53,7 @@ export interface DiscoverOptions {
 // This file SCANS. What it finds goes to the web API (POST /api/v1/worker/repos
 // and /worker/sessions, see run-ticket-worker.ts), and the server writes the
 // tables — the runner holds no database credential since security lockdown
-// stage 2. The shapes live in @markbase/protocol/worker-repos (re-exported so
+// stage 2. The shapes live in @markbase/shared/worker-repos (re-exported so
 // existing importers of @markbase/runner keep resolving); the reads and writes
 // are the web server's, in @markbase/server/db/worker-repos.
 export type {
@@ -62,8 +62,8 @@ export type {
   RepoStatus,
   WorkerRepo,
   WorkerSession,
-} from "@markbase/protocol/worker-repos";
-import type { DiscoveredRepo, DiscoveredSession, RepoStatus } from "@markbase/protocol/worker-repos";
+} from "@markbase/shared/worker-repos";
+import type { DiscoveredRepo, DiscoveredSession, RepoStatus } from "@markbase/shared/worker-repos";
 
 // One folder's sessions all share the same cwd (the folder name IS that cwd,
 // encoded), so we only need to find the cwd once per folder. The first JSONL

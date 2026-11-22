@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
     "@supabase/supabase-js": "^2.106.2"
   },
   "devDependencies": {

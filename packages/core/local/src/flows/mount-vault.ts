@@ -61,7 +61,7 @@ export interface MountVaultDeps {
    * is not the list this flow decided on: a folder picker and a big-folder
    * warning sit between the two, and another client mounting something in that
    * window used to be erased without a word. Backed by the locked
-   * updateMountedVaults in @markbase/protocol.
+   * updateMountedVaults in @markbase/shared.
    */
   updateMounted: (
     next: (current: MountedVault[]) => MountedVault[]
