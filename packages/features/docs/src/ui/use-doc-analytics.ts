@@ -17,7 +17,7 @@
 //     something rather than nothing.
 
 import { useEffect, useState } from "react";
-import { docAnalytics, watchAgentReads, type DocAnalyticsReport } from "@markbase/docs";
+import { docAnalytics, watchAgentReads, type DocAnalyticsReport } from "@markbase/protocol/docs";
 import type * as Y from "yjs";
 import { useDocFetch } from "./doc-client";
 import { docCrdtPool } from "./doc-crdt-pool";

@@ -113,7 +113,7 @@ ever talks to the API.
 - `packages/features/docs/src/handlers/documents.ts` — the shared list's shape,
   `docMembershipHandler`; `server/members.ts` — the data layer;
   `handlers/assets.ts` — `?doc=`.
-- `packages/features/docs/src/logic/vault-sync.ts` — read-only mode and the fork.
+- `packages/core/protocol/src/docs/vault-sync.ts` — read-only mode and the fork.
 - `packages/core/local/src/vault/vault-sync-run.ts` — the shared-mode rules, the fork
   bookkeeping, the per-document media pass.
 - `apps/app/src/main.ts` — the host: notifications, tray, IPC;

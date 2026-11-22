@@ -1,5 +1,5 @@
 import { agentJson, authenticateAgent, preflight } from "@/lib/agent-auth";
-import { agentTools } from "@markbase/docs/agent-tools";
+import { agentTools } from "@markbase/protocol/docs/agent-tools";
 
 export const runtime = "nodejs";
 

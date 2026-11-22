@@ -1,4 +1,4 @@
-import { accountOf } from "../logic";
+import { accountOf } from "@markbase/protocol/docs";
 import {
   createComment,
   createLink,

@@ -62,11 +62,12 @@ Nine files, three directories, three exports.
 
 A feature too big for one file per layer adds files INSIDE these three rather
 than adding a fourth. `docs` is the largest — 9 files in `handlers/`, 17 in
-`server/`, 62 in `ui/` — and it is the only one with a fourth directory:
-`logic/`, 32 files of CRDT, markdown and diffing that is genuinely neither
-HTTP nor database nor React. That is the bar for a new top-level concept: a
-body of logic that is none of the three, not a place for things that were
-awkward to file.
+`server/`, 62 in `ui/` — and it still has only the three. It used to have a
+fourth, `logic/`: the document engine (CRDT, markdown, diffing), which is
+neither HTTP nor database nor React. That engine is shared with the vault on
+the user's machine, so it now lives in core as `@markbase/protocol/docs`. A
+body of logic that several places share goes there, not into a fourth
+directory of one feature.
 
 Notably absent, and deliberately:
 

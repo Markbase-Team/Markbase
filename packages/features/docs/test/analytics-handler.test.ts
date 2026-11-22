@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as Y from "yjs";
 import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
-import { createDoc, setMarkdown } from "../src/logic/crdt";
-import { snapshot } from "../src/logic/sync";
-import { appendVersion } from "../src/logic/versions";
-import { addAgentReads, docAnalytics, type DocAnalyticsReport } from "../src/logic/analytics";
+import { createDoc, setMarkdown } from "@markbase/protocol/docs/crdt";
+import { snapshot } from "@markbase/protocol/docs/sync";
+import { appendVersion } from "@markbase/protocol/docs/versions";
+import { addAgentReads, docAnalytics, type DocAnalyticsReport } from "@markbase/protocol/docs/analytics";
 
 // GET /docs/:id/analytics is the one place a document's analytics are asked
 // for — the Analytics panel and an agent's `docs_analytics` tool both call it.

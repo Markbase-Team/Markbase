@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { agentTools } from "@markbase/docs/agent-tools";
+import { agentTools } from "@markbase/protocol/docs/agent-tools";
 import { toolSource } from "../src/integration/tool-source";
 
 // Where the MCP server's tools come from: the server it talks to, so they follow

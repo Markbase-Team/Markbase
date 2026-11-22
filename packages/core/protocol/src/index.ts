@@ -10,11 +10,10 @@
 // becomes reachable — the browser imports this entry, and a bundler's
 // tree-shaking is not a safety guarantee.
 //
-// Two things that used to be exported here are gone on purpose: the Supabase
-// CRDT store now lives in @markbase/docs (it implements that package's own
-// DocStore/DocPubSub), and VaultSyncManager lives in @markbase/vault. Both
-// imported @markbase/docs, so re-exporting them here would make protocol depend
-// on docs while docs depends on protocol — the cycle this split exists to break.
+// The document engine (schema, markdown, CRDT, sync transport) is the folder
+// src/docs, imported as @markbase/protocol/docs. It is deliberately not
+// re-exported here: it pulls in ProseMirror and Yjs, which most importers of
+// this barrel do not need.
 
 export * from "./types";
 export * from "./tickets";

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { DOC_ENDPOINTS } from "../src/logic/endpoints";
+import { DOC_ENDPOINTS } from "@markbase/protocol/docs/endpoints";
 
 // An endpoint is written once, beside its handler. The plain description the
 // CLI, the MCP server and the skill read is a generated copy of those
@@ -12,7 +12,7 @@ import { DOC_ENDPOINTS } from "../src/logic/endpoints";
 const { definedEndpoints, endpointRoute } = await import("../src/handlers");
 const { endpointsModule } = await import("../src/handlers/describe");
 
-const generated = join(dirname(fileURLToPath(import.meta.url)), "../src/logic/endpoints.generated.ts");
+const generated = join(dirname(fileURLToPath(import.meta.url)), "../../../core/protocol/src/docs/endpoints.generated.ts");
 
 describe("the generated endpoint descriptions", () => {
   it("are what the definitions generate", () => {

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
-import { bytesToBase64 } from "../src/logic/crdt-supabase";
-import { createDoc } from "../src/logic/crdt";
-import { snapshot } from "../src/logic/sync";
+import { bytesToBase64 } from "@markbase/protocol/docs/crdt-supabase";
+import { createDoc } from "@markbase/protocol/docs/crdt";
+import { snapshot } from "@markbase/protocol/docs/sync";
 
 // The CRDT endpoints enforce exactly what the rest of the document API does:
 // viewer to read, editor to write, a key's ceiling applied, a share-link guest

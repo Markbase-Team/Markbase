@@ -2,7 +2,7 @@ import {
   createAgentMessageRequest,
   getAgentSessionById,
 } from "@markbase/server/db/agent-sessions";
-import { parseMentions, stripMentionSyntax } from "@markbase/docs";
+import { parseMentions, stripMentionSyntax } from "@markbase/protocol/docs";
 import type { Actor, DocumentRow } from "@markbase/docs/server";
 import { featureEnabled } from "@markbase/server/features";
 

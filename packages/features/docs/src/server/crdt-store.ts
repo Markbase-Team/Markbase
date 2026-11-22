@@ -6,7 +6,7 @@ import {
   mergeSnapshot,
   retryingDb,
   type DbResult,
-} from "@markbase/docs";
+} from "@markbase/protocol/docs";
 
 // The server's side of docs.doc_crdt (security lockdown stage 2).
 //

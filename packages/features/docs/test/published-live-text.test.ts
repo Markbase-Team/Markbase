@@ -1,7 +1,7 @@
 import type { Actor } from "../src/server/auth";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createDoc, setMarkdown } from "../src/logic/crdt";
-import { snapshot } from "../src/logic/sync";
+import { createDoc, setMarkdown } from "@markbase/protocol/docs/crdt";
+import { snapshot } from "@markbase/protocol/docs/sync";
 
 // A published page shows the document as it stands now — the CRDT — not the
 // row's `content`, which is a mirror only some writers keep in step. The
@@ -144,7 +144,7 @@ describe("publishing pins a version", () => {
     expect(version).toBe(0);
 
     // The author keeps writing; the public page does not move.
-    const { restore, snapshot: snap } = await import("../src/logic/sync");
+    const { restore, snapshot: snap } = await import("@markbase/protocol/docs/sync");
     const live = restore(crdt.get("d1")!);
     setMarkdown(live, "# Launch Post\n\nReady to ship. And a half-finished thought\n", "editor");
     crdt.set("d1", snap(live));

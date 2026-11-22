@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { docJsonIsValid, docJsonToMarkdown, type DocJSON } from "@markbase/docs";
+import { docJsonIsValid, docJsonToMarkdown, type DocJSON } from "@markbase/protocol/docs";
 import { getCurrentUser } from "@/lib/supabase/server";
 import {
   capabilityFor,

@@ -1,7 +1,7 @@
 import { descriptionModule } from "@markbase/protocol/endpoint-gen";
 import { definedEndpoints } from "./index";
 
-// The text of logic/endpoints.generated.ts: every defined endpoint's
+// The text of @markbase/protocol/docs/endpoints.generated: every defined endpoint's
 // description, as plain data, in the order the endpoints are defined.
 // scripts/gen-endpoints.ts writes it; a test compares it with what is committed.
 

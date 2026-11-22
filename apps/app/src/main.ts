@@ -11,7 +11,7 @@ import {
   session,
   type IpcMainEvent,
 } from "electron";
-import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/docs/crdt-api";
+import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/protocol/docs/crdt-api";
 import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
 import type { MenuItemConstructorOptions } from "electron";
 import { startTicketWorkerHost, type TicketWorkerHost, type TicketWorkerStatus } from "./ticket-worker";

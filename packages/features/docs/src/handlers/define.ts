@@ -4,7 +4,7 @@ import {
   type Endpoint as DefinedEndpoint,
   type RouteParams,
 } from "@markbase/protocol/endpoint";
-import type { DocEndpoint } from "../logic/endpoints";
+import type { DocEndpoint } from "@markbase/protocol/docs/endpoints";
 import type { Capability, DocAuth, SignedInActor } from "../server";
 import { accountActor, requireDocCapability } from "./actor";
 import { json } from "./respond";

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { normalizePath } from "@markbase/protocol/folders";
 import { refsIn } from "@markbase/protocol/asset-refs";
-import { assetPathFor } from "../logic";
+import { assetPathFor } from "@markbase/protocol/docs";
 import {
   listAssets,
   putAsset,

@@ -17,7 +17,7 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { dirname, join } from "node:path";
 import * as Y from "yjs";
-import { getMarkdown, setMarkdown, type DocStore, type DocPubSub } from "@markbase/docs";
+import { getMarkdown, setMarkdown, type DocStore, type DocPubSub } from "@markbase/protocol/docs";
 import { SHARED_VAULT_ID } from "@markbase/protocol/shared-vault";
 import { readVaultIndex } from "../../src/vault/vault-index";
 import {

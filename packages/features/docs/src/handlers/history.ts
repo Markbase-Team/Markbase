@@ -5,7 +5,7 @@ import {
   markdownToDoc,
   versionContent,
   type DocJSON,
-} from "../logic";
+} from "@markbase/protocol/docs";
 import { readDocCrdt, searchDocuments } from "../server";
 import { endpoint } from "./define";
 import { json } from "./respond";

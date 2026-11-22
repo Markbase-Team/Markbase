@@ -14,13 +14,13 @@
 import { watchVault, type VaultWatcher } from "./fs-watcher";
 export type { VaultWatcher } from "./fs-watcher";
 import { basename, join, relative, sep } from "node:path";
-import { deriveTitle, type DocStore, type DocPubSub } from "@markbase/docs";
+import { deriveTitle, type DocStore, type DocPubSub } from "@markbase/protocol/docs";
 import type { VaultFs } from "@markbase/protocol/storage";
 import { normalizePath, folderOf } from "@markbase/protocol/folders";
 import { nextPollDelay } from "@markbase/protocol/poll-backoff";
 import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/protocol/timeout-fetch";
 import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
-import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/docs/crdt-api";
+import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/protocol/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
 import { agentCredit, takeAgentReads } from "./agent-audit";
 import {

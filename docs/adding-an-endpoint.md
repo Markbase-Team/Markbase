@@ -114,7 +114,7 @@ It writes three things from your definition:
 
 | File | For |
 | --- | --- |
-| `packages/features/docs/src/logic/endpoints.generated.ts` | The plain description. The CLI, the MCP server and the browser read this; they cannot import the handler, which is server code. |
+| `packages/core/protocol/src/docs/endpoints.generated.ts` | The plain description. The CLI, the MCP server and the browser read this; they cannot import the handler, which is server code. |
 | `skills/markbase/SKILL.md` | The agent skill. |
 | `apps/web/src/app/api/v1/…/route.ts` | The route file, one line per method. |
 
@@ -188,7 +188,7 @@ export const listSessionsEndpoint = agents.define(
   `gen:endpoints` in the root `package.json`, and copy its test.
 - **Tools.** A feature whose endpoints agents may call also needs its
   descriptions in the list the tools are built from (`AGENT_ENDPOINTS` in
-  `packages/features/docs/src/logic/endpoints.ts`), as a generated copy like
+  `packages/core/protocol/src/docs/endpoints.ts`), as a generated copy like
   documents'. Agents does not, because all of its endpoints are hidden. The
   first feature that does should move that list to the core as well.
 
@@ -196,7 +196,7 @@ export const listSessionsEndpoint = agents.define(
 
 `/me`, `/me/profile` and `/agent/tools` are hand-written route files in
 `apps/web`, described in `ACCOUNT_ENDPOINTS` in
-`packages/features/docs/src/logic/endpoints.ts`. Add the entry there and the
+`packages/core/protocol/src/docs/endpoints.ts`. Add the entry there and the
 route file yourself. `apps/web/test/api-registry.test.ts` fails if a route
 under `apps/web/src/app/api/v1` has no entry, or an entry has no route. A
 route that should not be an endpoint at all (sign-in plumbing, say) goes in

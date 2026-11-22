@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, MessageSquarePlus, Send, Trash2, Undo2 } from "lucide-react";
 import { cn } from "@markbase/ui/utils";
 import { useDocComments } from "./use-doc-comments";
-import type { CommentView } from "@markbase/docs";
+import type { CommentView } from "@markbase/protocol/docs";
 import type { EditorSelection } from "./doc-editor";
 
 // The document's comments (roadmap B1). Reads and writes the comments Y.Array in

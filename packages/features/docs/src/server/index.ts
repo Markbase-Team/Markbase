@@ -102,7 +102,7 @@ export {
   type ReceiveResult,
   type RevisionRow,
 } from "./steps";
-export type { DiffSegment } from "../logic/diff";
+export type { DiffSegment } from "@markbase/protocol/docs/diff";
 export {
   listAssets,
   getAssetByPath,

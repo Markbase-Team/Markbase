@@ -29,7 +29,7 @@
 // another file if it tried.
 
 import type * as Y from "yjs";
-import { createDoc, getMarkdown, setMarkdown, observeMarkdown, type Origin } from "@markbase/docs";
+import { createDoc, getMarkdown, setMarkdown, observeMarkdown, type Origin } from "@markbase/protocol/docs";
 import type { LocalFile, LocalFilePort, LocalSaveResult } from "./ports";
 
 const LOCAL_DOC_PREFIX = "local:";

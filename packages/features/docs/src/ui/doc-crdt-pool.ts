@@ -22,9 +22,9 @@ import {
   createUndoManager,
   type DocStore,
   type DocPubSub,
-} from "@markbase/docs";
-import { SupabaseDocPubSub } from "@markbase/docs/crdt-supabase";
-import { ApiCrdtTransport, type CrdtRequest } from "@markbase/docs/crdt-api";
+} from "@markbase/protocol/docs";
+import { SupabaseDocPubSub } from "@markbase/protocol/docs/crdt-supabase";
+import { ApiCrdtTransport, type CrdtRequest } from "@markbase/protocol/docs/crdt-api";
 import { createSupabaseBrowserClient } from "@markbase/protocol/browser";
 import { api } from "@markbase/protocol/api-client";
 import { desktopTransport } from "./ipc-crdt";

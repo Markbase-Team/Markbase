@@ -29,7 +29,7 @@ import { app } from "electron";
 import type { WebContents } from "electron";
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/docs/crdt-api";
+import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/protocol/docs/crdt-api";
 import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
 
 let transport: ApiCrdtTransport | null = null;

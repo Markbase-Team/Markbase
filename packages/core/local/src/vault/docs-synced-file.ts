@@ -20,7 +20,7 @@ import {
   VaultSync,
   type DocStore,
   type DocPubSub,
-} from "@markbase/docs";
+} from "@markbase/protocol/docs";
 import type { VaultSyncFs, VaultBaseStore } from "@markbase/protocol/storage";
 import type { AgentCredit, AgentReads, OpenSyncedFile, SyncedFile } from "./synced-file";
 

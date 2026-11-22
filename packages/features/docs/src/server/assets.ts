@@ -1,6 +1,6 @@
 import { supabase } from "@markbase/server/supabase";
 import { createHash } from "node:crypto";
-import { selectOrphans, type StoredObject } from "../logic/media";
+import { selectOrphans, type StoredObject } from "@markbase/protocol/docs/media";
 
 // Data layer for docs.assets (roadmap A6) — the index that lets a vault-relative
 // image path be resolved to bytes.

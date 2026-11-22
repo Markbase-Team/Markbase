@@ -1,5 +1,5 @@
 import { Extension } from "@tiptap/core";
-import { intentFromClick, type OpenIntent } from "@markbase/docs/workspace-tabs";
+import { intentFromClick, type OpenIntent } from "@markbase/protocol/docs/workspace-tabs";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorState } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";

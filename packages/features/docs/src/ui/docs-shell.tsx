@@ -22,7 +22,7 @@ import {
   type DocTabAction,
   type DocTabsState,
   type OpenIntent,
-} from "@markbase/docs/workspace-tabs";
+} from "@markbase/protocol/docs/workspace-tabs";
 import { DocsSidebar } from "./docs-sidebar";
 import { setActiveDoc } from "./active-doc";
 import { NewVaultModal, type VaultMeta } from "./new-vault-modal";

@@ -7,7 +7,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/docs/agent-tools";
+import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/protocol/docs/agent-tools";
 import {
   hookAgentsOf,
   installAuditHooks,

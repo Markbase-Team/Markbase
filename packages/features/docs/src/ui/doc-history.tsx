@@ -1,7 +1,7 @@
 "use client";
 
 import { Bot } from "lucide-react";
-import { versionCreditText } from "@markbase/docs";
+import { versionCreditText } from "@markbase/protocol/docs";
 import { cn } from "@markbase/ui/utils";
 import { useDocVersions } from "./use-doc-versions";
 

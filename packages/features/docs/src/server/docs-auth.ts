@@ -3,8 +3,8 @@ import { ownerDisplayName } from "./owner-name";
 import { agentLabel } from "@markbase/protocol/attribution";
 import { providerFromClient, type Provider } from "@markbase/protocol";
 import { claimAgentSession } from "@markbase/server/db/agent-sessions";
-import { docEndpoint } from "../logic/endpoints";
-import { accountOf } from "../logic/types";
+import { docEndpoint } from "@markbase/protocol/docs/endpoints";
+import { accountOf } from "@markbase/protocol/docs/types";
 import {
   atLeast,
   capabilityFor,

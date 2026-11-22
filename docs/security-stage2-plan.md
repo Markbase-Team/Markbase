@@ -286,7 +286,7 @@ exit). The CLI (`markbase start`) and the desktop ticket worker host pass only
 for the vault daemons and the CRDT host until PR 67 removes those callers.
 
 **Every direct access has an endpoint**, registered as `WORKER_ENDPOINTS` in
-`packages/features/docs/src/logic/endpoints.ts` (`capability: null`,
+`packages/core/protocol/src/docs/endpoints.ts` (`capability: null`,
 `humanOnly` — plumbing, not agent tools) and served by handlers in
 `packages/features/projects/src/handlers/worker.ts`:
 

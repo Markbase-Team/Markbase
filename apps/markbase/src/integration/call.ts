@@ -1,5 +1,5 @@
-import type { HttpMethod } from "@markbase/docs/endpoints";
-import { pathParams } from "@markbase/docs/agent-tools";
+import type { HttpMethod } from "@markbase/protocol/docs/endpoints";
+import { pathParams } from "@markbase/protocol/docs/agent-tools";
 import { toolRequest, type Json } from "@markbase/protocol/endpoint-tools";
 import { appUrl, loadConfig } from "../config";
 

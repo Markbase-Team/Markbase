@@ -28,7 +28,7 @@
 // other update. Publishing is nothing: the save that follows every edit
 // carries it to the server, which broadcasts it to the browsers.
 
-import type { DocPubSub, DocStore } from "@markbase/docs";
+import type { DocPubSub, DocStore } from "@markbase/protocol/docs";
 import type { CrdtPort } from "./ports";
 
 // The port is handed in rather than read off the window: which process serves

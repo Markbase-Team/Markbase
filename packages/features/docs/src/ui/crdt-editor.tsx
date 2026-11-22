@@ -8,7 +8,7 @@
 import { useRef } from "react";
 import type * as Y from "yjs";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { docExtensions, emptyDoc, type DocJSON } from "@markbase/docs";
+import { docExtensions, emptyDoc, type DocJSON } from "@markbase/protocol/docs";
 import { useCrdtSync } from "./use-crdt-sync";
 import { YUndo } from "./y-undo";
 

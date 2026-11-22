@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { buildFolderTree, filePathIn, filesUnder, moveFolder, renameFolder, type FolderNode, type Move } from "@markbase/protocol/folders";
 import { nextPollDelay } from "@markbase/protocol/poll-backoff";
-import { intentFromClick, type OpenIntent } from "@markbase/docs/workspace-tabs";
+import { intentFromClick, type OpenIntent } from "@markbase/protocol/docs/workspace-tabs";
 import { isSharedScope, SHARED_SCOPE } from "./scope";
 import { readLocalVaultDocs, type VaultIndexEntry } from "./vault-index-client";
 import { useDocsPorts, type VaultsPort } from "./ports";

@@ -57,11 +57,7 @@ function resolveSpec(fromFile: string, spec: string): string | null {
     const src = join(dir, "src");
     candidates.push(
       rest.length ? `${join(src, ...rest)}.ts` : join(src, "index.ts"),
-      join(src, ...rest, "index.ts"),
-      // A package whose logic layer has a name of its own — docs splits
-      // logic/ from server/ and ui/, so its root export is src/logic/index.ts.
-      rest.length ? `${join(src, "logic", ...rest)}.ts` : join(src, "logic", "index.ts"),
-      join(src, "logic", ...rest, "index.ts")
+      join(src, ...rest, "index.ts")
     );
   }
   return candidates.find((c) => existsSync(c)) ?? null;
@@ -247,15 +243,35 @@ describe("package boundary", () => {
     expect(packagesReached(join(CORE, "protocol/src/index.ts"))).toEqual([]);
   });
 
-  // docs is imported by the browser editor, so it carries the same obligation.
-  it("docs reaches no node builtins", () => {
-    expect(nodeDependents(join(FEATURES, "docs/src/logic/index.ts"))).toEqual([]);
+  // The document engine (src/docs) is imported by the browser editor, so it
+  // carries the same obligation. It is not re-exported from the barrel, so the
+  // two tests above never walk it: every file in the folder is an entry here,
+  // because most are imported by subpath (@markbase/protocol/docs/crdt-api).
+  const DOC_ENGINE = sourceFiles(join(CORE, "protocol/src/docs"));
+
+  it("the document engine reaches no node builtins", () => {
+    expect(DOC_ENGINE.length).toBeGreaterThan(30);
+    expect([...new Set(DOC_ENGINE.flatMap(nodeDependents))]).toEqual([]);
   });
 
-  it("docs depends on protocol only", () => {
-    expect(packagesReached(join(FEATURES, "docs/src/logic/index.ts"))).toEqual([
-      "protocol",
-    ]);
+  // It used to be the docs feature's logic/ layer, which made the vault (core)
+  // import a feature. Inside protocol it may reach nothing outside protocol.
+  it("the document engine depends on no other workspace package", () => {
+    expect([...new Set(DOC_ENGINE.flatMap(packagesReached))]).toEqual([]);
+  });
+
+  // The rule the layout exists for: core never imports a feature.
+  it("no core package imports a feature", () => {
+    const found: string[] = [];
+    for (const pkg of readdirSync(CORE, { withFileTypes: true })) {
+      if (!pkg.isDirectory()) continue;
+      for (const f of sourceFiles(join(CORE, pkg.name, "src"))) {
+        for (const m of readFileSync(f, "utf8").matchAll(/from\s+"@markbase\/([a-z-]+)/g)) {
+          if (FEATURE_PKG_DIRS.includes(m[1])) found.push(`${f.slice(PKGS.length + 1)} → @markbase/${m[1]}`);
+        }
+      }
+    }
+    expect(found).toEqual([]);
   });
 
   // The node packages are allowed — expected — to reach builtins. These assert

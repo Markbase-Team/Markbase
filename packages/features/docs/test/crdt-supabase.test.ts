@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import { configureSupabase } from "@markbase/server/supabase";
-import { SupabaseDocPubSub, bytesToBase64, base64ToBytes } from "../src/logic/crdt-supabase";
-import { createDoc, getMarkdown, setMarkdown } from "../src/logic/crdt";
-import { restore, snapshot } from "../src/logic/sync";
+import { SupabaseDocPubSub, bytesToBase64, base64ToBytes } from "@markbase/protocol/docs/crdt-supabase";
+import { createDoc, getMarkdown, setMarkdown } from "@markbase/protocol/docs/crdt";
+import { restore, snapshot } from "@markbase/protocol/docs/sync";
 
 // --- Pure unit: base64 is where binary Yjs state could corrupt, so cover the
 // awkward bytes (high, zero, empty) with no Supabase involved. Runs in CI.

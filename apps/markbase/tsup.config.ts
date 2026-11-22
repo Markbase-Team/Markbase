@@ -14,7 +14,6 @@ export default defineConfig({
     "@markbase/protocol",
     "@markbase/node",
     "@markbase/local",
-    "@markbase/docs",
   ],
   external: ["@supabase/supabase-js", "@modelcontextprotocol/sdk"],
   banner: { js: "#!/usr/bin/env node" },

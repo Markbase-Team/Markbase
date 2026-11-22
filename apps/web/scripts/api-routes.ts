@@ -1,4 +1,4 @@
-import { DOC_ENDPOINTS, type DocEndpoint } from "@markbase/docs/endpoints";
+import { DOC_ENDPOINTS, type DocEndpoint } from "@markbase/protocol/docs/endpoints";
 import { routeFiles, type GeneratedFile } from "@markbase/protocol/endpoint-gen";
 
 // The route files of the documents API, worked out from the endpoint registry.

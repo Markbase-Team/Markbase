@@ -17,7 +17,7 @@ import { createHash } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import { join } from "node:path";
 import * as Y from "yjs";
-import { getMarkdown, setMarkdown, type DocStore, type DocPubSub } from "@markbase/docs";
+import { getMarkdown, setMarkdown, type DocStore, type DocPubSub } from "@markbase/protocol/docs";
 import { startVaultSync, type DocSummary, type VaultWatcher } from "../../src/vault/vault-sync-run";
 import { VaultNotOursError } from "../../src/vault/vault-account";
 import { readVaultIndex } from "../../src/vault/vault-index";

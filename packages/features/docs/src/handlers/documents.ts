@@ -9,7 +9,7 @@ import {
   retitleLeadingH1,
   setMarkdown,
   accountOf,
-} from "../logic";
+} from "@markbase/protocol/docs";
 import {
   adoptedFileActor,
   countApiRead,

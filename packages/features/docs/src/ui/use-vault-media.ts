@@ -13,7 +13,7 @@
 
 import { api } from "@markbase/protocol/api-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MediaRegistry, type AssetLink, type MarkdownLens } from "@markbase/docs";
+import { MediaRegistry, type AssetLink, type MarkdownLens } from "@markbase/protocol/docs";
 import { cachedGet, invalidateCache } from "@markbase/ui/app-cache";
 import { useLatest } from "@markbase/ui/latest-ref";
 

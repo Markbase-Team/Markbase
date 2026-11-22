@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getMarkdown, setMarkdown } from "../src/logic/crdt";
+import { getMarkdown, setMarkdown } from "@markbase/protocol/docs/crdt";
 import { LocalFileSession, localDocId, isLocalDocId } from "../src/ui/local-file-crdt";
 import type { LocalFile, LocalFilePort, LocalSaveResult } from "../src/ui/ports";
 

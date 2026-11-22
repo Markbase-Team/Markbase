@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { agentTools } from "@markbase/docs/agent-tools";
+import { agentTools } from "@markbase/protocol/docs/agent-tools";
 import { offersToken } from "@markbase/server/caller";
 import { signInChallenge } from "@markbase/server/mcp-oauth";
 import { toolRequest, type Json } from "@markbase/protocol/endpoint-tools";
