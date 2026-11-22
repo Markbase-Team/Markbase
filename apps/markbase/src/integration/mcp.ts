@@ -17,8 +17,8 @@ import {
   type McpInstallOptions,
   type McpInstallResult,
   type McpTarget,
-} from "@markbase/node";
-import { canOpenBrowser } from "@markbase/flows/node";
+} from "@markbase/local";
+import { canOpenBrowser } from "@markbase/local/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
 import { toolAnnotations, type Json } from "@markbase/protocol/endpoint-tools";

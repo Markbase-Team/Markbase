@@ -4,7 +4,8 @@
 // (src/supabase.ts and src/db/), which imports the shapes from here.
 //
 // Anything that opens a file, spawns a process or reads the home directory lives
-// in @markbase/node, @markbase/server, @markbase/vault or @markbase/runner instead. This package
+// in @markbase/server (the web server) or @markbase/local (the user's machine)
+// instead. This package
 // has no node dependency at all, and test/package-boundary.test.ts fails if one
 // becomes reachable — the browser imports this entry, and a bundler's
 // tree-shaking is not a safety guarantee.

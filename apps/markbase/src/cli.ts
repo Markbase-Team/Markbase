@@ -58,7 +58,7 @@ Usage:
 First run:  markbase login
 `;
 
-import { migrateHome, markbaseHome } from "@markbase/vault";
+import { migrateHome, markbaseHome } from "@markbase/local/vault";
 
 async function main(): Promise<void> {
   // Before anything reads the registry, the locks, or a sync base. Both this and

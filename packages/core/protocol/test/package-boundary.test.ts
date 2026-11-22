@@ -122,8 +122,12 @@ const FEATURE_PKG_DIRS = readdirSync(FEATURES, { withFileTypes: true })
   .map((e) => e.name)
   .sort();
 
-/** Node-only packages, by name — which is now also their directory. */
-const NODE_PKGS = ["node", "server", "vault", "runner"];
+/**
+ * Node-only packages, by name — which is now also their directory. Each is
+ * named for where it runs: server on the web server, local on the user's
+ * machine. node is the remainder both still share.
+ */
+const NODE_PKGS = ["node", "server", "local"];
 
 /** Every .ts/.tsx file under one package's src. */
 function sourceFiles(dir: string, acc: string[] = []): string[] {
@@ -263,7 +267,7 @@ describe("package boundary", () => {
   });
 
   // The package graph above keeps protocol clean, but nothing in it stops a
-  // browser component importing @markbase/vault directly — which is how chokidar
+  // browser component importing @markbase/local directly — which is how chokidar
   // and node:fs reach a client bundle. The plan asks for a lint rule; this is a
   // test instead, because ESLint conditions on paths and `"use client"` is a
   // string inside the file.
@@ -466,11 +470,11 @@ describe("feature manifests", () => {
     expect(FEATURE_PKG_DIRS).toContain("docs");
     expect(FEATURE_PKG_DIRS).toContain("attention");
     for (const kernel of [
-      "protocol", "ui", "server", "node", "vault", "runner", "registry",
+      "protocol", "ui", "server", "node", "local", "registry",
       // Demoted from features deliberately: every release ships them.
       // agent is the agent rail, browser-agent the fallback for systems with
-      // no connector, flows the Operator seam both node hosts sit on.
-      "agent", "browser-agent", "flows",
+      // no connector.
+      "agent", "browser-agent",
     ]) {
       expect(FEATURE_PKG_DIRS).not.toContain(kernel);
     }

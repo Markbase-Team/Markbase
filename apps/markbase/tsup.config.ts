@@ -13,10 +13,8 @@ export default defineConfig({
   noExternal: [
     "@markbase/protocol",
     "@markbase/node",
-    "@markbase/vault",
-    "@markbase/runner",
+    "@markbase/local",
     "@markbase/docs",
-    "@markbase/flows",
   ],
   external: ["@supabase/supabase-js", "@modelcontextprotocol/sdk"],
   banner: { js: "#!/usr/bin/env node" },

@@ -1,15 +1,15 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { markbaseHome } from "@markbase/vault";
+import { markbaseHome } from "@markbase/local/vault";
 import { dirname, join } from "node:path";
 import {
   readMountedVaults,
   saveInstance as writeInstance,
   type MountedVault,
   type SavedInstance,
-} from "@markbase/vault";
+} from "@markbase/local/vault";
 import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
-import { usableApiKey } from "@markbase/node";
+import { usableApiKey } from "@markbase/local";
 
 // Where the per-user config lives. Holds the API key, so it's written 0600.
 export const CONFIG_DIR = markbaseHome();

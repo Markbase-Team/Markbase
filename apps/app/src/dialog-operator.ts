@@ -1,4 +1,4 @@
-import type { Operator } from "@markbase/flows";
+import type { Operator } from "@markbase/local/flows";
 
 // The desktop's operator: the same questions, asked with dialogs.
 //

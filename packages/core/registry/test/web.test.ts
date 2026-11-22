@@ -40,12 +40,6 @@ describe("transpilePackages", () => {
    * nobody decided to compile. Add to this list only alongside the reason.
    */
   const ADDED_SINCE_HARDCODED = [
-    // Kernel — the Operator seam both node hosts sit on. It was missing from
-    // the hand-maintained list only because nothing in the web app imports it
-    // yet. Next transpiles a listed package only when something reaches it, so
-    // naming it costs nothing and stops the list going stale the day the app
-    // does import it. That is the whole point of generating it.
-    "@markbase/flows",
     // These three became packages: each one's UI left apps/web and its data
     // layer left packages/core/protocol, so the web build now has a workspace
     // package to compile where before it had app-local files. protocol no
@@ -66,10 +60,24 @@ describe("transpilePackages", () => {
     "@markbase/agents",
   ].sort();
 
+  /**
+   * Every removal since, with its reason, for the same purpose.
+   */
+  const REMOVED_SINCE_HARDCODED = [
+    // The vault engine is @markbase/local/vault now. @markbase/local runs on the
+    // user's machine only (the CLI and the desktop app's main process), so the
+    // web build must never compile it; nothing in apps/web imported the vault
+    // when it was listed either.
+    "@markbase/vault",
+  ];
+
   it("differs from the hand-maintained list only by packages we can account for", () => {
     const generated = transpilePackages(all);
     expect(generated).toEqual(
-      [...HARDCODED_BEFORE, ...ADDED_SINCE_HARDCODED].sort()
+      [
+        ...HARDCODED_BEFORE.filter((p) => !REMOVED_SINCE_HARDCODED.includes(p)),
+        ...ADDED_SINCE_HARDCODED,
+      ].sort()
     );
 
     const added = generated.filter((p) => !HARDCODED_BEFORE.includes(p));

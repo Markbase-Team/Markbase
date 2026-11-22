@@ -61,11 +61,8 @@
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5",
-    "@markbase/flows": "*",
+    "@markbase/local": "*",
     "@markbase/protocol": "*",
-    "@markbase/node": "*",
-    "@markbase/vault": "*",
-    "@markbase/runner": "*",
     "@markbase/docs": "*",
     "vitest": "^2.1.8"
   }

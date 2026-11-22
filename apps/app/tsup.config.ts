@@ -16,11 +16,9 @@ export default defineConfig({
   noExternal: [
     "@markbase/protocol",
     "@markbase/node",
-    "@markbase/vault",
-    "@markbase/runner",
+    "@markbase/local",
     "@markbase/docs",
     "@markbase/agent",
-    "@markbase/flows",
   ],
   // Loaded at runtime from node_modules, not bundled: electron is the runtime,
   // node-pty is a prebuilt N-API

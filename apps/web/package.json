@@ -31,7 +31,6 @@
     "@markbase/registry": "*",
     "@markbase/server": "*",
     "@markbase/ui": "*",
-    "@markbase/vault": "*",
     "@milkdown/crepe": "^7.21.2",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",

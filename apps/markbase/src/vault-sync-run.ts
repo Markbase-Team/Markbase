@@ -18,17 +18,17 @@ import {
   startVaultSync,
   updateMountedVaults,
   type MountedVault,
-} from "@markbase/vault";
+} from "@markbase/local/vault";
 // unattendedOperator is pure policy — no machine behind it — so it lives in the
 // isomorphic entry. The flows and the terminal operator need one, and don't.
-import { unattendedOperator } from "@markbase/flows";
+import { unattendedOperator } from "@markbase/local/flows";
 import {
   reclaimVaults,
   repointVault,
   startVaultSupervisor,
   terminalOperator,
   type ReconcileDeps,
-} from "@markbase/flows/node";
+} from "@markbase/local/flows/node";
 import { SHARED_VAULT_ID } from "@markbase/protocol/shared-vault";
 import { DEFAULT_MIRROR_DIR, loadConfig } from "./config";
 import { notify } from "./notify";

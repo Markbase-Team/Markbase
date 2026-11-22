@@ -18,7 +18,7 @@ import type {
 } from "@markbase/docs/ui/ports";
 import type { DesktopApiRequest, DesktopApiResponse } from "./api-bridge";
 import type { InstanceConnectResult, InstanceStatus } from "./instance";
-import type { McpInstallResult } from "@markbase/node/mcp-install";
+import type { McpInstallResult } from "@markbase/local/mcp-install";
 
 // The one bridge between a page and the desktop shell. contextIsolation is on
 // and nodeIntegration off, so the renderer can't touch Node or Electron — it

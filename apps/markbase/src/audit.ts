@@ -14,7 +14,7 @@ import {
   type HookCall,
   type ReadEvent,
   type WriteEvent,
-} from "@markbase/vault";
+} from "@markbase/local/vault";
 
 // `markbase read-audit` and `markbase write-audit`: the commands an agent's
 // hook runs, so that what agents read and write in a mounted vault is on

@@ -15,7 +15,7 @@ import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/docs/crdt-api";
 import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
 import type { MenuItemConstructorOptions } from "electron";
 import { startTicketWorkerHost, type TicketWorkerHost, type TicketWorkerStatus } from "./ticket-worker";
-import { reportClaudeRun } from "@markbase/runner";
+import { reportClaudeRun } from "@markbase/local/runner";
 import { installTray } from "./tray";
 import {
   AT_LOGIN_FLAG,
@@ -59,7 +59,7 @@ import {
   installDocsMcp,
   withToolPath,
   type McpInstallResult,
-} from "@markbase/node";
+} from "@markbase/local";
 import {
   startVaultSync,
   listMarkdown,
@@ -94,7 +94,7 @@ import {
   type ForkControl,
   type LocalFork,
   type SharedVaultHost,
-} from "@markbase/vault";
+} from "@markbase/local/vault";
 import {
   SHARED_VAULT_DIRNAME,
   SHARED_VAULT_ID,
@@ -110,7 +110,7 @@ import {
   startVaultSupervisor,
   type ReconcileDeps,
   type VaultSupervisor,
-} from "@markbase/flows/node";
+} from "@markbase/local/flows/node";
 import { dialogOperator } from "./dialog-operator";
 import { spawn as spawnPty, type IPty } from "node-pty";
 import {

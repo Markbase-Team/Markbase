@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import type { AuditHookResult } from "@markbase/node";
+import type { AuditHookResult } from "@markbase/local";
 import { AUDIT_HOOKS_ENV, auditHooksOff, ensureAuditHooks } from "../src/audit-hooks";
 
 // The app adds the audit hooks at launch. These pin when it does not (the

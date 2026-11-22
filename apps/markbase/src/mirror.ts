@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, resolve } from "node:path";
-import { syncMirror } from "@markbase/vault";
+import { syncMirror } from "@markbase/local/vault";
 import { DEFAULT_MIRROR_DIR, loadConfig, saveMirrorDir } from "./config";
 
 const HELP = `Usage:

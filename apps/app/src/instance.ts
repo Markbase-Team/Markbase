@@ -4,7 +4,7 @@ import {
   normalizeInstanceUrl,
   type InstanceFetch,
 } from "@markbase/protocol/instance";
-import type { SavedInstance } from "@markbase/vault";
+import type { SavedInstance } from "@markbase/local/vault";
 
 // Connecting this app to a team's instance (SELF-HOSTING.md) — the decision
 // half, with no Electron in it so a test can drive it.

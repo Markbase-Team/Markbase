@@ -14,7 +14,7 @@
 // a fact the loop notices, not an event it has to be told about — though
 // `poke` lets the host say "now" rather than wait a tick.
 
-import { runTicketWorker, RUNNER_VERSION, type WorkerState } from "@markbase/runner";
+import { runTicketWorker, RUNNER_VERSION, type WorkerState } from "@markbase/local/runner";
 
 export interface TicketWorkerDeps {
   /**

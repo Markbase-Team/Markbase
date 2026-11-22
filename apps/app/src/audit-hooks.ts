@@ -1,4 +1,4 @@
-import { auditBin, hookApprovals, installAuditHooks, withToolPath, type AuditHookOptions, type AuditHookResult } from "@markbase/node";
+import { auditBin, hookApprovals, installAuditHooks, withToolPath, type AuditHookOptions, type AuditHookResult } from "@markbase/local";
 
 // The audit hooks at launch. An agent that edits a mounted vault's files
 // directly (Claude Code, Codex, Cursor) looks, to the sync, exactly like the

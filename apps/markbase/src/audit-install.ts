@@ -1,4 +1,4 @@
-import { HOOK_AGENTS, hookApprovals, installAuditHooks, type AuditHookResult, type HookAgent } from "@markbase/node";
+import { HOOK_AGENTS, hookApprovals, installAuditHooks, type AuditHookResult, type HookAgent } from "@markbase/local";
 
 // `markbase audit install` — add the read-audit and write-audit hooks to the
 // agents on this machine, so what they read and write in a vault is on record
@@ -11,7 +11,7 @@ import { HOOK_AGENTS, hookApprovals, installAuditHooks, type AuditHookResult, ty
 // write the same hooks.
 
 // The merge functions, where the tests have always found them.
-export { withCursorHooks, withToolHooks } from "@markbase/node";
+export { withCursorHooks, withToolHooks } from "@markbase/local";
 
 const FLAGS: { flag: string; target: HookAgent }[] = [
   { flag: "--claude-code", target: "claude-code" },

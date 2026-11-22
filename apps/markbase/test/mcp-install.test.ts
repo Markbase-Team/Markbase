@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import type { AuditHookOptions, AuditHookResult, McpInstallResult } from "@markbase/node";
+import type { AuditHookOptions, AuditHookResult, McpInstallResult } from "@markbase/local";
 
 // login.ts reaches the skill installer, which bundles SKILL.md through tsup's
 // loader; vitest has no loader for it, and nothing here signs in anyway.

@@ -1,12 +1,12 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
-import { awaitDeviceAuth, detectClaudeVersion } from "@markbase/node";
+import { awaitDeviceAuth, detectClaudeVersion } from "@markbase/local";
 import {
   canOpenBrowser,
   signIn as runSignIn,
   terminalOperator,
-} from "@markbase/flows/node";
+} from "@markbase/local/flows/node";
 import { appUrl, CONFIG_PATH, loadConfig, saveConfig } from "./config";
 import { runChecks } from "./doctor";
 import { installServiceAfterSetup } from "./service";
