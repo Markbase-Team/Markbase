@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { serverSupabaseKey } from "@markbase/protocol/supabase";
+import { serverSupabaseKey } from "@markbase/server/supabase";
 
 // Secret-key Supabase client for the Attention module. The attention_* tables
 // have RLS enabled with no policies, so they deny the publishable/anon key;
