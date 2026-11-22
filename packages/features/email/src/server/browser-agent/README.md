@@ -1,4 +1,4 @@
-# @markbase/browser-agent
+# The unsubscribe browser agent
 
 An agent that unsubscribes from an email for you. Given the unsubscribe targets
 extracted from a message, it picks the best strategy:
@@ -10,7 +10,7 @@ extracted from a message, it picks the best strategy:
 3. **mailto** — reports that the sender only accepts unsubscribe-by-email.
 
 ```ts
-import { runUnsubscribe } from "@markbase/browser-agent";
+import { runUnsubscribe } from "./index";
 
 const result = await runUnsubscribe({
   httpUrl: "https://news.example.com/u?id=abc",
@@ -23,7 +23,7 @@ const result = await runUnsubscribe({
 
 ## Enabling the live browser agent
 
-Playwright is loaded lazily and is **not** a hard dependency, so this package
+Playwright is loaded lazily and is **not** a hard dependency, so the email feature
 installs everywhere and the one-click path always works. To exercise the
 browser-driven path (step 2), install Playwright + a browser in the runtime:
 

@@ -25,7 +25,6 @@
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/legacy-modes": "^6.5.3",
     "@markbase/agent": "*",
-    "@markbase/browser-agent": "*",
     "@markbase/docs": "*",
     "@markbase/protocol": "*",
     "@markbase/registry": "*",

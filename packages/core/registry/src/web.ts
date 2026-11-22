@@ -15,7 +15,6 @@ import type { FeatureRuntime } from "./runtime";
  */
 export const KERNEL_PACKAGES = [
   "@markbase/agent",
-  "@markbase/browser-agent",
   "@markbase/node",
   "@markbase/protocol",
   "@markbase/server",

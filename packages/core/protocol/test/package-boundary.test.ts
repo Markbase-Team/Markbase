@@ -488,9 +488,8 @@ describe("feature manifests", () => {
     for (const kernel of [
       "protocol", "ui", "server", "node", "local", "registry",
       // Demoted from features deliberately: every release ships them.
-      // agent is the agent rail, browser-agent the fallback for systems with
-      // no connector.
-      "agent", "browser-agent",
+      // agent is the agent rail.
+      "agent",
     ]) {
       expect(FEATURE_PKG_DIRS).not.toContain(kernel);
     }

@@ -15,7 +15,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@markbase/browser-agent": "*",
     "@markbase/protocol": "*",
     "@markbase/ui": "*",
     "@supabase/supabase-js": "^2.106.2",

@@ -69,6 +69,10 @@ describe("transpilePackages", () => {
     // web build must never compile it; nothing in apps/web imported the vault
     // when it was listed either.
     "@markbase/vault",
+    // The unsubscribe agent had one importer, the email feature, so it is a
+    // folder of that feature now (email/src/server/browser-agent) and ships
+    // or is left out with it.
+    "@markbase/browser-agent",
   ];
 
   it("differs from the hand-maintained list only by packages we can account for", () => {
