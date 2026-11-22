@@ -88,7 +88,7 @@ function keepRejected(
  * whose record had not landed yet when the file changed (an agent's hook
  * reports after its tool finishes, and the watcher can be quicker).
  *
- * The answer comes from the vault's agent audit (@markbase/vault,
+ * The answer comes from the vault's agent audit (@markbase/local/vault,
  * agent-audit.ts): this module only asks, and knows nothing of hooks.
  */
 export type AgentCredit = (content: string) => { agent: string | null; later: () => string | null };

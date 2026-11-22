@@ -8,7 +8,7 @@ import type { McpInstallResult } from "./mcp-install";
 // The read-audit and write-audit hooks: what tells an agent's direct edit of a
 // vault file from the person's own. Each agent runs `markbase read-audit` and
 // `markbase write-audit` around its file tools, and the sync daemon matches a
-// file change to a recorded write (agent-audit in @markbase/vault). Without the
+// file change to a recorded write (agent-audit in @markbase/local/vault). Without the
 // hooks every such edit is credited to the person.
 //
 // One installer for the three places that add hooks — `markbase audit install`,

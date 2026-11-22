@@ -1,6 +1,6 @@
 // The ticket worker, as the desktop app hosts it.
 //
-// `markbase start` runs the same engine (@markbase/runner) from a terminal or a
+// `markbase start` runs the same engine (@markbase/local/runner) from a terminal or a
 // launchd service. Here it runs inside the app's main process, next to the vault
 // daemons, for the same reason they do: a person who installed the DMG and
 // nothing else should get tickets run on their machine. The app ships its own
@@ -105,7 +105,7 @@ export function startTicketWorkerHost(deps: TicketWorkerDeps): TicketWorkerHost 
         await runTicketWorker({
           appUrl: deps.appUrl,
           apiKey,
-          // What this engine can do — see @markbase/runner/version. The app's
+          // What this engine can do — see @markbase/local/runner/version. The app's
           // own version is the DMG's and says nothing about tickets.
           version: RUNNER_VERSION,
           claudeBin,

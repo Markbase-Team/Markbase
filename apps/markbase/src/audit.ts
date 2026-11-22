@@ -18,7 +18,7 @@ import {
 
 // `markbase read-audit` and `markbase write-audit`: the commands an agent's
 // hook runs, so that what agents read and write in a mounted vault is on
-// record (the ledger and its rules are @markbase/vault's agent-audit.ts).
+// record (the ledger and its rules are @markbase/local/vault's agent-audit.ts).
 //
 // Run by a hook, each takes the hook's JSON on stdin and says nothing — an
 // agent shows a hook's output to the model or the person, and a hook that

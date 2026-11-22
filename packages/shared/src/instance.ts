@@ -12,7 +12,7 @@ import { fetchWithTimeout } from "./timeout-fetch";
 //
 // This is the half every client shares: what the URL a person typed means, and
 // whether what the instance answered is usable. Saving the answer needs a
-// filesystem and lives with the registry (@markbase/vault); the CLI command and
+// filesystem and lives with the registry (@markbase/local/vault); the CLI command and
 // the desktop control each call these and then save.
 
 /** The hosted app — what a machine talks to until it is pointed elsewhere. */

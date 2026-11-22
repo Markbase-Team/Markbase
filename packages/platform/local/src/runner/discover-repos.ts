@@ -54,7 +54,7 @@ export interface DiscoverOptions {
 // and /worker/sessions, see run-ticket-worker.ts), and the server writes the
 // tables — the runner holds no database credential since security lockdown
 // stage 2. The shapes live in @markbase/shared/worker-repos (re-exported so
-// existing importers of @markbase/runner keep resolving); the reads and writes
+// existing importers of @markbase/local/runner keep resolving); the reads and writes
 // are the web server's, in @markbase/server/db/worker-repos.
 export type {
   DiscoveredRepo,

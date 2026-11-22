@@ -17,7 +17,7 @@
  *
  * Defined here rather than in the sync engine because it is a document's
  * identity, not a property of how it is synced — and because the alternative
- * pointed this package at @markbase/vault, which would make the isomorphic half
+ * pointed this package at @markbase/local/vault, which would make the isomorphic half
  * depend on the node half. The type is erased at compile time, so that edge cost
  * nothing at runtime; it still read as a cycle to anyone following the graph.
  */

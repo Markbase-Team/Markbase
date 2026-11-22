@@ -7,7 +7,7 @@
 // (security lockdown stage 2 closed that). Now it POSTs the discovered set to
 // /api/v1/worker/repos and /worker/sessions, and the API — which resolved the
 // key to its owner — calls these with that owner. The scanner itself stays in
-// @markbase/runner: it reads ~/.claude/projects and shells out to git, which
+// @markbase/local/runner: it reads ~/.claude/projects and shells out to git, which
 // nothing here should know how to do.
 
 /** Whether a discovered folder is a usable git repo. */

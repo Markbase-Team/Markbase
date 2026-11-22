@@ -75,7 +75,7 @@ import {
   readUnmountedVaults,
   removeMountedVault,
   // Aliased: this file has its own unmountVault, which is the host half (menu,
-  // supervisor pass). The @markbase/vault one is the registry half.
+  // supervisor pass). The @markbase/local/vault one is the registry half.
   unmountVault as tombstoneUnmount,
   migrateHome,
   markbaseHome,
@@ -767,7 +767,7 @@ function readOwnKey(): string | null {
 }
 
 /**
- * The loop that makes the registry true — see @markbase/flows.
+ * The loop that makes the registry true — see @markbase/local/flows.
  *
  * This replaces the map of stop handles the file used to keep. Mounting and
  * unmounting now edit the registry and ask for a pass; the supervisor decides
@@ -1449,7 +1449,7 @@ async function mountVaultToFolder(
   // The steps below — pick a folder, warn before adopting a big one, refuse a
   // folder that belongs to or sits inside another vault, register, start syncing
   // — are the same ones `markbase vault mount` runs. They live in
-  // @markbase/flows now, and this host supplies the dialogs and the menu.
+  // @markbase/local/flows now, and this host supplies the dialogs and the menu.
   const operator = dialogOperator({
     showMessageBox: (req) => dialog.showMessageBox(req),
     showOpenDialog: (req) => dialog.showOpenDialog(req),

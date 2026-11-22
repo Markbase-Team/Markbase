@@ -111,7 +111,7 @@ export function startVaultSupervisor(deps: SupervisorDeps): VaultSupervisor {
       reported.delete(vault.vaultId);
     } catch (e) {
       // Matched by name rather than by importing VaultLockedError: the class
-      // lives in @markbase/vault, and importing it here would drag the
+      // lives in @markbase/local/vault, and importing it here would drag the
       // whole sync engine into every consumer of this module for an instanceof.
       if (e instanceof Error && e.name === "VaultLockedError") {
         // Expected on a machine running both hosts. Stay in the desired set.

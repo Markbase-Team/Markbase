@@ -1,4 +1,4 @@
-// The modules, not the node barrel. "@markbase/vault" re-exports vault-fs,
+// The modules, not the node barrel. "@markbase/local/vault" re-exports vault-fs,
 // which reaches @markbase/docs, which drags that package's whole source into
 // this one's typecheck for the sake of two symbols. vault-boundary and
 // vault-registry reach nothing but node builtins.

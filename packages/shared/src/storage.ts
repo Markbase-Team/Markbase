@@ -14,7 +14,7 @@
 // here for exactly the same reason. There is no node import in this file and
 // there must never be one — the browser reaches this package's entry.
 //
-// Implementations: NodeVaultFs and NodeVaultBaseStore (@markbase/vault's
+// Implementations: NodeVaultFs and NodeVaultBaseStore (@markbase/local/vault's
 // vault-fs.ts), and the inline VaultFs the daemon builds. Docs consumes them.
 
 /** The disk surface a synced folder needs. `trash` retires, never hard-deletes. */

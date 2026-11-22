@@ -11,9 +11,9 @@
 // exporting it would make docs import the vault's interface purely to satisfy a
 // naming difference. The composition root is the honest home for wiring.
 //
-// What this costs: @markbase/docs is still a dependency of @markbase/vault, via
-// this file and the Supabase transport in vault-sync-run.ts. What it buys: the
-// dependency is now one named adapter instead of a class woven through the
+// The document engine this adapts is @markbase/shared/docs now, so the vault
+// no longer depends on the docs feature at all. What the adapter still buys: the
+// dependency is one named adapter instead of a class woven through the
 // manager's routing, so a second content type is a second adapter, not a rewrite.
 
 import {
