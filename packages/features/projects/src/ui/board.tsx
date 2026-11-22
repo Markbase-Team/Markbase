@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { createSupabaseBrowserClient } from "@markbase/shared/browser";
 import {
   ArrowDownAZ,
   ArrowUpAZ,
@@ -63,6 +62,7 @@ import { Kanban, type KanbanColumn, type KanbanChange } from "@markbase/ui/kanba
 import { ProjectTabs } from "./project-tabs";
 import { AppHeader } from "@markbase/ui/app-header";
 import { useProjects } from "./projects-context";
+import { onTicketChanges } from "./ticket-changes";
 import { TicketChat } from "./ticket-chat";
 import { MarkdownEditor } from "@markbase/ui/markdown-editor";
 import {
@@ -409,20 +409,7 @@ export function AdminClient({
   useEffect(() => {
     loadRef.current = load;
   }, [load]);
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    const channel = supabase
-      .channel("admin-tickets")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tickets" },
-        () => loadRef.current()
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  useEffect(() => onTicketChanges("admin-tickets", () => void loadRef.current()), []);
 
   // The "New project" button now lives in the sidebar; it opens this modal via
   // a window event (the modal + project state stay here on the board).

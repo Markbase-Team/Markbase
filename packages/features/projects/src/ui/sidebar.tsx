@@ -15,6 +15,7 @@ import {
   SidebarMenuSubItem,
 } from "@markbase/ui/sidebar";
 import { useProjects } from "./projects-context";
+import { onTicketChanges } from "./ticket-changes";
 
 /**
  * The projects entry in the shell's sidebar.
@@ -47,17 +48,10 @@ export default function ProjectsSidebar({ entry, Icon }: SidebarSlotProps) {
       );
     }
     loadRunning();
-    const channel = supabase
-      .channel("sidebar-running")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tickets" },
-        () => loadRunning()
-      )
-      .subscribe();
+    const stop = onTicketChanges("sidebar-running", () => void loadRunning());
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      stop();
     };
   }, []);
 
