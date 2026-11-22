@@ -7,7 +7,7 @@ import { HOOK_AGENTS, hookApprovals, installAuditHooks, type AuditHookResult, ty
 // The hooks normally arrive without this command: `markbase mcp install` adds
 // them to every agent it connects, and the desktop app adds them at launch.
 // This is the by-hand way, for a machine that has neither, or an agent
-// installed later. The installer itself lives in @markbase/node so all three
+// installed later. The installer itself lives in @markbase/local so all three
 // write the same hooks.
 
 // The merge functions, where the tests have always found them.

@@ -25,6 +25,7 @@ import type {
 import type { TicketCcPatch } from "./tickets";
 import type { Project, Ticket } from "./types";
 import type { DiscoveredRepo, DiscoveredSession } from "./worker-repos";
+import type { ProjectRepoReport, RefreshRequests, TicketSyncReport } from "./worker-refresh";
 
 export class WorkerApiError extends Error {
   /** The HTTP status, or 0 when no response arrived at all. */
@@ -61,6 +62,13 @@ export interface ClaimResult {
    * only reported when there was no job, the same idle path it always ran on.
    */
   rescan: boolean;
+  /**
+   * Tickets and projects the server wants looked up again in their local repo
+   * (see worker-refresh.ts). Reported on the idle path only, and absent from a
+   * server that predates it. The worker answers with reportTicketSync and
+   * reportProjectRepo; a request it cannot answer is simply left.
+   */
+  refresh?: RefreshRequests;
 }
 
 /** Everything the worker needs to act on a spawn request it just claimed. */
@@ -166,6 +174,18 @@ export class WorkerApi {
   /** Record (or clear) this machine's Claude Code version on its own key. */
   async reportClaudeVersion(version: string | null): Promise<void> {
     await this.call("PATCH", "/worker/claude-version", { version });
+  }
+
+  // ---- refresh requests ---------------------------------------------------
+
+  /** Answer a ticket refresh: what its branch shows now (commits, PR, preview). */
+  async reportTicketSync(ticketId: string, report: TicketSyncReport): Promise<void> {
+    await this.call("POST", `/worker/tickets/${encodeURIComponent(ticketId)}/sync`, report);
+  }
+
+  /** Answer a project refresh: its local repo's branches and origin remote. */
+  async reportProjectRepo(slug: string, report: ProjectRepoReport): Promise<void> {
+    await this.call("POST", `/worker/projects/${encodeURIComponent(slug)}/repo`, report);
   }
 
   // ---- agent requests -------------------------------------------------------

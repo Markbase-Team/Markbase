@@ -5,7 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { TICKET_PROMPT_PREFIX } from "../claude-code";
-import { getRemoteOrigin, normalizeRemote } from "@markbase/node/repos";
+import { normalizeRemote } from "@markbase/shared/git-remote";
+import { getRemoteOrigin } from "./repos";
 import { WorkerApi } from "@markbase/shared/worker-api";
 
 const exec = promisify(execFile);

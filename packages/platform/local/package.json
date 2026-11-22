@@ -23,7 +23,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@markbase/node": "*",
     "@markbase/shared": "*",
     "diff": "^8.0.4"
   },

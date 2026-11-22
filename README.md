@@ -75,8 +75,6 @@ packages/platform/   What everything is built on, split by where code runs.
                      app's main process): vault/ (watcher, lock, registry, file
                      sync), runner/ (the ticket worker), flows/ (sign in, mount
                      a vault, asked through an operator).
-  node/              Three git and Vercel helpers that server-side handlers
-                     and the runner still share.
   agent/  registry/  Self-contained: the agent rail, and the feature manifests.
 
 packages/features/   Things that live in the kernel. May import platform and shared.

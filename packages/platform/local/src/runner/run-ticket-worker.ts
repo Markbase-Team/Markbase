@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, stat, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { extname, join } from "node:path";
 import type { Job } from "@markbase/shared/jobs";
@@ -18,14 +18,16 @@ import { discoverClaude, sessionExists } from "./discover-repos";
 // Same /api/v1/me the owner lookup used, but it keeps the connection too — see
 // resolveIdentity.
 import { resolveWorkerConnection } from "@markbase/shared/worker-connection";
-import { getRepoState } from "@markbase/node/repo-state";
+import { getRepoState } from "./repo-state";
+import { getRemoteOrigin, listBranches } from "./repos";
 import {
   WorkerApi,
   WorkerApiError,
   type ClaimedMessageRequest,
   type ClaimedSpawnRequest,
 } from "@markbase/shared/worker-api";
-import { resolvePreviewUrl } from "@markbase/node/vercel-preview";
+import { resolvePreviewUrl } from "./vercel-preview";
+import type { RefreshRequests } from "@markbase/shared/worker-refresh";
 import { fetchLatestCliVersion, isVersionBehind } from "@markbase/shared/version";
 import type { McpConfig } from "@markbase/shared/types";
 
@@ -515,6 +517,79 @@ async function sweepRepos(ctx: Ctx): Promise<void> {
   }
 }
 
+/** True when `dir` is a folder on this machine. */
+async function isDirectory(dir: string): Promise<boolean> {
+  try {
+    return (await stat(dir)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+// A request this worker cannot answer (the path is on another machine, or the
+// lookup failed) is offered again on every idle poll until it expires. Trying
+// it once a minute is plenty; an answered request is not offered again at all.
+const REFRESH_RETRY_MS = 60_000;
+const refreshTriedAt = new Map<string, number>();
+
+function refreshDue(key: string): boolean {
+  const now = Date.now();
+  const last = refreshTriedAt.get(key);
+  if (last !== undefined && now - last < REFRESH_RETRY_MS) return false;
+  refreshTriedAt.set(key, now);
+  return true;
+}
+
+// Answer the server's refresh requests: lookups that need git, gh or the
+// Vercel CLI inside a project's local repo, which only this machine has. The
+// web server used to run them itself and could only do so when it shared a
+// disk with the checkout.
+//
+// Each request is answered on its own and best-effort. A project whose path is
+// not a folder here belongs to another of the owner's machines, so it is left
+// for that worker; the server stops offering a request nobody answers. A
+// failure must never disrupt job polling.
+async function answerRefreshRequests(ctx: Ctx, refresh: RefreshRequests): Promise<void> {
+  for (const slug of refresh.projects) {
+    if (!refreshDue(`project:${slug}`)) continue;
+    try {
+      const project = await ctx.api.getProject(slug);
+      const cwd = project?.local_path;
+      if (!cwd || !(await isDirectory(cwd))) continue;
+      const branches = await listBranches(cwd);
+      await ctx.api.reportProjectRepo(slug, { ...branches, remote: await getRemoteOrigin(cwd) });
+      refreshTriedAt.delete(`project:${slug}`);
+      ctx.log(`reported ${branches.branches.length} branch(es) for project ${slug}`);
+    } catch (e) {
+      ctx.log(`project refresh error (${slug}): ${errMsg(e as ErrLike)}`);
+    }
+  }
+  for (const id of refresh.tickets) {
+    if (!refreshDue(`ticket:${id}`)) continue;
+    try {
+      const ticket = await ctx.api.getTicket(id);
+      if (!ticket) continue;
+      const project = await ctx.api.getProject(ticket.project);
+      const cwd = project?.local_path;
+      if (!cwd || !(await isDirectory(cwd))) continue;
+      const branch = ticket.cc_branch ?? "auto";
+      const state = await getRepoState(cwd, branch);
+      await ctx.api.reportTicketSync(id, {
+        commits: state?.commits ?? [],
+        pr_id: state?.pr_id ?? null,
+        pr_title: state?.pr_title ?? null,
+        pr_url: state?.pr_url ?? null,
+        review_requested: state?.review_requested ?? null,
+        preview_url: await resolvePreviewUrl(cwd, branch),
+      });
+      refreshTriedAt.delete(`ticket:${id}`);
+      ctx.log(`reported repo state for ticket ${id}`);
+    } catch (e) {
+      ctx.log(`ticket refresh error (${id}): ${errMsg(e as ErrLike)}`);
+    }
+  }
+}
+
 // How often the local folder mirror reconciles. Fast enough that saving a file in
 // your editor lands in Markbase while you're still looking at it, slow enough not
 // to hammer the API with a full document list.
@@ -850,8 +925,9 @@ async function claimLoop(
     while (!signal.aborted) {
       let job: Job | null = null;
       let rescan = false;
+      let refresh: RefreshRequests | undefined;
       try {
-        ({ job, rescan } = await ctx.api.claim({ version: opts.version, reclaim }));
+        ({ job, rescan, refresh } = await ctx.api.claim({ version: opts.version, reclaim }));
         reclaim = false;
         claimFailures = 0;
       } catch (e) {
@@ -869,6 +945,9 @@ async function claimLoop(
         // idle path. The only scan there is, and it stays inside the mounted
         // folders.
         if (rescan) await sweepRepos(ctx);
+        if (refresh && (refresh.projects.length || refresh.tickets.length)) {
+          await answerRefreshRequests(ctx, refresh);
+        }
         // Drain one agent auto-spawn request and one @mention delivery per idle
         // tick (so ~10 s responsiveness).
         await drainAgentRequests(ctx);

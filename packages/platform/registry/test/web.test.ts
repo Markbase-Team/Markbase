@@ -73,6 +73,11 @@ describe("transpilePackages", () => {
     // folder of that feature now (email/src/server/browser-agent) and ships
     // or is left out with it.
     "@markbase/browser-agent",
+    // What was left of it (repo-state, repos, vercel-preview) ran on the web
+    // server only because three project routes shelled out to git there. The
+    // worker runs those lookups now, so the files are @markbase/local's and
+    // the web build has nothing of it to compile.
+    "@markbase/node",
   ];
 
   it("differs from the hand-maintained list only by packages we can account for", () => {

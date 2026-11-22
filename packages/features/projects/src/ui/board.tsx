@@ -90,6 +90,9 @@ const ALL = "all";
 const TICKETS_URL = "/api/v1/tickets";
 /** Collapse the duplicate ticket fetches a remount fires, without going stale. */
 const TICKETS_DEDUPE_MS = 2_000;
+// How long after asking for a project's branches to read them again: the
+// worker answers on its next idle poll (about ten seconds), then runs git.
+const BRANCH_REFRESH_MS = 15_000;
 const propertiesUrl = (slug: string) => `/api/admin/projects/${slug}/properties`;
 
 // Client-side filter + sort over the full ticket list, mirroring the server
@@ -514,18 +517,26 @@ export function AdminClient({
   useEffect(() => {
     if (!ticketModalOpen || !tmProject) return;
     let cancelled = false;
+    let again: ReturnType<typeof setTimeout> | null = null;
+    // The list is what the project's worker last reported, and reading it asks
+    // the worker for a fresh one (`refreshing`). The worker answers on its next
+    // idle poll, so look once more after it has had time to.
+    const load = (retry: boolean): Promise<void> =>
+      fetch(`/api/admin/projects/${tmProject}/branches`)
+        .then((r) => r.json())
+        .then((d: { branches?: string[]; refreshing?: boolean }) => {
+          if (cancelled) return;
+          setTmBranches(d.branches ?? []);
+          if (retry && d.refreshing) again = setTimeout(() => void load(false), BRANCH_REFRESH_MS);
+        })
+        .catch(() => {
+          if (!cancelled) setTmBranches([]);
+        });
     void Promise.resolve().then(() => setTmBranchLoading(true));
-    fetch(`/api/admin/projects/${tmProject}/branches`)
-      .then((r) => r.json())
-      .then((d: { branches?: string[] }) => {
-        if (!cancelled) setTmBranches(d.branches ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setTmBranches([]);
-      })
-      .finally(() => !cancelled && setTmBranchLoading(false));
+    void load(true).finally(() => !cancelled && setTmBranchLoading(false));
     return () => {
       cancelled = true;
+      if (again) clearTimeout(again);
     };
   }, [ticketModalOpen, tmProject]);
 
@@ -612,15 +623,12 @@ export function AdminClient({
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      toast.error(data.error ?? "No preview available yet");
+      toast.error(data.error ?? "Could not ask for the preview");
       return;
     }
-    setAllTickets((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, preview_url: data.preview_url } : t
-      )
-    );
-    toast.success("Preview URL found");
+    // The lookup runs on the worker's machine; the ticket updates over
+    // Realtime when it reports.
+    toast.info("Asked your worker for the preview. The ticket updates when it answers.");
   }
 
   async function syncReview(id: string) {
@@ -632,16 +640,9 @@ export function AdminClient({
       toast.error(data.error ?? "Could not check review status");
       return;
     }
-    if (data.review_requested) {
-      setAllTickets((prev) =>
-        prev.map((t) =>
-          t.id === id ? { ...t, status: "review_requested" } : t
-        )
-      );
-      toast.success("Review requested — status updated");
-    } else {
-      toast.info("No review requested on the PR yet");
-    }
+    // The lookup runs on the worker's machine; if a review is pending the
+    // ticket moves to "review requested" over Realtime when it reports.
+    toast.info("Asked your worker to check the PR. The ticket updates when it answers.");
   }
 
   async function saveProject(e: React.FormEvent<HTMLFormElement>) {

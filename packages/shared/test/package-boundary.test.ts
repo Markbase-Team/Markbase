@@ -134,9 +134,9 @@ const FEATURE_PKG_DIRS = readdirSync(FEATURES, { withFileTypes: true })
 /**
  * Node-only packages, by name — which is now also their directory. Each is
  * named for where it runs: server on the web server, local on the user's
- * machine. node is the remainder both still share.
+ * machine.
  */
-const NODE_PKGS = ["node", "server", "local"];
+const NODE_PKGS = ["server", "local"];
 
 /** Every .ts/.tsx file under one package's src. */
 function sourceFiles(dir: string, acc: string[] = []): string[] {
@@ -292,10 +292,10 @@ describe("package boundary", () => {
    * HTTP: ui (where there is a screen), server (the web server) and local (the
    * user's machine) may each import shared and nothing in platform.
    *
-   * The one edge listed is what is left of @markbase/node: repo-state, repos
-   * and vercel-preview, which the runner in local and the projects feature's
-   * handlers on the web server both run. See node/src/index.ts. It is pinned
-   * so that it can only shrink.
+   * There are no exceptions. The last one was @markbase/node (repo-state,
+   * repos, vercel-preview), which the runner and three project routes on the
+   * web server both ran; the routes ask the worker now, so those files are
+   * local's.
    */
   it("ui, server and local import no other platform package", () => {
     const platformDirs = readdirSync(PLATFORM, { withFileTypes: true })
@@ -311,7 +311,21 @@ describe("package boundary", () => {
         }
       }
     }
-    expect([...new Set(found)].sort()).toEqual(["local → node"]);
+    expect([...new Set(found)].sort()).toEqual([]);
+  });
+
+  // local runs on the user's machine. A feature's code runs in a browser or on
+  // the web server, so a feature importing local would be the web server
+  // reaching for a disk it does not have. What a feature needs from the
+  // machine it asks the worker for, over HTTP (see worker-refresh.ts).
+  it("no feature imports @markbase/local", () => {
+    const found: string[] = [];
+    for (const dir of FEATURE_PKG_DIRS) {
+      for (const f of sourceFiles(join(FEATURES, dir, "src"))) {
+        if (/from\s+"@markbase\/local/.test(readFileSync(f, "utf8"))) found.push(f.slice(PKGS.length + 1));
+      }
+    }
+    expect(found).toEqual([]);
   });
 
   // The rule the layout exists for: platform never imports a feature.
@@ -546,7 +560,7 @@ describe("feature manifests", () => {
     expect(FEATURE_PKG_DIRS).toContain("docs");
     expect(FEATURE_PKG_DIRS).toContain("attention");
     for (const kernel of [
-      "shared", "ui", "server", "node", "local", "registry",
+      "shared", "ui", "server", "local", "registry",
       // Demoted from features deliberately: every release ships them.
       // agent is the agent rail.
       "agent",

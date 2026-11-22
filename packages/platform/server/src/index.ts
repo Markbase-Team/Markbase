@@ -5,7 +5,7 @@
 // Named for WHERE it runs. apps/web imports it from routes and server
 // components; feature packages import it from their handlers/ and server/
 // layers. The CLI, the desktop app, the runner, the vault and flows do not —
-// what the user's machine needs stays in @markbase/node. Nothing here may be
+// what the user's machine needs is @markbase/local. Nothing here may be
 // imported from a "use client" file (package-boundary.test.ts lists this
 // package in NODE_PKGS).
 //

@@ -8,8 +8,7 @@ import {
   updateTicketCc,
 } from "@markbase/server/db/tickets";
 import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
-import { getRepoState } from "@markbase/node/repo-state";
-import { resolvePreviewUrl } from "@markbase/node/vercel-preview";
+import { requestRefresh } from "@markbase/server/db/worker-refresh";
 import { owner, type HandlerHost } from "./host";
 
 // Handing a ticket to an agent, and everything that follows from it: the run,
@@ -154,79 +153,47 @@ export function ticketChatHandler(host: HandlerHost) {
   };
 }
 
-export function ticketReviewHandler(host: HandlerHost) {
+/**
+ * Ask the owner's worker to look a ticket up in its project's local repo.
+ *
+ * Reading a ticket's PR, review request and preview takes git and gh inside
+ * the checkout, and the checkout is on the worker's machine, not on this
+ * server. So this records the request and answers 202 at once: the worker
+ * sees it on its next idle poll, looks, and reports to
+ * POST /api/v1/worker/tickets/:id/sync, which writes the ticket. The board
+ * hears about the change over Realtime like any other ticket update.
+ */
+async function requestTicketRefresh(
+  req: Request,
+  id: string,
+  host: HandlerHost
+): Promise<Response> {
   const { json } = host;
-  // POST — check GitHub for a review request on the ticket's open PR and, if
-  // one is pending, move the ticket to "review_requested". Mirrors the preview
-  // route: it reads live state via the `gh` CLI in the project's local repo, so
-  // no Vercel/GitHub token is needed here.
-  return async (req: Request, id: string): Promise<Response> => {
-    const a = await owner(req, "write", host);
-    if ("error" in a) return a.error;
+  const a = await owner(req, "write", host);
+  if ("error" in a) return a.error;
 
-    const ticket = await getTicket(id, a.ownerId);
-    if (!ticket) return json({ error: "Ticket not found" }, 404);
+  const ticket = await getTicket(id, a.ownerId);
+  if (!ticket) return json({ error: "Ticket not found" }, 404);
 
-    const project = await getProject(ticket.project, a.ownerId);
-    if (!project?.local_path) {
-      return json({ error: "This project has no local repo path" }, 400);
-    }
+  const project = await getProject(ticket.project, a.ownerId);
+  if (!project?.local_path) {
+    return json({ error: "This project has no local repo path" }, 400);
+  }
 
-    const branch = ticket.cc_branch ?? "auto";
-    const state = await getRepoState(project.local_path, branch);
-    if (!state || !state.pr_id) {
-      return json({ error: "No open PR found for this ticket" }, 404);
-    }
+  await requestRefresh(a.ownerId, "ticket", id);
+  return json({ queued: true }, 202);
+}
 
-    // Keep the PR/commit fields fresh while we're here (cheap; we already paid
-    // for the gh lookup) so the board reflects the open PR even on first sync.
-    await updateTicketCc(id, {
-      commits: state.commits,
-      pr_id: state.pr_id,
-      pr_title: state.pr_title,
-      pr_url: state.pr_url,
-    });
-
-    // A pending review request moves the ticket to "review_requested". If none
-    // is pending we leave the status alone (the reviewer may have responded).
-    if (state.review_requested) {
-      await updateTicket(id, { status: "review_requested" }, a.ownerId);
-    }
-
-    return json({
-      review_requested: state.review_requested ?? false,
-      status: state.review_requested ? "review_requested" : ticket.status,
-      pr_id: state.pr_id,
-    });
-  };
+export function ticketReviewHandler(host: HandlerHost) {
+  // POST — ask the worker whether a review has been requested on the ticket's
+  // open PR. If one is pending when it reports, the ticket moves to
+  // "review_requested".
+  return (req: Request, id: string): Promise<Response> => requestTicketRefresh(req, id, host);
 }
 
 export function ticketPreviewHandler(host: HandlerHost) {
-  const { json } = host;
-  // POST — look up the ticket's Vercel preview URL (from the GitHub deployment
-  // for its branch) and store it on the ticket.
-  return async (req: Request, id: string): Promise<Response> => {
-    const a = await owner(req, "write", host);
-    if ("error" in a) return a.error;
-
-    const ticket = await getTicket(id, a.ownerId);
-    if (!ticket) return json({ error: "Ticket not found" }, 404);
-
-    const project = await getProject(ticket.project, a.ownerId);
-    if (!project?.local_path) {
-      return json({ error: "This project has no local repo path" }, 400);
-    }
-
-    const branch = ticket.cc_branch ?? "auto";
-    const url = await resolvePreviewUrl(project.local_path, branch);
-    if (!url) {
-      return json(
-        { error: "No preview found yet — Vercel may still be building" },
-        404
-      );
-    }
-
-    await updateTicketCc(id, { preview_url: url });
-    return json({ preview_url: url });
-  };
+  // POST — ask the worker for the ticket's Vercel preview URL (from the GitHub
+  // deployment for its branch). The same lookup as the review check: one
+  // answer from the worker carries the PR, the review request and the preview.
+  return (req: Request, id: string): Promise<Response> => requestTicketRefresh(req, id, host);
 }

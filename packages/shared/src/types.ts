@@ -1,3 +1,5 @@
+import type { StoredProjectBranches } from "./worker-refresh";
+
 export const TICKET_STATUSES = [
   "requested",
   "ready_to_execute",
@@ -111,6 +113,11 @@ export interface Project {
   owners: string[];
   /** Per-project MCP servers for Claude Code runs (with ${SECRET} refs). */
   mcp_config: McpConfig | null;
+  /**
+   * The local repo's branches, as the project's worker last reported them.
+   * Null until a worker has answered; see worker-refresh.ts.
+   */
+  branches?: StoredProjectBranches | null;
   created_at: string;
 }
 

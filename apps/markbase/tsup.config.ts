@@ -12,7 +12,6 @@ export default defineConfig({
   clean: true,
   noExternal: [
     "@markbase/shared",
-    "@markbase/node",
     "@markbase/local",
   ],
   external: ["@supabase/supabase-js", "@modelcontextprotocol/sdk"],

@@ -25,6 +25,8 @@ const sessions = {
 };
 const tickets = {
   getProject: vi.fn(),
+  createProject: vi.fn(),
+  updateProject: vi.fn(),
   getTicket: vi.fn(),
   updateTicket: vi.fn(),
   updateTicketCc: vi.fn(),
@@ -39,6 +41,13 @@ const repos = {
   takeRepoRescan: vi.fn(),
 };
 const keys = { setClaudeVersion: vi.fn() };
+const refresh = {
+  requestRefresh: vi.fn(),
+  listRefreshRequests: vi.fn(),
+  clearRefreshRequest: vi.fn(),
+  saveProjectBranches: vi.fn(),
+  clearProjectBranches: vi.fn(),
+};
 
 vi.mock("@markbase/server/db/jobs", () => jobs);
 vi.mock("@markbase/server/db/agent-sessions", () => sessions);
@@ -51,6 +60,7 @@ vi.mock("@markbase/server/db/worker-repos", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@markbase/server/db/worker-repos")>()),
   ...repos,
 }));
+vi.mock("@markbase/server/db/worker-refresh", () => refresh);
 vi.mock("@markbase/server/api-keys", () => keys);
 vi.mock("@markbase/server/features", () => ({
   CLAUDE_CODE_REQUIRED: "needs claude",
@@ -59,7 +69,10 @@ vi.mock("@markbase/server/features", () => ({
 
 const handlers = await import("../src/handlers/worker");
 const { ticketHandler, ticketMessagesHandler } = await import("../src/handlers/tickets");
-const { projectHandler } = await import("../src/handlers/projects");
+const { projectHandler, projectsHandler, projectBranchesHandler } = await import(
+  "../src/handlers/projects"
+);
+const { ticketPreviewHandler, ticketReviewHandler } = await import("../src/handlers/runs");
 type HandlerHost = import("../src/handlers/host").HandlerHost;
 type Authenticated = import("../src/handlers/host").Authenticated;
 
@@ -103,7 +116,7 @@ const A_JOB = { id: JOB, ticket_id: TICKET, owner_id: A, kind: "dispatch", statu
 const A_TICKET = { id: TICKET, project: "p", owner_id: A, title: "T", properties: {} };
 
 beforeEach(() => {
-  for (const group of [jobs, sessions, tickets, plans, repos, keys]) {
+  for (const group of [jobs, sessions, tickets, plans, repos, keys, refresh]) {
     for (const fn of Object.values(group)) fn.mockReset();
   }
   // The data layer is owner-scoped: it answers A's things to A and nothing to B.
@@ -119,6 +132,7 @@ beforeEach(() => {
   tickets.listProjectProperties.mockResolvedValue([]);
   jobs.claimNextJob.mockResolvedValue(null);
   repos.takeRepoRescan.mockResolvedValue(false);
+  refresh.listRefreshRequests.mockResolvedValue({ tickets: [], projects: [] });
   plans.getUserPlan.mockResolvedValue("pro");
 });
 
@@ -129,17 +143,34 @@ describe("POST /worker/claim", () => {
       req("a-key", { body: { version: "0.8.0", owner_id: B, p_owner_id: B } })
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ job: A_JOB, rescan: false });
+    expect(await res.json()).toEqual({
+      job: A_JOB,
+      rescan: false,
+      refresh: { tickets: [], projects: [] },
+    });
     expect(jobs.claimNextJob).toHaveBeenCalledWith(A, "0.8.0");
     expect(jobs.reclaimStale).not.toHaveBeenCalled();
+    // A worker with a job is about to be busy: nothing else is handed to it.
+    expect(refresh.listRefreshRequests).not.toHaveBeenCalled();
   });
 
   it("runs the staleness sweep first only when asked, and takes a rescan only when idle", async () => {
     repos.takeRepoRescan.mockResolvedValue(true);
     const res = await handlers.workerClaimHandler(host)(req("a-key", { body: { reclaim: true } }));
-    expect(await res.json()).toEqual({ job: null, rescan: true });
+    expect(await res.json()).toEqual({
+      job: null,
+      rescan: true,
+      refresh: { tickets: [], projects: [] },
+    });
     expect(jobs.reclaimStale).toHaveBeenCalledTimes(1);
     expect(repos.takeRepoRescan).toHaveBeenCalledWith(A);
+  });
+
+  it("hands an idle worker its owner's pending refresh requests", async () => {
+    refresh.listRefreshRequests.mockResolvedValue({ tickets: [TICKET], projects: ["p"] });
+    const res = await handlers.workerClaimHandler(host)(req("a-key", { body: {} }));
+    expect((await res.json()).refresh).toEqual({ tickets: [TICKET], projects: ["p"] });
+    expect(refresh.listRefreshRequests).toHaveBeenCalledWith(A);
   });
 
   it("refuses a caller the gate refused", async () => {
@@ -427,5 +458,191 @@ describe("tickets and projects, as the worker uses them", () => {
     expect(mine.status).toBe(200);
     expect((await mine.json()).project.local_path).toBe("/repo");
     expect((await h.GET(req("b-key"), "p")).status).toBe(404);
+  });
+});
+
+// The web server has no checkout, so it never runs git. A route that needs the
+// repo records a request for the owner's worker and the worker's report is
+// what writes the answer.
+describe("refresh: the server asks, the worker answers", () => {
+  it("preview and review only queue a request for the ticket's owner", async () => {
+    for (const handler of [ticketPreviewHandler(host), ticketReviewHandler(host)]) {
+      const res = await handler(req("a-session", { method: "POST" }), TICKET);
+      expect(res.status).toBe(202);
+      expect(await res.json()).toEqual({ queued: true });
+    }
+    expect(refresh.requestRefresh).toHaveBeenCalledTimes(2);
+    expect(refresh.requestRefresh).toHaveBeenCalledWith(A, "ticket", TICKET);
+    expect(tickets.updateTicketCc).not.toHaveBeenCalled();
+  });
+
+  it("B cannot queue a refresh of A's ticket", async () => {
+    const res = await ticketPreviewHandler(host)(req("b-key", { method: "POST" }), TICKET);
+    expect(res.status).toBe(404);
+    expect(refresh.requestRefresh).not.toHaveBeenCalled();
+  });
+
+  it("a ticket report writes what was found, moves a pending review, and clears the request", async () => {
+    const res = await handlers.workerTicketSyncHandler(host)(
+      req("a-key", {
+        body: {
+          commits: [{ title: "fix", link: "https://github.com/o/r/commit/abc" }],
+          pr_id: "12",
+          pr_title: "Fix it",
+          pr_url: "https://github.com/o/r/pull/12",
+          review_requested: true,
+          preview_url: "https://preview.example",
+          status: "done",
+          owner_id: B,
+        },
+      }),
+      TICKET
+    );
+    expect(res.status).toBe(200);
+    expect(tickets.updateTicketCc).toHaveBeenCalledWith(TICKET, {
+      commits: [{ title: "fix", link: "https://github.com/o/r/commit/abc" }],
+      pr_id: "12",
+      pr_title: "Fix it",
+      pr_url: "https://github.com/o/r/pull/12",
+      preview_url: "https://preview.example",
+    });
+    expect(tickets.updateTicket).toHaveBeenCalledWith(TICKET, { status: "review_requested" }, A);
+    expect(refresh.clearRefreshRequest).toHaveBeenCalledWith(A, "ticket", TICKET);
+  });
+
+  it("a report that found no PR and no preview leaves those fields and the status alone", async () => {
+    await handlers.workerTicketSyncHandler(host)(
+      req("a-key", { body: { commits: [], review_requested: true } }),
+      TICKET
+    );
+    expect(tickets.updateTicketCc).toHaveBeenCalledWith(TICKET, { commits: [] });
+    expect(tickets.updateTicket).not.toHaveBeenCalled();
+  });
+
+  it("B's key cannot report on A's ticket or A's project", async () => {
+    const t = await handlers.workerTicketSyncHandler(host)(
+      req("b-key", { body: { commits: [] } }),
+      TICKET
+    );
+    expect(t.status).toBe(404);
+    const p = await handlers.workerProjectRepoHandler(host)(
+      req("b-key", { body: { branches: ["main"] } }),
+      "p"
+    );
+    expect(p.status).toBe(404);
+    expect(tickets.updateTicketCc).not.toHaveBeenCalled();
+    expect(refresh.saveProjectBranches).not.toHaveBeenCalled();
+  });
+
+  it("a project report stores the branches and fills an empty GitHub link from the remote", async () => {
+    const res = await handlers.workerProjectRepoHandler(host)(
+      req("a-key", {
+        body: {
+          branches: ["main", "dev", "main", ""],
+          default: "main",
+          current: "dev",
+          remote: "git@github.com:o/r.git",
+        },
+      }),
+      "p"
+    );
+    expect(res.status).toBe(200);
+    expect(refresh.saveProjectBranches).toHaveBeenCalledWith(A, "p", {
+      branches: ["main", "dev"],
+      default: "main",
+      current: "dev",
+      remote: "git@github.com:o/r.git",
+    });
+    expect(tickets.updateProject).toHaveBeenCalledWith(
+      "p",
+      { github_repo: "https://github.com/o/r" },
+      A
+    );
+    expect(refresh.clearRefreshRequest).toHaveBeenCalledWith(A, "project", "p");
+  });
+
+  it("a project report never overwrites a GitHub link someone set", async () => {
+    tickets.getProject.mockResolvedValue({
+      slug: "p",
+      name: "P",
+      local_path: "/repo",
+      owner_id: A,
+      github_repo: "https://github.com/typed/link",
+    });
+    await handlers.workerProjectRepoHandler(host)(
+      req("a-key", { body: { branches: ["main"], remote: "git@github.com:o/r.git" } }),
+      "p"
+    );
+    expect(tickets.updateProject).not.toHaveBeenCalled();
+  });
+
+  it("a project report without a branch list is refused", async () => {
+    const res = await handlers.workerProjectRepoHandler(host)(
+      req("a-key", { body: { remote: "x" } }),
+      "p"
+    );
+    expect(res.status).toBe(400);
+    expect(refresh.saveProjectBranches).not.toHaveBeenCalled();
+  });
+
+  it("branches are the worker's last report, and reading them asks for a fresh one", async () => {
+    tickets.getProject.mockResolvedValue({
+      slug: "p",
+      name: "P",
+      local_path: "/repo",
+      owner_id: A,
+      branches: { branches: ["main"], default: "main", current: "main", at: "2026-11-22T00:00:00Z" },
+    });
+    const res = await projectBranchesHandler(host)(req("a-session"), "p");
+    expect(await res.json()).toEqual({
+      branches: ["main"],
+      default: "main",
+      current: "main",
+      at: "2026-11-22T00:00:00Z",
+      refreshing: true,
+    });
+    expect(refresh.requestRefresh).toHaveBeenCalledWith(A, "project", "p");
+  });
+
+  it("branches before any worker has answered are empty, not an error", async () => {
+    const res = await projectBranchesHandler(host)(req("a-session"), "p");
+    expect(await res.json()).toEqual({
+      branches: [],
+      default: null,
+      current: null,
+      at: null,
+      refreshing: true,
+    });
+  });
+
+  it("creating a project checks only the path's form, and asks the worker to read the repo", async () => {
+    tickets.getProject.mockResolvedValue(undefined);
+    tickets.createProject.mockImplementation(async (input: { slug: string }) => input);
+    const relative = await projectsHandler(host).POST(
+      req("a-session", { body: { slug: "new", name: "New", local_path: "repos/new" } })
+    );
+    expect(relative.status).toBe(400);
+
+    // A path that does not exist on the server is fine: it is the worker's disk.
+    const res = await projectsHandler(host).POST(
+      req("a-session", {
+        body: { slug: "new", name: "New", local_path: "/not/on/this/server" },
+      })
+    );
+    expect(res.status).toBe(201);
+    // No link typed: it stays empty until the worker reports the remote.
+    expect(tickets.createProject).toHaveBeenCalledWith(
+      expect.objectContaining({ local_path: "/not/on/this/server", github_repo: null })
+    );
+    expect(refresh.requestRefresh).toHaveBeenCalledWith(A, "project", "new");
+  });
+
+  it("changing a project's path drops its stored branches and asks for new ones", async () => {
+    await projectHandler(host).PATCH(
+      req("a-session", { method: "PATCH", body: { local_path: "/other" } }),
+      "p"
+    );
+    expect(refresh.clearProjectBranches).toHaveBeenCalledWith(A, "p");
+    expect(refresh.requestRefresh).toHaveBeenCalledWith(A, "project", "p");
   });
 });

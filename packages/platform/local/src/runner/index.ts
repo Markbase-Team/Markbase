@@ -3,8 +3,9 @@
 //
 // Node-only, and the top of the dependency graph — it draws on @markbase/shared
 // (jobs, tickets, connection identity), the machine-side files beside it in
-// @markbase/local (the Claude probe and session), @markbase/node (repo state)
-// and @markbase/local/vault (the mirror). Nothing imports it back.
+// @markbase/local (the Claude probe and session), the git and gh lookups in
+// this folder (repos, repo-state, vercel-preview) and @markbase/local/vault
+// (the mirror). Nothing imports it back.
 //
 // Both the CLI and the desktop app start it. Having it apart from both hosts is
 // what made the desktop a host change rather than another copy of the loop; the

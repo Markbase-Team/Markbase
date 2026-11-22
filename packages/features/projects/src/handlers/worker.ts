@@ -15,7 +15,26 @@ import {
   listQueuedAgentRequests,
   setAgentSessionExternalId,
 } from "@markbase/server/db/agent-sessions";
-import { getProject, updateTicketCc } from "@markbase/server/db/tickets";
+import {
+  getProject,
+  getTicket,
+  updateProject,
+  updateTicket,
+  updateTicketCc,
+} from "@markbase/server/db/tickets";
+import {
+  clearRefreshRequest,
+  listRefreshRequests,
+  saveProjectBranches,
+} from "@markbase/server/db/worker-refresh";
+import { normalizeRemote } from "@markbase/shared/git-remote";
+import type { TicketCcPatch } from "@markbase/shared/tickets";
+import {
+  projectRepoReportFrom,
+  ticketSyncReportFrom,
+  type ProjectRepoReportBody,
+  type TicketSyncReportBody,
+} from "@markbase/shared/worker-refresh";
 import { getUserPlan } from "@markbase/server/db/plans";
 import {
   isRepoStatus,
@@ -61,9 +80,12 @@ export function workerClaimHandler(host: HandlerHost) {
   const { json } = host;
   // POST { version?, reclaim? } — claim the next queued job for the key's
   // owner, stamping presence (and the version) either way. Answers
-  // { job, rescan }: `rescan` is the admin's pending "Rescan paths" request,
-  // taken atomically, reported only on the idle path as the worker always
-  // handled it. `reclaim` runs the staleness sweep first — once, at startup.
+  // { job, rescan, refresh }: `rescan` is the admin's pending "Rescan paths"
+  // request, taken atomically, reported only on the idle path as the worker
+  // always handled it. `refresh` is the tickets and projects waiting for a
+  // lookup in their local repo (see workerTicketSyncHandler), also idle-only:
+  // a worker that has a job is about to be busy. `reclaim` runs the staleness
+  // sweep first — once, at startup.
   return async (req: Request): Promise<Response> => {
     const a = await owner(req, "write", host);
     if ("error" in a) return a.error;
@@ -74,7 +96,8 @@ export function workerClaimHandler(host: HandlerHost) {
     if (body.reclaim === true) await reclaimStale();
     const job = await claimNextJob(a.ownerId, version);
     const rescan = job ? false : await takeRepoRescan(a.ownerId);
-    return json({ job, rescan });
+    const refresh = job ? { tickets: [], projects: [] } : await listRefreshRequests(a.ownerId);
+    return json({ job, rescan, refresh });
   };
 }
 
@@ -162,6 +185,79 @@ export function workerReposHandler(host: HandlerHost) {
     }
     await reportWorkerRepos(a.ownerId, repos);
     return json({ ok: true, count: repos.length });
+  };
+}
+
+export function workerTicketSyncHandler(host: HandlerHost) {
+  const { json } = host;
+  // POST { commits, pr_id, pr_title, pr_url, review_requested, preview_url } —
+  // the worker's answer to a ticket refresh: what the ticket's branch shows in
+  // the project's local repo right now. The web server used to run git and gh
+  // for this itself, which only worked when it shared a disk with the
+  // checkout; the worker is on that disk, so it looks and reports.
+  //
+  // Only what was found is written. A lookup that found no PR or no preview
+  // leaves the ticket's fields as they were, as the old routes did. A pending
+  // review request moves the ticket to "review_requested"; none pending leaves
+  // the status alone (the reviewer may have responded).
+  return async (req: Request, id: string): Promise<Response> => {
+    const a = await owner(req, "write", host);
+    if ("error" in a) return a.error;
+    if (!UUID_RE.test(id)) return json({ error: "Ticket not found" }, 404);
+
+    const ticket = await getTicket(id, a.ownerId);
+    if (!ticket) return json({ error: "Ticket not found" }, 404);
+
+    const body = await jsonBody<TicketSyncReportBody>(req);
+    if (!body) return json({ error: "Invalid JSON" }, 400);
+    const report = ticketSyncReportFrom(body);
+
+    const patch: TicketCcPatch = { commits: report.commits };
+    if (report.pr_id) {
+      patch.pr_id = report.pr_id;
+      patch.pr_title = report.pr_title;
+      patch.pr_url = report.pr_url;
+    }
+    if (report.preview_url) patch.preview_url = report.preview_url;
+    await updateTicketCc(id, patch);
+
+    if (report.pr_id && report.review_requested) {
+      await updateTicket(id, { status: "review_requested" }, a.ownerId);
+    }
+    await clearRefreshRequest(a.ownerId, "ticket", id);
+    return json({ ok: true });
+  };
+}
+
+export function workerProjectRepoHandler(host: HandlerHost) {
+  const { json } = host;
+  // POST { branches, default, current, remote } — the worker's answer to a
+  // project refresh: the branches of the project's local repo and its origin
+  // remote. The branches are stored on the project for the new-ticket picker.
+  // The remote fills the project's GitHub link only when it has none, which is
+  // what creating a project used to do by reading the repo off the server's
+  // own disk.
+  return async (req: Request, slug: string): Promise<Response> => {
+    const a = await owner(req, "write", host);
+    if ("error" in a) return a.error;
+
+    const project = await getProject(slug, a.ownerId);
+    if (!project) return json({ error: "Project not found" }, 404);
+
+    const body = await jsonBody<ProjectRepoReportBody>(req);
+    const report = body ? projectRepoReportFrom(body) : null;
+    if (!report) return json({ error: "branches must be an array" }, 400);
+
+    await saveProjectBranches(a.ownerId, slug, report);
+    if (!project.github_repo && report.remote) {
+      await updateProject(
+        slug,
+        { github_repo: normalizeRemote(report.remote) ?? report.remote },
+        a.ownerId
+      );
+    }
+    await clearRefreshRequest(a.ownerId, "project", slug);
+    return json({ ok: true });
   };
 }
 

@@ -93,7 +93,7 @@ export async function runMcpInstall(argv: string[] = [], deps: McpInstallDeps = 
   if (doCode) targets.push("claude-code");
   if (doCodex) targets.push("codex");
   if (doCursor) targets.push("cursor");
-  // The same installer the desktop app's Settings runs (@markbase/node).
+  // The same installer the desktop app's Settings runs (@markbase/local).
   const installed = deps.installDocsMcp({ key, base, targets, forceCursor: want.cursor });
   for (const r of installed) {
     const name = r.name.padEnd(15);

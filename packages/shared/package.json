@@ -45,7 +45,9 @@
     "./device-auth-contract": "./src/device-auth-contract.ts",
     "./instance-config": "./src/instance-config.ts",
     "./docs": "./src/docs/index.ts",
-    "./docs/*": "./src/docs/*.ts"
+    "./docs/*": "./src/docs/*.ts",
+    "./worker-refresh": "./src/worker-refresh.ts",
+    "./git-remote": "./src/git-remote.ts"
   },
   "scripts": {
     "test": "vitest run",
