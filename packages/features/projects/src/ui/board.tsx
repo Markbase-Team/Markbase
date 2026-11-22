@@ -93,6 +93,9 @@ const TICKETS_DEDUPE_MS = 2_000;
 // How long after asking for a project's branches to read them again: the
 // worker answers on its next idle poll (about ten seconds), then runs git.
 const BRANCH_REFRESH_MS = 15_000;
+// When to reload the board after asking the worker about a ticket: once after
+// it has had time to answer, and once more for a slow gh call.
+const WORKER_ANSWER_RELOAD_MS = [12_000, 30_000];
 const propertiesUrl = (slug: string) => `/api/admin/projects/${slug}/properties`;
 
 // Client-side filter + sort over the full ticket list, mirroring the server
@@ -617,6 +620,21 @@ export function AdminClient({
     toast.success("Run canceled"); // board also updates live via Realtime
   }
 
+  // The worker answers a lookup on its next idle poll and then runs git and gh,
+  // so the answer lands some seconds after the request. Realtime normally
+  // brings it to the board; these reloads make sure it shows even when the
+  // socket missed it.
+  const reloadTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => {
+    const timers = reloadTimers.current;
+    return () => timers.forEach(clearTimeout);
+  }, []);
+  function reloadAfterWorkerAnswers() {
+    for (const ms of WORKER_ANSWER_RELOAD_MS) {
+      reloadTimers.current.push(setTimeout(() => void loadRef.current(true), ms));
+    }
+  }
+
   async function fetchPreview(id: string) {
     const res = await fetch(`/api/v1/tickets/${id}/preview`, {
       method: "POST",
@@ -626,9 +644,10 @@ export function AdminClient({
       toast.error(data.error ?? "Could not ask for the preview");
       return;
     }
-    // The lookup runs on the worker's machine; the ticket updates over
-    // Realtime when it reports.
+    // The lookup runs on the worker's machine; the ticket updates when it
+    // reports.
     toast.info("Asked your worker for the preview. The ticket updates when it answers.");
+    reloadAfterWorkerAnswers();
   }
 
   async function syncReview(id: string) {
@@ -641,8 +660,9 @@ export function AdminClient({
       return;
     }
     // The lookup runs on the worker's machine; if a review is pending the
-    // ticket moves to "review requested" over Realtime when it reports.
+    // ticket moves to "review requested" when it reports.
     toast.info("Asked your worker to check the PR. The ticket updates when it answers.");
+    reloadAfterWorkerAnswers();
   }
 
   async function saveProject(e: React.FormEvent<HTMLFormElement>) {
