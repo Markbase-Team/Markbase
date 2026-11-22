@@ -260,6 +260,33 @@ describe("package boundary", () => {
     expect([...new Set(DOC_ENGINE.flatMap(packagesReached))]).toEqual([]);
   });
 
+  /**
+   * Core is split by where code runs, and the three places only meet over
+   * HTTP: ui (where there is a screen), server (the web server) and local (the
+   * user's machine) may each import protocol and nothing else in core.
+   *
+   * The one edge listed is what is left of @markbase/node: repo-state, repos
+   * and vercel-preview, which the runner in local and the projects feature's
+   * handlers on the web server both run. See node/src/index.ts. It is pinned
+   * so that it can only shrink.
+   */
+  it("ui, server and local import only protocol among core packages", () => {
+    const coreDirs = readdirSync(CORE, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name);
+    const found: string[] = [];
+    for (const pkg of ["ui", "server", "local"]) {
+      for (const f of sourceFiles(join(CORE, pkg, "src"))) {
+        for (const m of readFileSync(f, "utf8").matchAll(/from\s+"@markbase\/([a-z-]+)/g)) {
+          if (m[1] !== pkg && m[1] !== "protocol" && coreDirs.includes(m[1])) {
+            found.push(`${pkg} → ${m[1]}`);
+          }
+        }
+      }
+    }
+    expect([...new Set(found)].sort()).toEqual(["local → node"]);
+  });
+
   // The rule the layout exists for: core never imports a feature.
   it("no core package imports a feature", () => {
     const found: string[] = [];
