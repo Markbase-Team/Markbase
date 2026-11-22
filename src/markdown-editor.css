@@ -1,0 +1,168 @@
+/* App-side overrides for the Milkdown Crepe editor (frame theme). Keeps the
+   editor a fixed-ish height that scrolls, and aligns it with the app's light
+   surface + border tokens. */
+
+.crepe-editor {
+  border-radius: var(--radius, 0.5rem);
+  overflow: hidden;
+}
+
+/* Use the app's sans for the whole editor (body + headings), instead of Crepe's
+   Noto Sans / Noto Serif. The frame theme sets these vars DIRECTLY on .milkdown,
+   and a custom property declared on an element beats an inherited one — so the
+   override MUST also target .milkdown (here, with higher specificity), not the
+   .crepe-editor ancestor, or it silently does nothing. Font only — Crepe owns
+   its own spacing/list layout, which prose-style margins would break. */
+.crepe-editor .milkdown {
+  --crepe-font-default: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --crepe-font-title: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* The editable area: give it a sensible min height (from --crepe-min-h, set by
+   the `rows` prop) and cap it so long notes scroll instead of growing the page. */
+.crepe-editor .milkdown {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.crepe-editor .milkdown .ProseMirror {
+  min-height: var(--crepe-min-h, 300px);
+}
+
+/* Crepe ships NO responsive styles — its theme is desktop-fixed, including a
+   60px/120px content padding that crushes the text column on small screens (a
+   400px phone loses 240px to side gutters, so list items wrap after one word).
+   Add our own breakpoints: keep the roomy gutter on desktop, tighten it on
+   tablets, and let phones use nearly the full width. */
+@media (max-width: 1024px) {
+  .crepe-editor .milkdown .ProseMirror {
+    padding: 40px 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .crepe-editor .milkdown .ProseMirror {
+    padding: 20px 16px;
+  }
+
+  /* The drag/insert handle gutter is sized for desktop; pull content back so the
+     tighter padding isn't eaten by it. */
+  .crepe-editor .milkdown .milkdown-list-item-block li {
+    gap: 6px;
+  }
+
+  /* On phones the persistent .crepe-mobile-bar replaces Crepe's selection
+     toolbar, so hide the latter to avoid two bars fighting over the bottom. */
+  .crepe-editor .milkdown .milkdown-toolbar {
+    display: none !important;
+  }
+}
+
+/* Always-visible mobile editor bar (rendered by the component while the editor
+   is focused). Hidden on desktop, where Crepe's selection toolbar is used. */
+.crepe-mobile-bar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .crepe-mobile-bar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    /* --kbd-offset is the keyboard's overlap (VisualViewport, set in the
+       component); the bar rides just above the keyboard, or the bottom when 0. */
+    bottom: var(--kbd-offset, 0px);
+    z-index: 50;
+    gap: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: var(--bg-surface, #ffffff);
+    border-top: 1px solid var(--border-subtle, #e5e5e5);
+    padding: 4px 6px;
+    /* Clear the home indicator only when resting at the very bottom (no kbd). */
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .crepe-mobile-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .crepe-mobile-bar button {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text, #1c1c1c);
+    cursor: pointer;
+  }
+
+  .crepe-mobile-bar button:active {
+    background: var(--bg-surface-low, #ededed);
+  }
+}
+
+/* Live ticket chip: the badge cluster rendered after a taskified block's
+   `?ticket=` link (status + priority, fetched live). The link text itself
+   (`#abcdef12`) is normal editor content; these badges are decorations. */
+.crepe-editor .ticket-chip {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  margin-left: 0.35rem;
+  vertical-align: baseline;
+  text-decoration: none;
+  user-select: none;
+}
+.crepe-editor .ticket-chip__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0 0.45rem;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+}
+.crepe-editor .ticket-chip__badge--muted {
+  color: var(--text-dim, #9ca3af);
+}
+.crepe-editor .ticket-chip__priority {
+  color: var(--text-muted, #6b7280);
+}
+/* Status colors mirror the board's status badges. */
+.crepe-editor .ticket-chip__status--requested {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+.crepe-editor .ticket-chip__status--ready_to_execute {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.crepe-editor .ticket-chip__status--in_progress {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.crepe-editor .ticket-chip__status--review_requested {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+.crepe-editor .ticket-chip__status--done {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
