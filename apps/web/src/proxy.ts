@@ -5,7 +5,7 @@ import {
   offersToken,
   resolveCaller,
   type ReadSession,
-} from "@markbase/node/caller";
+} from "@markbase/server/caller";
 import {
   CALLER_HEADER,
   CALLER_HEADER_PREFIX,

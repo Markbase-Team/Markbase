@@ -1,6 +1,6 @@
 import { getSkillByName } from "@markbase/protocol/skills";
 import { listSkillFiles } from "@markbase/protocol/skill-files";
-import { buildSkillTarball } from "@markbase/node/skill-bundle";
+import { buildSkillTarball } from "@markbase/server/skill-bundle";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 // GET /api/v1/skills/:name/bundle — the whole skill as a .tar.gz (SKILL.md +

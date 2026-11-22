@@ -114,8 +114,8 @@ function packagesReached(entry: string): string[] {
  *
  * The vault is core: the memory layer, owning the container (which files exist,
  * what appears on disk). docs is a feature: it supplies what goes INSIDE a vault
- * file. ui and llm are shared capabilities rather than features — everything may
- * depend on them, and nothing ships without them.
+ * file. ui and server's llm folder are shared capabilities rather than features —
+ * everything may depend on them, and nothing ships without them.
  */
 const FEATURE_PKG_DIRS = readdirSync(FEATURES, { withFileTypes: true })
   .filter((e) => e.isDirectory() && existsSync(join(FEATURES, e.name, "markbase.json")))
@@ -123,7 +123,7 @@ const FEATURE_PKG_DIRS = readdirSync(FEATURES, { withFileTypes: true })
   .sort();
 
 /** Node-only packages, by name — which is now also their directory. */
-const NODE_PKGS = ["node", "vault", "runner"];
+const NODE_PKGS = ["node", "server", "vault", "runner"];
 
 /** Every .ts/.tsx file under one package's src. */
 function sourceFiles(dir: string, acc: string[] = []): string[] {
@@ -297,10 +297,12 @@ describe("package boundary", () => {
   /**
    * Why chatJson moved here: a shared capability inside a feature package makes
    * that feature un-droppable. llm must stay a leaf, or every feature that wants
-   * a model inherits whatever it grows.
+   * a model inherits whatever it grows. It is a folder of @markbase/server now
+   * rather than a package, so this also checks it imports nothing else in there.
    */
   it("llm depends on nothing", () => {
-    expect(packagesReached(join(CORE, "llm/src/index.ts"))).toEqual([]);
+    const reached = importGraph(join(CORE, "server/src/llm/index.ts"));
+    expect(reached.filter((f) => !f.startsWith(join(CORE, "server/src/llm/")))).toEqual([]);
   });
 });
 
@@ -464,7 +466,7 @@ describe("feature manifests", () => {
     expect(FEATURE_PKG_DIRS).toContain("docs");
     expect(FEATURE_PKG_DIRS).toContain("attention");
     for (const kernel of [
-      "protocol", "ui", "llm", "node", "vault", "runner", "registry",
+      "protocol", "ui", "server", "node", "vault", "runner", "registry",
       // Demoted from features deliberately: every release ships them.
       // agent is the agent rail, browser-agent the fallback for systems with
       // no connector, flows the Operator seam both node hosts sit on.

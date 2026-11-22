@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { generatedDrift } from "@markbase/node/generated-files";
+import { generatedDrift } from "@markbase/server/generated-files";
 import { toolsFrom } from "@markbase/protocol/endpoint-tools";
 
 // The agents feature's endpoints are written once, in src/handlers, and its

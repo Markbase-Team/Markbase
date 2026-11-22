@@ -6,7 +6,7 @@ import {
   MIN_SPAWN_WORKER_VERSION,
   MIN_WORKER_VERSION,
 } from "@markbase/protocol";
-import { listApiKeys } from "@markbase/node";
+import { listApiKeys } from "@markbase/server/api-keys";
 import { listAgentSessions, type AgentSession, type Provider } from "@markbase/protocol";
 import type { FeaturePageProps } from "@markbase/ui/page-host";
 import { Badge } from "@markbase/ui/badge";

@@ -3,9 +3,9 @@ import { callerFromHeaders } from "./auth";
  * The contract a route handler and its host agree on.
  *
  * Types only, and deliberately in protocol rather than beside the
- * implementation in @markbase/node: a feature's `handlers/` layer must be able to
+ * implementation in @markbase/server: a feature's `handlers/` layer must be able to
  * state what it needs from its host without pulling in how a particular host
- * satisfies it. The implementation lives in `@markbase/node/caller`, and a
+ * satisfies it. The implementation lives in `@markbase/server/caller`, and a
  * shell that resolves callers some other way is free to supply its own.
  *
  * There is ONE API. A handler never learns whether the caller arrived with a

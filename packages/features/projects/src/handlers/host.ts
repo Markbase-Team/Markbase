@@ -1,4 +1,4 @@
-import type { ApiScope } from "@markbase/node/api-keys";
+import type { ApiScope } from "@markbase/server/api-keys";
 import { callerFromHeaders } from "@markbase/protocol/auth";
 
 /**

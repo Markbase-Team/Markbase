@@ -7,7 +7,7 @@ import {
   updateTicket,
   updateTicketCc,
 } from "@markbase/protocol/tickets";
-import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/node/features";
+import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 import { getRepoState } from "@markbase/node/repo-state";
 import { resolvePreviewUrl } from "@markbase/node/vercel-preview";
 import { owner, type HandlerHost } from "./host";

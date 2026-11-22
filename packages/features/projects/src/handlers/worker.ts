@@ -25,7 +25,7 @@ import {
   type DiscoveredRepo,
   type DiscoveredSession,
 } from "@markbase/protocol/worker-repos";
-import { setClaudeVersion } from "@markbase/node/api-keys";
+import { setClaudeVersion } from "@markbase/server/api-keys";
 import { connection, owner, type HandlerHost } from "./host";
 
 // The ticket worker's API (security lockdown stage 2).

@@ -1,4 +1,4 @@
-import { confirmApiKey } from "@markbase/node/api-keys";
+import { confirmApiKey } from "@markbase/server/api-keys";
 import { agentJson, authenticateAgent, preflight } from "@/lib/agent-auth";
 
 export const runtime = "nodejs";

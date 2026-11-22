@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@markbase/agent": "*",
-    "@markbase/node": "*",
     "@markbase/protocol": "*",
+    "@markbase/server": "*",
     "@markbase/ui": "*",
     "@supabase/supabase-js": "^2.106.2",
     "@tiptap/core": "^3.22.3",

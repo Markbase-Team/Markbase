@@ -11,7 +11,7 @@
 // comparison --check does, so it cannot fall behind unnoticed.
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { syncGeneratedFiles } from "@markbase/node/generated-files";
+import { syncGeneratedFiles } from "@markbase/server/generated-files";
 import { endpointsModule } from "../src/handlers/describe";
 
 const ok = syncGeneratedFiles({

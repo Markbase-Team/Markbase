@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createApiKey } from "@markbase/node/api-keys";
+import { createApiKey } from "@markbase/server/api-keys";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { pickedCapability } from "@/lib/capabilities";
 import { isLoopbackCallback } from "../page";

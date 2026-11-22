@@ -17,7 +17,7 @@ import { loadFeatures, enabledFeatures, repoRoot } from "../src/load";
  */
 const HARDCODED_BEFORE = [
   "@markbase/agent",
-  "@markbase/llm",
+  "@markbase/server",
   "@markbase/protocol",
   "@markbase/node",
   "@markbase/vault",

@@ -15,10 +15,10 @@ import { CALLER_HEADER, parseCaller } from "@markbase/protocol/auth";
 // reduced to on the header is part of what is being proved here.
 
 const resolveCaller = vi.fn();
-vi.mock("@markbase/node/caller", async () => {
+vi.mock("@markbase/server/caller", async () => {
   const real =
-    await vi.importActual<typeof import("@markbase/node/caller")>(
-      "@markbase/node/caller"
+    await vi.importActual<typeof import("@markbase/server/caller")>(
+      "@markbase/server/caller"
     );
   return {
     forwardedCaller: real.forwardedCaller,

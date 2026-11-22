@@ -52,8 +52,8 @@ vi.mock("@markbase/protocol/worker-repos", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@markbase/protocol/worker-repos")>()),
   ...repos,
 }));
-vi.mock("@markbase/node/api-keys", () => keys);
-vi.mock("@markbase/node/features", () => ({
+vi.mock("@markbase/server/api-keys", () => keys);
+vi.mock("@markbase/server/features", () => ({
   CLAUDE_CODE_REQUIRED: "needs claude",
   featureEnabled: async () => true,
 }));

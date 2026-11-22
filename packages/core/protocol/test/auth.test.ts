@@ -52,7 +52,7 @@ describe("the caller header", () => {
   });
 
   it("reads a provider or ceiling it does not know the way the key store does", () => {
-    // Both mirror what @markbase/node/api-keys does when it reads the row: a
+    // Both mirror what @markbase/server/api-keys does when it reads the row: a
     // provider it does not know is `unknown`, a ceiling it does not know is
     // none. The gate only ever writes values it read that way, so this is the
     // reader agreeing with the writer, not a policy of its own.

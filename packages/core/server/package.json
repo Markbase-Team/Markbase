@@ -1,0 +1,27 @@
+{
+  "name": "@markbase/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api-keys": "./src/api-keys.ts",
+    "./caller": "./src/caller.ts",
+    "./features": "./src/features.ts",
+    "./generated-files": "./src/generated-files.ts",
+    "./llm": "./src/llm/index.ts",
+    "./mcp-oauth": "./src/mcp-oauth.ts",
+    "./skill-bundle": "./src/skill-bundle.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/protocol": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

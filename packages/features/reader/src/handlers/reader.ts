@@ -1,4 +1,4 @@
-import { chatJson, type ContentPart } from "@markbase/llm";
+import { chatJson, type ContentPart } from "@markbase/server/llm";
 import {
   addReaderMessage,
   createReaderDocument,

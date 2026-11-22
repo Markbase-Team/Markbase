@@ -2,7 +2,7 @@
 // a browser, on a server, and in a daemon alike.
 //
 // Anything that opens a file, spawns a process or reads the home directory lives
-// in @markbase/node, @markbase/vault or @markbase/runner instead. This package
+// in @markbase/node, @markbase/server, @markbase/vault or @markbase/runner instead. This package
 // has no node dependency at all, and test/package-boundary.test.ts fails if one
 // becomes reachable — the browser imports this entry, and a bundler's
 // tree-shaking is not a safety guarantee.

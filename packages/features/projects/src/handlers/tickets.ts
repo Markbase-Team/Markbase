@@ -15,7 +15,7 @@ import {
   type TicketCcPatchBody,
 } from "@markbase/protocol/tickets";
 import { isOwnerKind, isStatus } from "@markbase/protocol/types";
-import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/node/features";
+import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 import { owner, type HandlerHost } from "./host";
 
 export function ticketsHandler(host: HandlerHost) {

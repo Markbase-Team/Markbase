@@ -17,9 +17,9 @@ export const KERNEL_PACKAGES = [
   "@markbase/agent",
   "@markbase/browser-agent",
   "@markbase/flows",
-  "@markbase/llm",
   "@markbase/node",
   "@markbase/protocol",
+  "@markbase/server",
   "@markbase/ui",
   "@markbase/vault",
 ] as const;

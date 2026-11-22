@@ -8,8 +8,8 @@ import {
   renameAgentSession,
 } from "@markbase/protocol";
 import { endpointSet, signedIn, type EndpointDef } from "@markbase/protocol/endpoint";
-import { listApiKeys } from "@markbase/node/api-keys";
-import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/node/features";
+import { listApiKeys } from "@markbase/server/api-keys";
+import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 
 // The agents feature's endpoints: the named agent sessions a person hands work
 // to. Each is written once — what it is, who may call it, its code — with the

@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import type { FeatureId } from "@markbase/protocol";
-import { featureEnabled } from "@markbase/node/features";
+import { featureEnabled } from "@markbase/server/features";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 // Only the part that needs Next. Deciding WHETHER a feature is available is
-// pure logic and lives in @markbase/node/features, where a package can reach
+// pure logic and lives in @markbase/server/features, where a package can reach
 // it; sending someone to a page is the shell's job and stays here.
 
-export { CLAUDE_CODE_REQUIRED, getFeatureEnv, featureEnabled } from "@markbase/node/features";
+export { CLAUDE_CODE_REQUIRED, getFeatureEnv, featureEnabled } from "@markbase/server/features";
 
 /**
  * Gate a server component on a Claude-Code-only feature. Sends the user to the

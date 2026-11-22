@@ -1,4 +1,4 @@
-import { chatJson } from "@markbase/llm";
+import { chatJson } from "@markbase/server/llm";
 import {
   createTicket,
   getProject,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { agentTools } from "@markbase/docs/agent-tools";
-import { offersToken } from "@markbase/node/caller";
-import { signInChallenge } from "@markbase/node/mcp-oauth";
+import { offersToken } from "@markbase/server/caller";
+import { signInChallenge } from "@markbase/server/mcp-oauth";
 import { toolRequest, type Json } from "@markbase/protocol/endpoint-tools";
 import {
   MCP_SESSION_HEADER,
@@ -61,7 +61,7 @@ export const DELETE = notOffered;
 export async function POST(req: Request) {
   // A key, never the browser's cookie: this URL is reachable from any page a
   // signed-in person has open, and a cookie would let that page act as them.
-  // A client with no key is told where to sign in (see @markbase/node/mcp-oauth);
+  // A client with no key is told where to sign in (see @markbase/server/mcp-oauth);
   // one that can only send a key is told the same thing in words.
   if (!offersToken(req)) {
     return refusal(401, "Sign in, or send 'Authorization: Bearer <api_key>'. Keys are made in the dashboard, under API keys.", {

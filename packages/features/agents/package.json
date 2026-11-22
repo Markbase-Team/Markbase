@@ -12,8 +12,8 @@
   },
   "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
   "dependencies": {
-    "@markbase/node": "*",
     "@markbase/protocol": "*",
+    "@markbase/server": "*",
     "@markbase/ui": "*",
     "lucide-react": "^1.17.0",
     "sonner": "^2.0.7"

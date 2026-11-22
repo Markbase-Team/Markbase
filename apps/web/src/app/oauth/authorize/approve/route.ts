@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createApiKey } from "@markbase/node/api-keys";
-import { checkAuthorize, sealCode } from "@markbase/node/mcp-oauth";
+import { createApiKey } from "@markbase/server/api-keys";
+import { checkAuthorize, sealCode } from "@markbase/server/mcp-oauth";
 import { pickedCapability } from "@/lib/capabilities";
 import { instanceUrl } from "@/lib/instance-url";
 import { oauthSecret } from "@/lib/mcp-oauth";
@@ -28,7 +28,7 @@ async function fromThisSite(req: Request): Promise<boolean> {
 
 // POST target of the /oauth/authorize form. Mints an API key for the signed-in
 // person, inert until the client exchanges the code for it (see
-// @markbase/node/mcp-oauth), and sends the client back to the address it
+// @markbase/server/mcp-oauth), and sends the client back to the address it
 // registered with that code.
 export async function POST(req: Request) {
   const user = await getCurrentUser();

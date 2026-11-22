@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { serverSupabaseKey } from "@markbase/protocol/supabase";
-import type { OAuthError } from "@markbase/node/mcp-oauth";
+import type { OAuthError } from "@markbase/server/mcp-oauth";
 
 // The web app's half of sign-in for the hosted MCP server: where the secret
 // comes from, and how its endpoints answer. The rules are in
-// @markbase/node/mcp-oauth.
+// @markbase/server/mcp-oauth.
 
 /**
  * The secret client ids are signed with and codes are sealed with. It is

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { chatJson } from "../src/openrouter";
+import { chatJson } from "../src/llm/openrouter";
 
 // The retry policy is the whole point of this module, and it was never covered:
 // it lived inside a feature package that has no test setup at all. These tests
