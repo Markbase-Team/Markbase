@@ -1,4 +1,4 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 import {
   createManualItem,
   fileEmailOnBoard,
