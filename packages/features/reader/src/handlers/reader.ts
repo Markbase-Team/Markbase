@@ -1,4 +1,4 @@
-import { chatJson, type ContentPart } from "@markbase/llm";
+import { chatJson, type ContentPart } from "@markbase/server/llm";
 import {
   addReaderMessage,
   createReaderDocument,
@@ -22,7 +22,7 @@ import {
 // standard Web `Response` — the same body can be served by a Next route, an
 // Electron IPC bridge, or any plain Node server.
 
-import type { Authorize } from "@markbase/protocol/caller";
+import type { Authorize } from "@markbase/shared/caller";
 
 export type { Authorize };
 

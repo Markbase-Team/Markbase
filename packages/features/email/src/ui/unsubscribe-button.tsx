@@ -6,7 +6,7 @@ import { Check, Loader2, MailX } from "lucide-react";
 import { Button } from "@markbase/ui/button";
 import type { UnsubscribeInfo } from "../server/unsubscribe";
 
-// The unsubscribe agent's reply (mirrors @markbase/browser-agent's
+// The unsubscribe agent's reply (mirrors server/browser-agent's
 // UnsubscribeResult — kept inline so this client component pulls no server deps).
 type UnsubscribeResult = {
   ok: boolean;

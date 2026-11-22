@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { readLocalJson, removeLocal, writeLocalJson } from "./local-store";
 import { usePrompt } from "@markbase/ui/prompt-dialog";
@@ -17,9 +17,9 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { buildFolderTree, filePathIn, filesUnder, moveFolder, renameFolder, type FolderNode, type Move } from "@markbase/protocol/folders";
-import { nextPollDelay } from "@markbase/protocol/poll-backoff";
-import { intentFromClick, type OpenIntent } from "@markbase/docs/workspace-tabs";
+import { buildFolderTree, filePathIn, filesUnder, moveFolder, renameFolder, type FolderNode, type Move } from "@markbase/shared/folders";
+import { nextPollDelay } from "@markbase/shared/poll-backoff";
+import { intentFromClick, type OpenIntent } from "@markbase/shared/docs/workspace-tabs";
 import { isSharedScope, SHARED_SCOPE } from "./scope";
 import { readLocalVaultDocs, type VaultIndexEntry } from "./vault-index-client";
 import { useDocsPorts, type VaultsPort } from "./ports";

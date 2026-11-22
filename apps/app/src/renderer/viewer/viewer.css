@@ -10,7 +10,7 @@
 /* The classes this page can actually use: the shared components, and the one
  * feature it renders. Same rule as apps/web — a directory, never a glob in the
  * middle of a path, because a glob that matches nothing is silent. */
-@source "../../../../../packages/core/ui/src";
+@source "../../../../../packages/platform/ui/src";
 @source "../../../../../packages/features/docs/src";
 
 /* The font family is the shell's to supply — see the terms window. */

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { DocAnalyticsReport } from "../src/logic/analytics";
+import type { DocAnalyticsReport } from "@markbase/shared/docs/analytics";
 
 // The Analytics panel as a person sees it, from the response the endpoint
 // gives. The read row below is the one GET /docs/:id/analytics returned on

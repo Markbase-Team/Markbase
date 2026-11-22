@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { serverSupabaseKey } from "@markbase/protocol/supabase";
+import { serverSupabaseKey } from "@markbase/server/supabase";
 
 // Secret-key Supabase client for the email module. The email tables (which
 // hold OAuth tokens) have RLS that denies the publishable/anon key, so this

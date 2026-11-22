@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 // resolves through node_modules when it loads this config, and Node then cannot
 // follow the package's extensionless relative imports. A relative path is
 // bundled along with them. Build-time only; the registry walks up from cwd.
-import { featuresEnvValue } from "../../packages/core/registry/src/web";
+import { featuresEnvValue } from "../../packages/platform/registry/src/web";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -31,7 +31,7 @@ export default defineConfig({
   root: here("./src/renderer"),
   base: "./",
   plugins: [react(), tailwindcss()],
-  // @markbase/protocol/browser reads the Supabase project from the names the
+  // @markbase/shared/browser reads the Supabase project from the names the
   // website's build gives it. These pages have no Next build, and the pair
   // cannot be baked in either: this app is built once and the machine it runs
   // on may have been pointed at a self-hosted instance (SELF-HOSTING.md). So

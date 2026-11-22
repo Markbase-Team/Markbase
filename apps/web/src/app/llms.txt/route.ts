@@ -1,4 +1,4 @@
-import { REPO_URL } from "@markbase/protocol/downloads";
+import { REPO_URL } from "@markbase/shared/downloads";
 import { BLOG_POSTS } from "@/lib/blog";
 import { DOCS_NAV, docsDescription, docsPage } from "@/lib/docs-nav";
 

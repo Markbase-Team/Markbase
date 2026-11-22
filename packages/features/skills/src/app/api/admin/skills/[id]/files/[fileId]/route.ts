@@ -1,9 +1,6 @@
-import {
-  deleteSkillFile,
-  isSafeSkillPath,
-  updateSkillFile,
-} from "@markbase/protocol/skill-files";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { isSafeSkillPath } from "@markbase/shared/skill-files";
+import { deleteSkillFile, updateSkillFile } from "@markbase/server/db/skill-files";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // PATCH /api/admin/skills/:id/files/:fileId — edit a file's path/content/mode.
 export async function PATCH(

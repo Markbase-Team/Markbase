@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteApiKey } from "@markbase/node/api-keys";
+import { deleteApiKey } from "@markbase/server/api-keys";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";

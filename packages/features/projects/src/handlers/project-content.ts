@@ -3,14 +3,14 @@ import {
   deleteProjectDoc,
   listProjectDocs,
   updateProjectDoc,
-} from "@markbase/protocol/project-docs";
+} from "@markbase/server/db/project-docs";
 import {
   createWorkLog,
   deleteWorkLog,
   listWorkLogs,
   updateWorkLog,
-} from "@markbase/protocol/work-logs";
-import { getProject } from "@markbase/protocol/tickets";
+} from "@markbase/server/db/work-logs";
+import { getProject } from "@markbase/server/db/tickets";
 import { owner, type HandlerHost } from "./host";
 
 // A project's own writing: its documentation and its work logs.

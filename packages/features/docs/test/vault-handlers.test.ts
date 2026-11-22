@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
+import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 
 // One vault, asked about by id. The two refusals are different answers and
 // stay different: 404 is "there is no such vault" and 403 is "there is, and it
@@ -39,8 +39,8 @@ vi.mock("../src/server/members", () => ({
 }));
 vi.mock("../src/server/links", () => ({ getLinkByToken: async () => null }));
 vi.mock("../src/server/owner-name", () => ({ ownerDisplayName: async (u: string) => u }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

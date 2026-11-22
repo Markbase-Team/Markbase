@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@markbase/protocol/supabase", () => ({ supabase: {} }));
+vi.mock("@markbase/server/supabase", () => ({ supabase: {} }));
 
 import { recordProductEvent, type EventWriter, type ProductEventRow } from "../src/lib/product-events-server";
 

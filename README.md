@@ -61,17 +61,25 @@ apps/app/        The desktop app (Electron): the same documents, plus the sync
 apps/markbase/   The `markbase` CLI (@markbase/cli): sign in, mount a vault,
                  run the sync as a background service.
 
-packages/core/       What everything is built on
-  protocol/          Isomorphic types, the API client, pure logic. Runs in a
-                     browser, a server and a daemon alike.
-  vault/             The local vault: watcher, lock, registry, file sync.
-  flows/             Steps every client shares (sign in, mount a vault), written
-                     once against an operator that asks the questions.
-  node/  registry/  ui/  runner/  agent/  llm/  browser-agent/
+packages/shared/     One package (@markbase/shared) that runs everywhere: types,
+                     the API client, the document engine (CRDT, markdown),
+                     pure logic. No Node.js built-ins, no secrets. Imports
+                     nothing else in packages/.
 
-packages/features/   Things that live in the kernel
-  docs/              The collaborative document engine: CRDT, markdown,
-                     comments, history, the vault's file contents. Released.
+packages/platform/   What everything is built on, split by where code runs.
+                     May import shared; never a feature.
+  ui/                React components. Runs where there is a screen.
+  server/            Runs on the web server only: the database client and
+                     queries, API keys, the caller, the model client.
+  local/             Runs on the user's machine only (the CLI and the desktop
+                     app's main process): vault/ (watcher, lock, registry, file
+                     sync), runner/ (the ticket worker), flows/ (sign in, mount
+                     a vault, asked through an operator).
+  agent/  registry/  Self-contained: the agent rail, and the feature manifests.
+
+packages/features/   Things that live in the kernel. May import platform and shared.
+  docs/              Collaborative documents: the editor, comments, history,
+                     publishing, and the API behind them. Released.
   agents/ attention/ diary/ email/ projects/ reader/ skills/ terms/ today/
                      In the repository, not in the released product. A build
                      ships them only when MARKBASE_FEATURES names them.
@@ -82,10 +90,10 @@ docs/            Design notes: the shared vault, the workspace layout, how
                  get it as a tool (docs/adding-an-endpoint.md).
 ```
 
-The vault is core and documents are a feature, so the dependency points from
-`docs` to `vault`, not the other way: the vault says what it needs from a
-synced file and `docs` implements it.
-`packages/core/protocol/test/package-boundary.test.ts` fails if an edge is
+Imports run one way: features may import platform and shared, platform may import
+shared, and shared imports neither. Inside platform, `ui`, `server` and `local`
+never import each other; they meet over HTTP.
+`packages/shared/test/package-boundary.test.ts` fails if an edge is
 added back.
 
 ## Develop

@@ -1,5 +1,5 @@
-import { confirmApiKey } from "@markbase/node/api-keys";
-import { openCode, pkceMatches } from "@markbase/node/mcp-oauth";
+import { confirmApiKey } from "@markbase/server/api-keys";
+import { openCode, pkceMatches } from "@markbase/server/mcp-oauth";
 import { oauthError, oauthJson, oauthPreflight, oauthSecret } from "@/lib/mcp-oauth";
 
 export const runtime = "nodejs";

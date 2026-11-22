@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import {
   createContext,
   useCallback,

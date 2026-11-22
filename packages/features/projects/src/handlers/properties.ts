@@ -5,7 +5,7 @@ import {
   getProjectProperty,
   listProjectProperties,
   updateProjectProperty,
-} from "@markbase/protocol/tickets";
+} from "@markbase/server/db/tickets";
 import { owner, type HandlerHost } from "./host";
 
 /** Trim, drop blanks, and de-duplicate the allowed-values list for a property. */

@@ -1,4 +1,4 @@
-import { protectedResourceMetadata } from "@markbase/node/mcp-oauth";
+import { protectedResourceMetadata } from "@markbase/server/mcp-oauth";
 import { instanceUrl } from "@/lib/instance-url";
 import { oauthJson, oauthPreflight } from "@/lib/mcp-oauth";
 

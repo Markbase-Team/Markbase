@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
+import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 
 // The Shared Vault's API surface (docs/shared-vault.md): the shared list says
 // what the member holds and where they file it, a member may file or leave a
@@ -42,8 +42,8 @@ vi.mock("../src/server/vaults", () => ({
     return v !== null && v.owner_id === userId;
   },
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

@@ -7,7 +7,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/docs/agent-tools";
+import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/shared/docs/agent-tools";
 import {
   hookAgentsOf,
   installAuditHooks,
@@ -17,11 +17,11 @@ import {
   type McpInstallOptions,
   type McpInstallResult,
   type McpTarget,
-} from "@markbase/node";
-import { canOpenBrowser } from "@markbase/flows/node";
+} from "@markbase/local";
+import { canOpenBrowser } from "@markbase/local/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
-import { toolAnnotations, type Json } from "@markbase/protocol/endpoint-tools";
+import { toolAnnotations, type Json } from "@markbase/shared/endpoint-tools";
 import { callEndpoint } from "./call";
 import { printHookResults } from "../audit-install";
 import { mcpAuth } from "./mcp-auth";
@@ -93,7 +93,7 @@ export async function runMcpInstall(argv: string[] = [], deps: McpInstallDeps = 
   if (doCode) targets.push("claude-code");
   if (doCodex) targets.push("codex");
   if (doCursor) targets.push("cursor");
-  // The same installer the desktop app's Settings runs (@markbase/node).
+  // The same installer the desktop app's Settings runs (@markbase/local).
   const installed = deps.installDocsMcp({ key, base, targets, forceCursor: want.cursor });
   for (const r of installed) {
     const name = r.name.padEnd(15);

@@ -1,6 +1,6 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { syncGeneratedFiles } from "@markbase/node/generated-files";
+import { syncGeneratedFiles } from "@markbase/server/generated-files";
 import { GENERATED_API_DIRS, generatedApiRoutes } from "./api-routes";
 
 // Writes the documents API's route files from its endpoint definitions.

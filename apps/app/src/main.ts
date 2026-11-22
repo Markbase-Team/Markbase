@@ -11,11 +11,11 @@ import {
   session,
   type IpcMainEvent,
 } from "electron";
-import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/docs/crdt-api";
-import { fetchWithTimeout } from "@markbase/protocol/timeout-fetch";
+import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/shared/docs/crdt-api";
+import { fetchWithTimeout } from "@markbase/shared/timeout-fetch";
 import type { MenuItemConstructorOptions } from "electron";
 import { startTicketWorkerHost, type TicketWorkerHost, type TicketWorkerStatus } from "./ticket-worker";
-import { reportClaudeRun } from "@markbase/runner";
+import { reportClaudeRun } from "@markbase/local/runner";
 import { installTray } from "./tray";
 import {
   AT_LOGIN_FLAG,
@@ -51,7 +51,7 @@ import { homedir } from "node:os";
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { SUPABASE_KEY_DEFAULT, SUPABASE_URL_DEFAULT } from "./supabase-defaults";
-import { DEFAULT_APP_URL, parseConnectLink } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL, parseConnectLink } from "@markbase/shared/instance";
 import { connectToInstance, instanceStatus, type InstanceStatus } from "./instance";
 import {
   awaitDeviceAuth,
@@ -59,7 +59,7 @@ import {
   installDocsMcp,
   withToolPath,
   type McpInstallResult,
-} from "@markbase/node";
+} from "@markbase/local";
 import {
   startVaultSync,
   listMarkdown,
@@ -75,7 +75,7 @@ import {
   readUnmountedVaults,
   removeMountedVault,
   // Aliased: this file has its own unmountVault, which is the host half (menu,
-  // supervisor pass). The @markbase/vault one is the registry half.
+  // supervisor pass). The @markbase/local/vault one is the registry half.
   unmountVault as tombstoneUnmount,
   migrateHome,
   markbaseHome,
@@ -94,13 +94,13 @@ import {
   type ForkControl,
   type LocalFork,
   type SharedVaultHost,
-} from "@markbase/vault";
+} from "@markbase/local/vault";
 import {
   SHARED_VAULT_DIRNAME,
   SHARED_VAULT_ID,
   SHARED_VAULT_NAME,
   sanitizePathSegment,
-} from "@markbase/protocol/shared-vault";
+} from "@markbase/shared/shared-vault";
 import {
   mountVault,
   folderRefusal,
@@ -110,7 +110,7 @@ import {
   startVaultSupervisor,
   type ReconcileDeps,
   type VaultSupervisor,
-} from "@markbase/flows/node";
+} from "@markbase/local/flows/node";
 import { dialogOperator } from "./dialog-operator";
 import { spawn as spawnPty, type IPty } from "node-pty";
 import {
@@ -258,7 +258,7 @@ process.on("uncaughtException", (e) => {
 interface Settings {
   /**
    * Mounted vaults are NOT here. They live in the machine-wide registry the CLI
-   * also uses (packages/core/src/vault-registry.ts) — one list, so mounting in
+   * also uses (packages/platform/local/src/vault/vault-registry.ts) — one list, so mounting in
    * either place is visible to both. `legacyVaults` is only read once, to move
    * an older install's list over.
    */
@@ -767,7 +767,7 @@ function readOwnKey(): string | null {
 }
 
 /**
- * The loop that makes the registry true — see @markbase/flows.
+ * The loop that makes the registry true — see @markbase/local/flows.
  *
  * This replaces the map of stop handles the file used to keep. Mounting and
  * unmounting now edit the registry and ask for a pass; the supervisor decides
@@ -1449,7 +1449,7 @@ async function mountVaultToFolder(
   // The steps below — pick a folder, warn before adopting a big one, refuse a
   // folder that belongs to or sits inside another vault, register, start syncing
   // — are the same ones `markbase vault mount` runs. They live in
-  // @markbase/flows now, and this host supplies the dialogs and the menu.
+  // @markbase/local/flows now, and this host supplies the dialogs and the menu.
   const operator = dialogOperator({
     showMessageBox: (req) => dialog.showMessageBox(req),
     showOpenDialog: (req) => dialog.showOpenDialog(req),
@@ -3173,7 +3173,7 @@ function openSettings(): void {
 
 // ---- Join links -------------------------------------------------------------
 // An instance's /join page offers markbase://connect?instance=<url>&code=<invite>
-// (@markbase/protocol/instance). The OS hands it to this app — `open-url` on
+// (@markbase/shared/instance). The OS hands it to this app — `open-url` on
 // macOS, argv on Windows and Linux, and on either the second process when one
 // is already running — and the app does what "Change Instance…" did: confirms,
 // signs out, saves, restarts on the instance. Nobody types the address.

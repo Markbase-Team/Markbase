@@ -14,13 +14,10 @@ export default defineConfig({
   clean: true,
   // Workspace TS packages must be inlined (Electron can't resolve them at runtime).
   noExternal: [
-    "@markbase/protocol",
-    "@markbase/node",
-    "@markbase/vault",
-    "@markbase/runner",
+    "@markbase/shared",
+    "@markbase/local",
     "@markbase/docs",
     "@markbase/agent",
-    "@markbase/flows",
   ],
   // Loaded at runtime from node_modules, not bundled: electron is the runtime,
   // node-pty is a prebuilt N-API

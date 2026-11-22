@@ -1,5 +1,5 @@
 import type { FeatureLayoutProps } from "@markbase/ui/page-host";
-import { getProject } from "@markbase/protocol/tickets";
+import { getProject } from "@markbase/server/db/tickets";
 import { ProjectProvider, ProjectTabs } from "../../../../ui";
 
 // Shared shell for a project's asset tabs (Secrets, Work Logs): the tab bar +

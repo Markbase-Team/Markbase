@@ -1,18 +1,18 @@
-import { chatJson } from "@markbase/llm";
+import { chatJson } from "@markbase/server/llm";
 import {
   createTicket,
   getProject,
   listProjectProperties,
   listTicketsInRange,
   updateProject,
-} from "@markbase/protocol/tickets";
+} from "@markbase/server/db/tickets";
 import {
   isStatus,
   STATUS_LABELS,
   type McpConfig,
   type Ticket,
   type TicketStatus,
-} from "@markbase/protocol/types";
+} from "@markbase/shared/types";
 import { owner, type HandlerHost } from "./host";
 
 // The three endpoints that are about a project as a whole rather than one

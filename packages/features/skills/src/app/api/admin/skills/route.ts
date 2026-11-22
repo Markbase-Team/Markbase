@@ -1,5 +1,6 @@
-import { listSkills, upsertSkill, SKILL_NAME_RE } from "@markbase/protocol/skills";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { SKILL_NAME_RE } from "@markbase/shared/skills";
+import { listSkills, upsertSkill } from "@markbase/server/db/skills";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // Authentication happens in the shell's proxy — /api/admin/skills is a
 // `required` prefix there, so a request that reaches this file carries a

@@ -13,8 +13,8 @@
   "scripts": { "typecheck": "tsc --noEmit" },
   "dependencies": {
     "@codemirror/lang-markdown": "*",
-    "@markbase/node": "*",
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
+    "@markbase/server": "*",
     "@markbase/ui": "*",
     "lucide-react": "^1.17.0",
     "sonner": "^2.0.7"

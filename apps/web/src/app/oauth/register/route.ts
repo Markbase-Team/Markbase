@@ -1,11 +1,11 @@
-import { registerClient, type RegistrationRequest } from "@markbase/node/mcp-oauth";
+import { registerClient, type RegistrationRequest } from "@markbase/server/mcp-oauth";
 import { oauthError, oauthJson, oauthPreflight, oauthSecret } from "@/lib/mcp-oauth";
 
 export const runtime = "nodejs";
 
 // RFC 7591. An MCP client introduces itself before it sends anybody to sign
 // in. Nothing is stored: the id returned is the registration, signed (see
-// @markbase/node/mcp-oauth), so this is open to any caller and costs nothing
+// @markbase/server/mcp-oauth), so this is open to any caller and costs nothing
 // to call. A registration grants nothing; a person still has to approve.
 export const OPTIONS = oauthPreflight;
 

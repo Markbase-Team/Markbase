@@ -27,7 +27,7 @@ import {
   listCommentThreads,
   offsetForQuote,
   type CommentView,
-} from "@markbase/docs";
+} from "@markbase/shared/docs";
 import { docCrdtPool } from "./doc-crdt-pool";
 import { useDocsPorts } from "./ports";
 import { useLatest } from "@markbase/ui/latest-ref";

@@ -1,4 +1,4 @@
-import { routeFiles, type GeneratedFile } from "@markbase/protocol/endpoint-gen";
+import { routeFiles, type GeneratedFile } from "@markbase/shared/endpoint-gen";
 import { definedEndpoints } from "./index";
 
 // The agents feature's route files, worked out from its endpoint definitions.

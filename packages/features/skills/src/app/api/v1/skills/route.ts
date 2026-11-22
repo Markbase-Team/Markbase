@@ -1,16 +1,8 @@
-import {
-  buildSkillMd,
-  listSkills,
-  parseSkillMd,
-  upsertSkill,
-  SKILL_NAME_RE,
-} from "@markbase/protocol/skills";
-import {
-  isSafeSkillPath,
-  replaceSkillFiles,
-  type SkillFileInput,
-} from "@markbase/protocol/skill-files";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { buildSkillMd, parseSkillMd, SKILL_NAME_RE } from "@markbase/shared/skills";
+import { listSkills, upsertSkill } from "@markbase/server/db/skills";
+import { isSafeSkillPath, type SkillFileInput } from "@markbase/shared/skill-files";
+import { replaceSkillFiles } from "@markbase/server/db/skill-files";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // Authentication and CORS happen in the shell's proxy. /api/v1/skills is an
 // `optional` prefix there — the install script below it is public — so every

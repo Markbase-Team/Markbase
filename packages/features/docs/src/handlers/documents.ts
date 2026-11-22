@@ -9,7 +9,7 @@ import {
   retitleLeadingH1,
   setMarkdown,
   accountOf,
-} from "../logic";
+} from "@markbase/shared/docs";
 import {
   adoptedFileActor,
   countApiRead,
@@ -33,8 +33,8 @@ import {
   userOwnsVault,
   type SharedDocumentListRow,
 } from "../server";
-import { normalizePath } from "@markbase/protocol/folders";
-import { sharedDocPath } from "@markbase/protocol/shared-vault";
+import { normalizePath } from "@markbase/shared/folders";
+import { sharedDocPath } from "@markbase/shared/shared-vault";
 import { endpoint } from "./define";
 import { json } from "./respond";
 

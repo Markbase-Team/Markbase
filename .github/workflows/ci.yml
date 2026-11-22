@@ -1,6 +1,6 @@
 name: CI
 
-# Typecheck + tests for the monorepo (protocol, docs engine, vault, web) on every
+# Typecheck + tests for the monorepo (shared, core, features, web) on every
 # PR and on pushes to main. Deployment (CD) is handled by Vercel, which builds
 # and ships the web app on push to main — this job is the pre-merge safety net.
 on:

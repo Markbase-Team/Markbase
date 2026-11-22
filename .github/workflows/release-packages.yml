@@ -13,7 +13,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "packages/core/ui/**"
+      - "packages/platform/ui/**"
       - "packages/features/attention/**"
       - ".github/workflows/release-packages.yml"
   workflow_dispatch:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Split @shared/ui → pkg-ui
         run: |
-          git subtree split --prefix=packages/core/ui -b _split_ui
+          git subtree split --prefix=packages/platform/ui -b _split_ui
           git push -f origin _split_ui:pkg-ui
 
       - name: Split @workspace/attention → pkg-attention

@@ -1,5 +1,5 @@
-import { getWorkerPresence } from "@markbase/protocol";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { getWorkerPresence } from "@markbase/server/db/jobs";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // GET /api/v1/worker — is this owner's worker connected? Used by the
 // dashboard to show a "worker not running" install card. "connected" means it

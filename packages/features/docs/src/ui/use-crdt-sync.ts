@@ -23,7 +23,7 @@ import {
   type CommentView,
   type DocJSON,
   type MarkdownLens,
-} from "@markbase/docs";
+} from "@markbase/shared/docs";
 import { docCrdtPool } from "./doc-crdt-pool";
 import { useDocsPorts } from "./ports";
 import { useLatest } from "@markbase/ui/latest-ref";

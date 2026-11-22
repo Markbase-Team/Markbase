@@ -1,4 +1,4 @@
-import { SKILL_NAME_RE } from "@markbase/protocol/skills";
+import { SKILL_NAME_RE } from "@markbase/shared/skills";
 
 // GET /api/v1/skills/:name/install — a bash installer you pipe to a shell. It
 // downloads the skill's bundle and unpacks it into ~/.claude/skills/<name>/, so

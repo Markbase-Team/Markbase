@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import type { Capability } from "./auth";
 
 // Shareable links. A `member` link requires sign-in and grants a doc_members

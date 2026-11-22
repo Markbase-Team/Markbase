@@ -1,4 +1,4 @@
-import { chooseRevival, getMarkdown, restore } from "@markbase/docs";
+import { chooseRevival, getMarkdown, restore } from "@markbase/shared/docs";
 import { loadCrdtSnapshot } from "./crdt-store";
 import {
   listTrashedInVault,

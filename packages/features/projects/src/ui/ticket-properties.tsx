@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@markbase/ui/select";
 import { propertyValueColor } from "./property-color";
-import type { ProjectProperty, Ticket } from "@markbase/protocol/types";
+import type { ProjectProperty, Ticket } from "@markbase/shared/types";
 import { submitKeys } from "@markbase/ui/keys";
 
 // Sentinel for the "no default value" option in the default-value picker

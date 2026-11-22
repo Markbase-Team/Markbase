@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import { decryptSecret, encryptSecret, maskPreview } from "./secrets-crypto";
 
 // Non-sensitive metadata about a stored secret. The encrypted columns

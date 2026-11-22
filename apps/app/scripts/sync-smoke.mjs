@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Does vault sync work on a Mac that has nothing but the app?
 //
-// The engine has its own tests (packages/core/vault/test), but they fake the
+// The engine has its own tests (packages/platform/local/test/vault), but they fake the
 // transport and never run the app around it. This runs a PACKAGED build the way
 // a fresh user would see it — no CLI, no ~/.markbaseConfig, no settings.json —
 // and checks the two directions through the HTTP API:

@@ -1,4 +1,4 @@
-import { authorizedByGate } from "@markbase/protocol/caller";
+import { authorizedByGate } from "@markbase/shared/caller";
 import { readerDocumentHandler } from "../../../../../../handlers";
 
 type Ctx = { params: Promise<{ id: string }> };

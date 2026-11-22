@@ -1,8 +1,8 @@
-import { markdownToDoc, docToMarkdown, deriveTitle } from "../logic/markdown";
+import { markdownToDoc, docToMarkdown, deriveTitle } from "@markbase/shared/docs/markdown";
 import { createDocument } from "./documents";
 import { createComment } from "./comments";
 import type { Actor } from "./auth";
-import type { DocJSON } from "../logic/types";
+import type { DocJSON } from "@markbase/shared/docs/types";
 
 /**
  * Who the welcome document and its sample comments are from: Markbase, as an

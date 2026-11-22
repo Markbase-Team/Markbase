@@ -7,7 +7,7 @@ import type {} from "./routes";
 import { Check, Loader2, Save, TriangleAlert } from "lucide-react";
 import { Button } from "@markbase/ui/button";
 import { Textarea } from "@markbase/ui/textarea";
-import type { McpConfig } from "@markbase/protocol/types";
+import type { McpConfig } from "@markbase/shared/types";
 import { useProject } from "./project-context";
 
 const TEMPLATE = `{

@@ -1,4 +1,4 @@
-import type { InstancePublicConfig } from "@markbase/protocol/instance-config";
+import type { InstancePublicConfig } from "@markbase/shared/instance-config";
 
 // The Supabase project THIS server runs on — the public half, read from the
 // server's environment when asked, not when built.

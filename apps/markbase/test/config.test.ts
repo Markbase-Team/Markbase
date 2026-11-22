@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { PLACEHOLDER_API_KEY } from "@markbase/node";
+import { PLACEHOLDER_API_KEY } from "@markbase/local";
 
 // Which key the CLI and the MCP server use. An agent's config can name one in
 // MARKBASE_API_KEY; otherwise it is the one `markbase login` saved. The case

@@ -25,8 +25,8 @@ import {
 import { ImageUpload } from "./image-upload";
 import { AttachmentThumb } from "./attachment-thumb";
 import { OwnerBadge, StatusBadge } from "./status-badge";
-import { uploadImages } from "@markbase/protocol/upload";
-import type { Project, Ticket } from "@markbase/protocol/types";
+import { uploadImages } from "@markbase/shared/upload";
+import type { Project, Ticket } from "@markbase/shared/types";
 
 export function ProjectClient({
   project,

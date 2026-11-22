@@ -1,5 +1,5 @@
 import { deleteSecret, updateSecret } from "../../../../../server";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // PATCH /api/admin/secrets/:id — rename, edit description, or rotate the value.
 export async function PATCH(

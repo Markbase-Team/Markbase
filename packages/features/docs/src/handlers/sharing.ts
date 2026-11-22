@@ -1,4 +1,4 @@
-import { accountOf } from "../logic";
+import { accountOf } from "@markbase/shared/docs";
 import {
   createComment,
   createLink,

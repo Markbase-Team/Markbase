@@ -1,5 +1,5 @@
 import { revealSecret } from "../../../../../../server";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // POST /api/admin/secrets/:id/reveal — decrypt and return the plaintext value.
 // POST (not GET) so the id/value never lands in URLs, server logs, or caches.

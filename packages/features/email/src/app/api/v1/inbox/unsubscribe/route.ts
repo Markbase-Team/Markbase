@@ -1,9 +1,9 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
-import { runUnsubscribe } from "@markbase/browser-agent";
+import { callerFromHeaders } from "@markbase/shared/auth";
+import { runUnsubscribe } from "../../../../../server/browser-agent";
 import { getEmailAccount, getMessage } from "../../../../../server";
 
 // POST { account, id } — spin up the unsubscribe agent for a message. Looks up
-// the message's unsubscribe targets, then hands them to @markbase/browser-agent
+// the message's unsubscribe targets, then hands them to the browser agent in server/browser-agent
 // (one-click POST, else a headless-browser walk-through, else mailto).
 // The browser agent can take a while to click through a confirmation page, so
 // the manifest gives this route `maxDuration: 60`.

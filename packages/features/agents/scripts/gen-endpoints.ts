@@ -2,7 +2,7 @@
 // (src/handlers). `--check` fails instead when they are out of date.
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { syncGeneratedFiles } from "@markbase/node/generated-files";
+import { syncGeneratedFiles } from "@markbase/server/generated-files";
 import { agentsRouteFiles } from "../src/handlers/routes";
 
 const ok = syncGeneratedFiles({

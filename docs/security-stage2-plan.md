@@ -277,7 +277,7 @@ The other half of stage 2: the worker tables and the six RPCs. Branch
 
 **The worker holds no database credential.** `@markbase/runner` talks to the
 web API and nothing else, through `WorkerApi`
-(`packages/core/protocol/src/worker-api.ts`): every request carries the
+(`packages/shared/src/worker-api.ts`): every request carries the
 machine's key as a bearer token, and nothing in any request body names an
 owner. A 5xx or a dropped connection is retried with the existing backoff; a
 401/403 ends the run and the host reports it (the tray's "failed", the CLI's
@@ -286,7 +286,7 @@ exit). The CLI (`markbase start`) and the desktop ticket worker host pass only
 for the vault daemons and the CRDT host until PR 67 removes those callers.
 
 **Every direct access has an endpoint**, registered as `WORKER_ENDPOINTS` in
-`packages/features/docs/src/logic/endpoints.ts` (`capability: null`,
+`packages/shared/src/docs/endpoints.ts` (`capability: null`,
 `humanOnly` — plumbing, not agent tools) and served by handlers in
 `packages/features/projects/src/handlers/worker.ts`:
 
@@ -352,5 +352,5 @@ revoked yet — revoke last.
 - `packages/features/projects/test/worker-handlers.test.ts`: another owner's
   key cannot claim, read, heartbeat or finish this owner's jobs, requests,
   tickets or projects; the owner passed to the data layer is always the key's.
-- `packages/core/protocol/test/worker-api.test.ts`: retry on 5xx and network
+- `packages/shared/test/worker-api.test.ts`: retry on 5xx and network
   failure, fatal on 401/403, null on 404 reads and 409 claims.

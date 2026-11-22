@@ -1,4 +1,4 @@
-import { authorizedByGate } from "@markbase/protocol/caller";
+import { authorizedByGate } from "@markbase/shared/caller";
 import { diariesHandler } from "../../../../handlers";
 
 // Authentication and CORS happen in the shell's proxy — /api/admin/diaries is

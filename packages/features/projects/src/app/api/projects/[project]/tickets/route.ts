@@ -2,8 +2,8 @@ import {
   createTicket,
   getProjectBySlug,
   listProjectTickets,
-} from "@markbase/protocol/tickets";
-import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/node/features";
+} from "@markbase/server/db/tickets";
+import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 
 // GET /api/projects/:project/tickets — list tickets for one project (public
 // requester view), scoped to the project in the URL.

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, CircleAlert, Minus, Plug } from "lucide-react";
-import type { McpInstallResult } from "@markbase/node/mcp-install";
+import type { McpInstallResult } from "@markbase/local/mcp-install";
 import { Button } from "@markbase/ui/button";
 import type { AgentsBridge } from "../../preload";
 

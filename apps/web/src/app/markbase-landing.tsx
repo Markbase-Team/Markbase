@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { StayInTouchForm } from "@/components/stay-in-touch";
 
-import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE, REPO_URL } from "@markbase/protocol/downloads";
+import { MAC_DOWNLOAD_URL, MAC_FIRST_OPEN_NOTE, REPO_URL } from "@markbase/shared/downloads";
 import { latestMacVersion } from "@/lib/latest-release";
 import { DownloadButton } from "@markbase/ui/download-button";
 

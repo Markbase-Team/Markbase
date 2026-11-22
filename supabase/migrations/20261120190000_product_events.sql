@@ -8,7 +8,7 @@
 --
 -- The page now reports those moments to POST /api/v1/events, which writes one
 -- row each here. The names a row may carry are a fixed list in
--- packages/core/protocol/src/product-events.ts; anything else is refused.
+-- packages/shared/src/product-events.ts; anything else is refused.
 --
 -- The table is the API's alone, like signup_sources: the server writes it with
 -- the secret key, and no browser key can read anyone's events.

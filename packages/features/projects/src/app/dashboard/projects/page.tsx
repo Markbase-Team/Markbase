@@ -1,5 +1,5 @@
 import type { FeaturePageProps } from "@markbase/ui/page-host";
-import { getProject, listTickets } from "@markbase/protocol/tickets";
+import { getProject, listTickets } from "@markbase/server/db/tickets";
 import { AdminClient } from "../../../ui";
 
 // The board. This IS the projects surface now — a bare /dashboard lands on

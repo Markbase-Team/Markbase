@@ -1,6 +1,6 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { joinLink } from "@markbase/protocol/instance";
-import { supabase } from "@markbase/protocol/supabase";
+import { joinLink } from "@markbase/shared/instance";
+import { supabase } from "@markbase/server/supabase";
 import { instanceUrl } from "@/lib/instance-url";
 
 // The instance's invite code: what its join link carries, and what the join

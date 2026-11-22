@@ -9,10 +9,10 @@ for that, `npm ls` and each package's own licence.
 
 ## Claudian — MIT
 
-`packages/core/agent` adapts portions of
+`packages/platform/agent` adapts portions of
 [Claudian](https://github.com/YishenTu/claudian): the Claude message-transform
 pipeline, the shared chunk model, and related helpers, with the coupling to the
 Obsidian host removed.
 
 Full attribution and the MIT licence text:
-[`packages/core/agent/NOTICE.md`](./packages/core/agent/NOTICE.md).
+[`packages/platform/agent/NOTICE.md`](./packages/platform/agent/NOTICE.md).

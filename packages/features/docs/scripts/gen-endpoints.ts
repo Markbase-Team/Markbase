@@ -1,4 +1,4 @@
-// Generate src/logic/endpoints.generated.ts — the plain description of every
+// Generate packages/shared/src/docs/endpoints.generated.ts — the plain description of every
 // documents endpoint — from the endpoints as they are defined beside their
 // handlers (src/handlers, `endpoint(def, run)`).
 //
@@ -11,11 +11,11 @@
 // comparison --check does, so it cannot fall behind unnoticed.
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { syncGeneratedFiles } from "@markbase/node/generated-files";
+import { syncGeneratedFiles } from "@markbase/server/generated-files";
 import { endpointsModule } from "../src/handlers/describe";
 
 const ok = syncGeneratedFiles({
-  root: join(dirname(fileURLToPath(import.meta.url)), "../src/logic"),
+  root: join(dirname(fileURLToPath(import.meta.url)), "../../../shared/src/docs"),
   files: [{ file: "endpoints.generated.ts", source: endpointsModule() }],
   check: process.argv.includes("--check"),
   what: "documents endpoint descriptions",

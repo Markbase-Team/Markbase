@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import type { Capability } from "./auth";
 
 // Data layer for docs.members — the authenticated collaborators on a doc and

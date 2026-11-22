@@ -27,13 +27,13 @@ import {
   resolveKeyOwner,
   unmountVault,
   updateMountedVaults,
-} from "@markbase/vault";
-import { mountVault, terminalOperator } from "@markbase/flows/node";
+} from "@markbase/local/vault";
+import { mountVault, terminalOperator } from "@markbase/local/flows/node";
 import {
   SHARED_VAULT_DIRNAME,
   SHARED_VAULT_ID,
   SHARED_VAULT_NAME,
-} from "@markbase/protocol/shared-vault";
+} from "@markbase/shared/shared-vault";
 import { loadConfig, type MountedVault } from "./config";
 
 const HELP = `Usage:

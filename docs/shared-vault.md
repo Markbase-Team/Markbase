@@ -86,7 +86,7 @@ would. `has_crdt` in the list is what tells it.
 A shared document's images live in the **owner's** vault, which is not yours to
 list. `GET /assets?doc=:id` gives anyone who may read the document exactly the
 assets its markdown references (resolved against the owner's path with the same
-code the daemon uses, `@markbase/protocol/asset-refs`). The daemon resolves each
+code the daemon uses, `@markbase/shared/asset-refs`). The daemon resolves each
 reference twice — against the owner's path to fetch, against your path to write
 — so `![d](img/d.png)` in `notes/Plan.md` arrives as `Ada/img/d.png` beside
 `Ada/Plan.md`. Nothing is uploaded or deleted.
@@ -108,18 +108,18 @@ ever talks to the API.
 
 ## Where the code is
 
-- `packages/core/protocol/src/shared-vault.ts` — the id, the name, the default
+- `packages/shared/src/shared-vault.ts` — the id, the name, the default
   folder name, the layout.
 - `packages/features/docs/src/handlers/documents.ts` — the shared list's shape,
   `docMembershipHandler`; `server/members.ts` — the data layer;
   `handlers/assets.ts` — `?doc=`.
-- `packages/features/docs/src/logic/vault-sync.ts` — read-only mode and the fork.
-- `packages/core/vault/src/vault-sync-run.ts` — the shared-mode rules, the fork
+- `packages/shared/src/docs/vault-sync.ts` — read-only mode and the fork.
+- `packages/platform/local/src/vault/vault-sync-run.ts` — the shared-mode rules, the fork
   bookkeeping, the per-document media pass.
 - `apps/app/src/main.ts` — the host: notifications, tray, IPC;
   `packages/features/docs/src/ui/local-fork-banner.tsx` — the banner.
 - `apps/markbase/src/vault.ts` — `mount --shared`, `status`.
-- Tests: `packages/core/vault/test/shared-vault-scenarios.test.ts`,
+- Tests: `packages/platform/local/test/vault/shared-vault-scenarios.test.ts`,
   `packages/features/docs/test/vault-sync-readonly.test.ts`,
   `packages/features/docs/test/shared-vault-handlers.test.ts`,
   `supabase/tests/security_lockdown.test.sql` §7.
