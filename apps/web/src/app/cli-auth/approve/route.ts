@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createApiKey } from "@markbase/server/api-keys";
+import { DESKTOP_KEY_NAME, createApiKey } from "@markbase/server/api-keys";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { pickedCapability } from "@/lib/capabilities";
 import { isLoopbackCallback } from "../page";
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   // which is what a history entry would otherwise be attributed to. The tool a
   // connection belongs to is settled by its stamped provider (see
   // setConnectionProvider), so the stored name is only ever a fallback.
-  const source = desktop ? "Markbase Desktop" : "markbase CLI";
+  const source = desktop ? DESKTOP_KEY_NAME : "markbase CLI";
   // A client that says confirm=1 will call /api/v1/keys/confirm once the key
   // reaches it, so mint it inert. Until then it authenticates nothing and the
   // sweep deletes it — which is what makes an abandoned authorization harmless

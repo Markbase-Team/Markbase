@@ -130,6 +130,35 @@ export async function confirmApiKey(token: string): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
+/**
+ * What the desktop app's own sign-in key is named (see /cli-auth/approve). It
+ * is how the app's sync reaches the account, not an agent the person
+ * connected, so `hasAgentConnection` leaves it out.
+ */
+export const DESKTOP_KEY_NAME = "Markbase Desktop";
+
+/**
+ * Has this account connected an agent? True when it holds a working key other
+ * than the desktop app's own: one minted by the connector sign-in (/oauth), by
+ * `markbase mcp install` or `markbase login`, or made by hand in the
+ * dashboard. A key minted and never collected by its client does not count.
+ *
+ * Asked when the app is about to offer "Connect an agent": a person who added
+ * Markbase as a connector inside their AI app has one, and being asked to
+ * connect it again reads as the first connection not having worked.
+ */
+export async function hasAgentConnection(ownerId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("api_keys")
+    .select("id")
+    .eq("owner_id", ownerId)
+    .not("confirmed_at", "is", null)
+    .not("name", "like", `${DESKTOP_KEY_NAME}%`)
+    .limit(1);
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
 export async function deleteApiKey(id: string, ownerId: string): Promise<void> {
   const { error } = await supabase
     .from("api_keys")
