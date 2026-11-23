@@ -1,0 +1,6 @@
+*.pem
+local.env
+results.json
+shot-*.png
+node_modules/
+package*.json

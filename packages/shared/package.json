@@ -14,6 +14,7 @@
     "./caller": "./src/caller.ts",
     "./connect-links": "./src/connect-links.ts",
     "./downloads": "./src/downloads.ts",
+    "./embed-cookies": "./src/embed-cookies.ts",
     "./endpoint": "./src/endpoint.ts",
     "./endpoint-gen": "./src/endpoint-gen.ts",
     "./endpoint-tools": "./src/endpoint-tools.ts",

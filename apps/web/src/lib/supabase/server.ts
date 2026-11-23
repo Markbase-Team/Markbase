@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { serverEmbedCookieOptions } from "@markbase/shared/embed-cookies";
 import { cookies } from "next/headers";
 
 // Cookie-bound Supabase client for Server Components and route handlers.
@@ -9,6 +10,7 @@ export async function createSupabaseServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      cookieOptions: serverEmbedCookieOptions(process.env.MARKBASE_EMBED_PROOF),
       cookies: {
         getAll() {
           return cookieStore.getAll();

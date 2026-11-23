@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { serverEmbedCookieOptions } from "@markbase/shared/embed-cookies";
 import { NextResponse, type NextRequest } from "next/server";
 import { safeNext } from "@/lib/routes";
 import { SIGNUP_SOURCE_COOKIE } from "@markbase/shared/analytics/funnel/signup-source";
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
       {
+        cookieOptions: serverEmbedCookieOptions(process.env.MARKBASE_EMBED_PROOF),
         cookies: {
           getAll() {
             return req.cookies.getAll();

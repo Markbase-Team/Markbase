@@ -76,7 +76,18 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // Framed by this site only — except in the embed proof, where the
+          // origins in MARKBASE_EMBED_FRAME_ANCESTORS may frame it too
+          // (docs/embed-proof.md). frame-ancestors is what browsers honour
+          // over X-Frame-Options, so it replaces it rather than joining it.
+          ...(process.env.MARKBASE_EMBED_FRAME_ANCESTORS
+            ? [
+                {
+                  key: "Content-Security-Policy",
+                  value: `frame-ancestors 'self' ${process.env.MARKBASE_EMBED_FRAME_ANCESTORS}`,
+                },
+              ]
+            : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }]),
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",

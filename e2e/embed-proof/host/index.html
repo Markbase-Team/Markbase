@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>fake Claude</title>
+<style>body{margin:0;font-family:system-ui} header{padding:8px 12px;border-bottom:1px solid #ddd} iframe{border:0;width:100%;height:calc(100vh - 40px)}</style>
+<header>fake Claude (top level, site A: 127.0.0.1:8766)</header>
+<!-- Claude puts each card in a sandbox proxy on another origin; the proxy holds the card. -->
+<iframe id="proxy" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+<script>
+  const q = new URLSearchParams(location.search);
+  document.getElementById("proxy").src = "http://127.0.0.1:8767/proxy.html?" + q.toString();
+</script>
