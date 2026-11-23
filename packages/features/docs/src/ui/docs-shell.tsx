@@ -809,11 +809,14 @@ export function DocsShell({
   const openNewVault = useCallback(() => setModalOpen(true), []);
 
   const onCreatedVault = useCallback(
-    (vault: VaultMeta) => {
+    (vault: VaultMeta, agentConnected: boolean) => {
       setVaults((prev) => [...prev, vault]);
       invalidateUrl(VAULTS_URL); // the cached list predates this vault
       focus(vault.id);
-      if (vaults.length === 0) setConnectOpen(true);
+      // Not offered to an account that already has an agent: a person who
+      // connected one before making a vault would read the offer as the
+      // connection not having worked.
+      if (vaults.length === 0 && !agentConnected) setConnectOpen(true);
     },
     [focus, vaults.length]
   );

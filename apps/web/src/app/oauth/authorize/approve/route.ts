@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { ensureFirstVault } from "@markbase/docs/server";
 import { createApiKey } from "@markbase/server/api-keys";
 import { checkAuthorize, sealCode } from "@markbase/server/mcp-oauth";
-import { pickedCapability } from "@/lib/capabilities";
+import { CONNECTOR_DEFAULT_CAPABILITY, pickedCapability } from "@/lib/capabilities";
 import { instanceUrl } from "@/lib/instance-url";
 import { oauthSecret } from "@/lib/mcp-oauth";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
   if (form.get("decision") !== "allow") {
     back.searchParams.set("error", "access_denied");
   } else {
-    const capability = pickedCapability(form.get("capability"));
+    const capability = pickedCapability(form.get("capability"), CONNECTOR_DEFAULT_CAPABILITY);
     const { token } = await createApiKey({
       name: `${checked.client.name} · ${new Date().toISOString().slice(0, 10)}`,
       ownerId: user.id,
@@ -65,6 +66,20 @@ export async function POST(req: Request) {
       capability: capability === "owner" ? null : capability,
       requiresConfirmation: true,
     });
+    // Somewhere for the agent to read and write on its very first call. A
+    // person who signed up on the way through this page has never opened the
+    // app, where a first vault is otherwise made, and their agent would
+    // connect to an account with nothing in it. Done here rather than on the
+    // agent's first call: this is the person's own request, made once, before
+    // the client holds a key, so every call the agent goes on to make sees
+    // the vault, and no read has to become a write. An account that has a
+    // vault is left as it is. A failure must not cost the person the
+    // connection: a document created without a vault still makes one.
+    try {
+      await ensureFirstVault(user.id);
+    } catch (error) {
+      console.error("[oauth] first vault for a connector sign-in failed", error);
+    }
     back.searchParams.set(
       "code",
       sealCode({ token, clientId: checked.clientId, redirectUri: checked.redirectUri, challenge: checked.challenge }, secret)

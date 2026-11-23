@@ -4,6 +4,7 @@ export * from "./editing";
 export * from "./sharing";
 export * from "./tabs";
 export * from "./vaults";
+export * from "./start";
 export * from "./assets";
 export * from "./crdt";
 export { definedEndpoints, endpointRoute, type Endpoint, type RouteParams } from "./define";

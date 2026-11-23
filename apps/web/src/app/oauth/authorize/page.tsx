@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { OAUTH_AUTHORIZE_PATH, checkAuthorize, type AuthorizeParams } from "@markbase/server/mcp-oauth";
 import { CapabilitySelect } from "@/components/capability-select";
-import { DEFAULT_CAPABILITY } from "@/lib/capabilities";
+import { CONNECTOR_DEFAULT_CAPABILITY } from "@/lib/capabilities";
 import { oauthSecret } from "@/lib/mcp-oauth";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -53,7 +53,7 @@ export default async function OAuthAuthorizePage({ searchParams }: { searchParam
               <input type="hidden" name="response_type" value="code" />
               <input type="hidden" name="state" value={params.state ?? ""} />
 
-              <CapabilitySelect defaultValue={DEFAULT_CAPABILITY} subject={checked.client.name} />
+              <CapabilitySelect defaultValue={CONNECTOR_DEFAULT_CAPABILITY} subject={checked.client.name} />
 
               <button
                 type="submit"

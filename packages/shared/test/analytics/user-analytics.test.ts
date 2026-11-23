@@ -8,7 +8,9 @@ import {
   isUserAnalyticsChannel,
   isUserAnalyticsOutcome,
   outcomeOfStatus,
+  userAnalyticsDetail,
 } from "../../src/analytics/user-analytics";
+import { MCP_PROTOCOL_EVENTS } from "../../src/mcp-http";
 import type { Caller } from "../../src/auth";
 
 // Who acted, and how many rows a reader may ask for.
@@ -81,6 +83,19 @@ describe("isUserAnalyticsAction", () => {
     for (const a of ["docs_readDoc", "docs_createDoc", "me_whoami", "mcp.initialize", "mcp.unknown_tool", "hook.read", "hook.write"]) {
       expect(isUserAnalyticsAction(a), a).toBe(true);
     }
+  });
+
+  // The onboarding funnel is read from these: a card was shown, a starter
+  // was picked, the "where to begin" tool was called.
+  it("accepts every MCP protocol event, and the tool a new connection begins with", () => {
+    for (const event of MCP_PROTOCOL_EVENTS) expect(isUserAnalyticsAction(`mcp.${event}`), event).toBe(true);
+    expect(isUserAnalyticsAction("docs_getStarted")).toBe(true);
+  });
+
+  it("keeps which card was shown and which starter was picked", () => {
+    expect(userAnalyticsDetail("mcp.resources_read", "ui://markbase/doc")).toBe("ui://markbase/doc");
+    expect(userAnalyticsDetail("mcp.prompts_get", "get_started")).toBe("get_started");
+    expect(userAnalyticsDetail("mcp.prompts_list", "anything")).toBeNull();
   });
 
   it("refuses anything else", () => {

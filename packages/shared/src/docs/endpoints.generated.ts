@@ -566,6 +566,20 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
     "summary": "Make a folder inside a vault a vault of its own"
   },
   {
+    "id": "docs_getStarted",
+    "method": "GET",
+    "path": "/docs/start",
+    "capability": null,
+    "scope": "read",
+    "summary": "Where to begin: your vaults, newest documents and things to try",
+    "skill": {
+      "whenToUse": "When the person has just connected Markbase, asks what they can do with it, or is unsure where to begin. Offer what it suggests.",
+      "input": "(nothing)",
+      "output": "{ vaults: [{ id, name }], documents: [{ id, title, excerpt, vault_id, updated_at }], suggestions: [{ title, description, prompt }] }",
+      "example": "curl -s -H \"$AUTH\" -H \"$CLIENT\" \"$BASE/docs/start\" | jq '.suggestions'"
+    }
+  },
+  {
     "id": "docs_listAssets",
     "method": "GET",
     "path": "/assets",

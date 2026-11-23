@@ -14,6 +14,7 @@ const deleteVault = vi.fn();
 const listVaultsForUser = vi.fn();
 const createVault = vi.fn();
 const seedWelcomeDoc = vi.fn();
+const hasAgentConnection = vi.fn();
 
 vi.mock("../src/server/vaults", () => ({
   getVault: (id: string) => getVault(id),
@@ -32,6 +33,10 @@ vi.mock("../src/server/welcome", () => ({
   seedWelcomeDoc: (u: string, v: string) => seedWelcomeDoc(u, v),
   WELCOME_DOC_PATH: "Welcome to Markbase.md",
 }));
+vi.mock("@markbase/server/api-keys", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/api-keys")>()),
+  hasAgentConnection: (u: string) => hasAgentConnection(u),
+}));
 vi.mock("../src/server/members", () => ({
   getMemberCapability: async () => null,
   setMemberPath: async () => true,
@@ -49,6 +54,7 @@ const { createVaultEndpoint, readVaultEndpoint, renameVaultEndpoint, deleteVault
 );
 // The tests below call an endpoint the way a route does: its `handle`, with the
 // path's parameters. These keep the call sites reading as method-on-resource.
+const { ensureFirstVault } = await import("../src/server/first-vault");
 const vaultsHandler = { POST: (r: Request) => createVaultEndpoint.handle(r, {}) };
 const vaultHandler = {
   GET: (r: Request, id: string) => readVaultEndpoint.handle(r, { id }),
@@ -78,6 +84,7 @@ beforeEach(() => {
   listVaultsForUser.mockReset().mockResolvedValue([]);
   createVault.mockReset().mockImplementation(async (input) => ({ id: "vault_new", ...input }));
   seedWelcomeDoc.mockReset().mockResolvedValue(undefined);
+  hasAgentConnection.mockReset().mockResolvedValue(false);
 });
 
 function postVault(caller: Caller, name: string): Request {
@@ -123,7 +130,93 @@ describe("POST /vaults seeds the Welcome document", () => {
     seedWelcomeDoc.mockRejectedValue(new Error("db down"));
     const res = await vaultsHandler.POST(postVault(OTHER, "First Vault"));
     expect(res.status).toBe(201);
-    expect(await res.json()).toEqual({ vault: { id: "vault_new", name: "First Vault", owner_id: "user_2" } });
+    expect(await res.json()).toEqual({
+      vault: { id: "vault_new", name: "First Vault", owner_id: "user_2" },
+      agent_connected: false,
+    });
+  });
+});
+
+// The app offers "Connect an agent" once, after a first vault. A person who
+// added Markbase as a connector inside their AI app before making a vault has
+// an agent already, and the answer rides on the vault so the app can skip it.
+describe("POST /vaults says whether an agent is already connected", () => {
+  it("true for a first vault on an account that has a connection", async () => {
+    hasAgentConnection.mockResolvedValue(true);
+    const res = await vaultsHandler.POST(postVault(OWNER, "First Vault"));
+    expect(hasAgentConnection).toHaveBeenCalledWith("owner_1");
+    expect((await res.json()).agent_connected).toBe(true);
+  });
+
+  it("false for a first vault on an account that has none", async () => {
+    const res = await vaultsHandler.POST(postVault(OWNER, "First Vault"));
+    expect((await res.json()).agent_connected).toBe(false);
+  });
+
+  it("false, and still 201, when the connection cannot be read: the offer is skippable", async () => {
+    hasAgentConnection.mockRejectedValue(new Error("db down"));
+    const res = await vaultsHandler.POST(postVault(OWNER, "First Vault"));
+    expect(res.status).toBe(201);
+    expect((await res.json()).agent_connected).toBe(false);
+  });
+
+  it("is not asked for a second vault, where nothing is offered", async () => {
+    listVaultsForUser.mockResolvedValue([{ id: "vault_a", name: "Work", owner_id: "owner_1" }]);
+    const res = await vaultsHandler.POST(postVault(OWNER, "Personal"));
+    expect(hasAgentConnection).not.toHaveBeenCalled();
+    expect(await res.json()).toEqual({ vault: { id: "vault_new", name: "Personal", owner_id: "owner_1" } });
+  });
+});
+
+// A person who connects an agent before ever opening the app (a connector
+// added inside an AI app, signing up on the way through) gets the same first
+// vault the app's dialog makes: one vault, with the Welcome document in it.
+describe("ensureFirstVault", () => {
+  const row = (id: string, created_at: string) => ({ id, name: "My Vault", owner_id: "user_2", created_at });
+
+  it("creates the first vault, with the Welcome document, for an account that has none", async () => {
+    createVault.mockResolvedValue(row("vault_new", "2026-11-22T19:13:03Z"));
+    listVaultsForUser.mockResolvedValueOnce([]).mockResolvedValueOnce([row("vault_new", "2026-11-22T19:13:03Z")]);
+    const made = await ensureFirstVault("user_2");
+    expect(made).toEqual({ vault: row("vault_new", "2026-11-22T19:13:03Z"), created: true });
+    expect(createVault).toHaveBeenCalledWith({ name: "My Vault", owner_id: "user_2" });
+    expect(seedWelcomeDoc).toHaveBeenCalledWith("user_2", "vault_new");
+  });
+
+  it("run again, changes nothing: the account keeps its vault and gets no second Welcome", async () => {
+    listVaultsForUser.mockResolvedValue([row("vault_a", "2026-11-01T00:00:00Z")]);
+    const again = await ensureFirstVault("user_2");
+    expect(again).toEqual({ vault: row("vault_a", "2026-11-01T00:00:00Z"), created: false });
+    expect(createVault).not.toHaveBeenCalled();
+    expect(seedWelcomeDoc).not.toHaveBeenCalled();
+  });
+
+  it("keeps the vault when its Welcome cannot be seeded", async () => {
+    createVault.mockResolvedValue(row("vault_new", "2026-11-22T19:13:03Z"));
+    seedWelcomeDoc.mockRejectedValue(new Error("db down"));
+    expect((await ensureFirstVault("user_2")).created).toBe(true);
+  });
+
+  // Two approvals at the same moment both find no vault and both create one.
+  it("removes its own vault when another call's is older, and seeds nothing into either", async () => {
+    const other = row("vault_other", "2026-11-22T19:13:03.100Z");
+    const mine = row("vault_mine", "2026-11-22T19:13:03.200Z");
+    createVault.mockResolvedValue(mine);
+    listVaultsForUser.mockResolvedValueOnce([]).mockResolvedValueOnce([other, mine]);
+    const made = await ensureFirstVault("user_2");
+    expect(made).toEqual({ vault: other, created: false });
+    expect(deleteVault).toHaveBeenCalledWith("vault_mine", "user_2");
+    expect(seedWelcomeDoc).not.toHaveBeenCalled();
+  });
+
+  it("keeps its own vault when it is the older of the two", async () => {
+    const mine = row("vault_mine", "2026-11-22T19:13:03.100Z");
+    const other = row("vault_other", "2026-11-22T19:13:03.200Z");
+    createVault.mockResolvedValue(mine);
+    listVaultsForUser.mockResolvedValueOnce([]).mockResolvedValueOnce([mine, other]);
+    expect(await ensureFirstVault("user_2")).toEqual({ vault: mine, created: true });
+    expect(deleteVault).not.toHaveBeenCalled();
+    expect(seedWelcomeDoc).toHaveBeenCalledWith("user_2", "vault_mine");
   });
 });
 

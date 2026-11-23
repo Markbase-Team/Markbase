@@ -1,11 +1,11 @@
+import { hasAgentConnection } from "@markbase/server/api-keys";
 import {
   convertFolderToVault,
-  createVault,
+  createVaultForAccount,
   deleteVault,
   getVault,
   listVaultsForUser,
   renameVault,
-  seedWelcomeDoc,
   type VaultRow,
 } from "../server";
 import { endpoint } from "./define";
@@ -79,18 +79,21 @@ export const createVaultEndpoint = endpoint({
 
   // An account's first vault arrives with a Welcome document in it — the
   // first thing a new person sees in the folder they just mounted. Only the
-  // first: a second vault's owner has seen it. Best-effort: a vault without
-  // its welcome is a vault; a failed welcome must not fail the vault.
-  const first = (await listVaultsForUser(a.actor.userId)).length === 0;
-  const vault = await createVault({ name, owner_id: a.actor.userId });
-  if (first) {
-    try {
-      await seedWelcomeDoc(a.actor.userId, vault.id);
-    } catch {
-      // the vault exists; the welcome is a nicety
-    }
+  // first: a second vault's owner has seen it (see server/first-vault).
+  const { vault, first } = await createVaultForAccount(a.actor.userId, name);
+  if (!first) return json({ vault }, 201);
+
+  // The app offers "Connect an agent" once, after a first vault. The answer
+  // to "does this account have one already" rides along, so the app does not
+  // offer it to a person who connected an agent before they ever made a
+  // vault. Unknown is "no": the offer is skippable, a missing one is not.
+  let agentConnected = false;
+  try {
+    agentConnected = await hasAgentConnection(a.actor.userId);
+  } catch {
+    // offer it
   }
-  return json({ vault }, 201);
+  return json({ vault, agent_connected: agentConnected }, 201);
 });
 
 /**

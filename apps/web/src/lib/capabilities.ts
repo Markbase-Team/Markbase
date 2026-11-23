@@ -7,6 +7,15 @@ export type Capability = (typeof CAPABILITIES)[number];
 // Least-privilege sane default: co-write docs, but not share or delete them.
 export const DEFAULT_CAPABILITY: Capability = "editor";
 
+/**
+ * What a connector added inside an AI app (/oauth/authorize) is offered by
+ * default: full access. Such a person has no other way into Markbase yet —
+ * they connected from the chat and may never open the app — so sharing a
+ * document, which needs Owner, has to work from the chat. The page still
+ * shows the choice, and it can be lowered later under API keys.
+ */
+export const CONNECTOR_DEFAULT_CAPABILITY: Capability = "owner";
+
 export const CAPABILITY_HELP: Record<Capability, string> = {
   viewer: "Viewer — read only",
   commenter: "Commenter — read and comment",
@@ -15,8 +24,11 @@ export const CAPABILITY_HELP: Record<Capability, string> = {
 };
 
 /** The capability a form sent, or the default when it sent none we know. */
-export function pickedCapability(value: FormDataEntryValue | string | null | undefined): Capability {
+export function pickedCapability(
+  value: FormDataEntryValue | string | null | undefined,
+  fallback: Capability = DEFAULT_CAPABILITY
+): Capability {
   return typeof value === "string" && (CAPABILITIES as readonly string[]).includes(value)
     ? (value as Capability)
-    : DEFAULT_CAPABILITY;
+    : fallback;
 }

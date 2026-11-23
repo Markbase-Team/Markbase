@@ -101,6 +101,7 @@ Each endpoint lists the **minimum role** it needs. Roles are ranked `owner > edi
 | `PATCH  $BASE/vaults/:id` | signed-in | Rename a vault |
 | `DELETE $BASE/vaults/:id` | signed-in | Delete a vault and every document in it |
 | `POST   $BASE/vaults/convert` | signed-in | Make a folder inside a vault a vault of its own |
+| `GET    $BASE/docs/start` | signed-in | Where to begin: your vaults, newest documents and things to try |
 | `GET    $BASE/assets` | signed-in | List the images and files in a vault, or the ones a document links to |
 | `GET    $BASE/me` | signed-in | Whose key this is: the owner's id and name, and the connection |
 | `GET    $BASE/me/profile` | signed-in | The account's display name and sign-in name |
@@ -216,6 +217,17 @@ curl -s -X POST -H "$AUTH" -H "$CLIENT" -H 'content-type: application/json' \
 
 ```bash
 curl -s -H "$AUTH" -H "$CLIENT" "$BASE/vaults" | jq '.vaults'
+```
+
+### Where to begin: your vaults, newest documents and things to try
+`GET /docs/start` · role: **signed-in** · scope: read
+
+- **When:** When the person has just connected Markbase, asks what they can do with it, or is unsure where to begin. Offer what it suggests.
+- **Input:** `(nothing)`
+- **Output:** { vaults: [{ id, name }], documents: [{ id, title, excerpt, vault_id, updated_at }], suggestions: [{ title, description, prompt }] }
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/start" | jq '.suggestions'
 ```
 
 ## Capabilities

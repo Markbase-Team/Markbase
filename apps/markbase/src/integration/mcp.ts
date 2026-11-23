@@ -17,6 +17,7 @@ import { canOpenBrowser } from "@markbase/local/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
 import type { Json } from "@markbase/shared/endpoint-tools";
+import { MCP_INSTRUCTIONS, MCP_PROMPTS } from "@markbase/shared/docs/onboarding";
 import { answerMcpLine, clientNameIn, type McpHost } from "@markbase/shared/mcp-http";
 import { callEndpoint } from "./call";
 import { printHookResults } from "../audit-install";
@@ -209,6 +210,10 @@ export async function runMcp(streams: McpStreams = { input: process.stdin, outpu
     name: "markbase-docs",
     version: version(),
     tools: toolSource(() => fetchServedTools(auth.key())),
+    // What the hosted server says too. No cards here: they open documents at
+    // an address on the instance, which the hosted server is the one to give.
+    instructions: MCP_INSTRUCTIONS,
+    prompts: MCP_PROMPTS,
     async call(tool, args) {
       // With a key that works: the one this machine has or, when the API
       // refuses it or there is none, the one a sign-in in the browser gives.

@@ -47,7 +47,11 @@ export function NewVaultModal({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: (vault: VaultMeta) => void;
+  /**
+   * `agentConnected`: the account already has an agent connected (it came in
+   * through a connector, or installed one). Only ever true for a first vault.
+   */
+  onCreated: (vault: VaultMeta, agentConnected: boolean) => void;
   /** The very first vault defaults its local folder to ~/Markbase (desktop). */
   isFirstVault: boolean;
 }) {
@@ -117,12 +121,12 @@ export function NewVaultModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: trimmed }),
       });
-      const data: { vault?: VaultMeta; error?: string } = await res.json();
+      const data: { vault?: VaultMeta; agent_connected?: boolean; error?: string } = await res.json();
       if (!res.ok || !data.vault) {
         setError(data.error ?? "Couldn't create the vault.");
         return;
       }
-      onCreated(data.vault);
+      onCreated(data.vault, data.agent_connected === true);
       if (vaults) {
         // On desktop, mount the new vault to a local folder now. Best effort: the
         // native picker owns its own errors/cancel, and the vault already exists in

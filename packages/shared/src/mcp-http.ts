@@ -48,8 +48,49 @@ export interface ToolAnswer {
  * exist. A tool call that reaches a tool is not one of these — the API that
  * answers it is where that is seen.
  */
-export const MCP_PROTOCOL_EVENTS = ["initialize", "tools_list", "unknown_tool", "unknown_method"] as const;
+export const MCP_PROTOCOL_EVENTS = [
+  "initialize",
+  "tools_list",
+  "unknown_tool",
+  "unknown_method",
+  // A client fetched a card's page (`asked` is its uri): the card is about to
+  // be shown to a person.
+  "resources_read",
+  // A client listed the starters, and a person picked one (`asked` is its name).
+  "prompts_list",
+  "prompts_get",
+] as const;
 export type McpProtocolEvent = (typeof MCP_PROTOCOL_EVENTS)[number];
+
+/** The MIME type that says a resource is an MCP App's page. */
+export const MCP_APP_MIME = "text/html;profile=mcp-app";
+
+/**
+ * A card shown in the conversation in place of a tool's raw answer (MCP Apps,
+ * the `io.modelcontextprotocol/ui` extension). The page is one self-contained
+ * HTML document the agent's app runs in a sandboxed frame and hands the
+ * tool's answer to. A client that does not know the extension ignores the
+ * link and shows the same text answer as before.
+ */
+export interface McpApp {
+  /** `ui://…`: what a tool points at, and what the client asks to read. */
+  uri: string;
+  name: string;
+  description: string;
+  /** The tools whose answer this card shows. */
+  tools: readonly string[];
+  /** The whole page. */
+  html: string;
+}
+
+/** A starter a person can pick in their agent's app: it becomes their message. */
+export interface McpPrompt {
+  name: string;
+  title: string;
+  description: string;
+  /** What is sent as the person's message. */
+  text: string;
+}
 
 /** What the route supplies: who this server is, its tools, and how one is run. */
 export interface McpHost {
@@ -63,6 +104,12 @@ export interface McpHost {
    * and its message is the whole of what the agent is told.
    */
   call(tool: AgentTool, args: JsonObject): Promise<ToolAnswer>;
+  /** What the agent is told about this server when it connects. */
+  instructions?: string;
+  /** Cards for tools' answers. With none, the server offers no resources. */
+  apps?: readonly McpApp[];
+  /** Starters. With none, the server offers no prompts. */
+  prompts?: readonly McpPrompt[];
   /**
    * Told of each protocol event, if the host wants to know. `asked` is the
    * tool or method that was asked for and is not there. Must not throw.
@@ -111,6 +158,16 @@ async function callTool(params: JsonObject, host: McpHost): Promise<JsonObject> 
 }
 
 /**
+ * The link from a tool to the card that shows its answer, as tool metadata.
+ * Both spellings: the nested one is the extension's, the flat one is what
+ * earlier clients read.
+ */
+function appLink(tool: string, host: McpHost): JsonObject {
+  const app = host.apps?.find((a) => a.tools.includes(tool));
+  return app ? { _meta: { ui: { resourceUri: app.uri }, "ui/resourceUri": app.uri } } : {};
+}
+
+/**
  * Answer one JSON-RPC message. Null for a notification, which has no answer.
  */
 export async function answerMcp(message: Json, host: McpHost): Promise<JsonObject | null> {
@@ -131,8 +188,13 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
         typeof asked === "string" && MCP_PROTOCOL_VERSIONS.includes(asked) ? asked : MCP_PROTOCOL_VERSIONS[0];
       return result(id, {
         protocolVersion,
-        capabilities: { tools: {} },
+        capabilities: {
+          tools: {},
+          ...(host.apps?.length ? { resources: {} } : {}),
+          ...(host.prompts?.length ? { prompts: {} } : {}),
+        },
         serverInfo: { name: host.name, version: host.version },
+        ...(host.instructions ? { instructions: host.instructions } : {}),
       });
     }
     case "ping":
@@ -147,14 +209,65 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
           // The schema is plain JSON; the cast only tells TypeScript so.
           inputSchema: JSON.parse(JSON.stringify(toolInputSchema(t))) as JsonObject,
           annotations: { ...toolAnnotations(t) },
+          ...appLink(t.name, host),
         })),
       });
     case "tools/call":
       return result(id, await callTool(params, host));
+    case "resources/list":
+      if (!host.apps?.length) break;
+      return result(id, {
+        resources: host.apps.map((app) => ({
+          uri: app.uri,
+          name: app.name,
+          description: app.description,
+          mimeType: MCP_APP_MIME,
+        })),
+      });
+    case "resources/templates/list":
+      if (!host.apps?.length) break;
+      return result(id, { resourceTemplates: [] });
+    case "resources/read": {
+      if (!host.apps?.length) break;
+      const app = host.apps.find((a) => a.uri === params.uri);
+      if (!app) return failure(id, -32002, `Resource not found: ${String(params.uri)}`);
+      host.onEvent?.("resources_read", app.uri);
+      return result(id, {
+        contents: [
+          {
+            uri: app.uri,
+            mimeType: MCP_APP_MIME,
+            text: app.html,
+            // Nothing is loaded from outside the page, so it asks for no
+            // domains: the client's default policy (no network) is the right one.
+            _meta: { ui: { prefersBorder: true } },
+          },
+        ],
+      });
+    }
+    case "prompts/list":
+      if (!host.prompts?.length) break;
+      host.onEvent?.("prompts_list");
+      return result(id, {
+        prompts: host.prompts.map((p) => ({ name: p.name, title: p.title, description: p.description })),
+      });
+    case "prompts/get": {
+      if (!host.prompts?.length) break;
+      const prompt = host.prompts.find((p) => p.name === params.name);
+      if (!prompt) return failure(id, -32602, `Unknown prompt: ${String(params.name)}`);
+      host.onEvent?.("prompts_get", prompt.name);
+      return result(id, {
+        description: prompt.description,
+        messages: [{ role: "user", content: { type: "text", text: prompt.text } }],
+      });
+    }
     default:
-      host.onEvent?.("unknown_method", method);
-      return failure(id, -32601, `Method not found: ${method}`);
+      break;
   }
+  // Not a method this server has, or one it has nothing to offer for: a
+  // server with no cards answers `resources/*` as it did before it had any.
+  host.onEvent?.("unknown_method", method);
+  return failure(id, -32601, `Method not found: ${method}`);
 }
 
 /**

@@ -48,6 +48,7 @@ export {
   type VaultRow,
 } from "./vaults";
 export { seedWelcomeDoc, WELCOME_DOC_PATH } from "./welcome";
+export { createVaultForAccount, ensureFirstVault, DEFAULT_VAULT_NAME } from "./first-vault";
 export {
   getUserDisplay,
   getUserProfile,
