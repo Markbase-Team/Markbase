@@ -40,7 +40,7 @@ export async function callEndpoint(
   };
   if (opts.clientName) headers["X-MCP-Client"] = opts.clientName;
   if (opts.sessionToken) headers["X-MCP-Session"] = opts.sessionToken;
-  if (opts.viaMcp) headers["X-Markbase-Via"] = "mcp";
+  if (opts.viaMcp) headers["X-MCP-Request"] = "1";
   const init: RequestInit = { method: request.method, headers };
   if (request.body !== undefined) {
     headers["content-type"] = "application/json";

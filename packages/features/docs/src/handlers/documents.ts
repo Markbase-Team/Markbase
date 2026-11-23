@@ -273,13 +273,16 @@ export const readDocEndpoint = endpoint({
         }),
   ]);
 
-  // An agent gets the document as text. doc_json is the editor's copy — what
-  // the browser paints first — and is many times the size of the markdown:
-  // an agent reading a 7 KB document received well over 50 KB, its app cut
-  // the answer short, and the card drawn from it could not be read. The
-  // stored row's own doc_json (a stale mirror) goes too.
+  // An agent gets the document as text and its facts. The editor's copies —
+  // doc_json, what the browser paints first, and base_doc, the merge base —
+  // are each several times the size of the markdown: an agent reading a 7 KB
+  // document received 130 KB, its app cut the answer short, and the card
+  // drawn from it could not be read. content_head (the list's preview) goes
+  // too: the whole text is right there.
   if (viaMcp(req)) {
-    const { doc_json: _stale, ...row } = auth.doc;
+    // content_head is a column the row type does not name; the row read with it.
+    const stored: typeof auth.doc & { content_head?: string } = auth.doc;
+    const { doc_json: _json, base_doc: _base, content_head: _head, ...row } = stored;
     return json({ doc: { ...row, content: derived.content }, capability: auth.capability, tabs });
   }
   return json({
@@ -290,13 +293,14 @@ export const readDocEndpoint = endpoint({
 });
 
 /**
- * Is this request an MCP tool call? Both MCP servers say so: the hosted /mcp
- * marks every call (X-Markbase-Via), and both forward the client's name
- * (X-MCP-Client) when it gave one. The browser, the desktop app and the sync
- * daemon send neither.
+ * Is this request an MCP tool call? Both MCP servers say so: they mark every
+ * call (X-MCP-Request), and forward the client's name (X-MCP-Client) when it
+ * gave one. The browser, the desktop app and the sync daemon send neither.
+ * (Not an x-markbase-* header: the gate strips that namespace, which is its
+ * own, before a handler sees the request.)
  */
 function viaMcp(req: Request): boolean {
-  return req.headers.get("x-markbase-via") === "mcp" || req.headers.has("x-mcp-client");
+  return req.headers.get("x-mcp-request") === "1" || req.headers.has("x-mcp-client");
 }
 
 // PATCH — rename (editors+).
