@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { NextConfig } from "next";
 import { join } from "node:path";
 import {
@@ -30,6 +31,23 @@ const standalone = process.env.MARKBASE_STANDALONE === "1";
 // release; `__dirname` exists only in the first, and the workspace runs the
 // build from apps/web, so the cwd names the same directory in the second.
 const webDir = typeof __dirname === "string" ? __dirname : process.cwd();
+
+/**
+ * Who may frame the app, from MARKBASE_EMBED_FRAME_ANCESTORS: a list of
+ * sites, or "claude" for Claude's own pair — claude.ai and the one sandbox
+ * host this server's cards get (`_meta.ui.domain`, derived from APP_URL/mcp
+ * the way Claude derives it; see claudeCardHost in src/lib/embed.ts). Never
+ * the *.claudemcpcontent.com wildcard, which would let every connector's
+ * cards frame the app. Unset: nothing but this site.
+ */
+function embedFrameAncestors(): string | null {
+  const value = process.env.MARKBASE_EMBED_FRAME_ANCESTORS?.trim();
+  if (!value) return null;
+  if (value !== "claude") return value;
+  const app = (process.env.APP_URL ?? "https://markbase.so").replace(/\/+$/, "");
+  const host = createHash("sha256").update(`${app}/mcp`).digest("hex").slice(0, 32);
+  return `https://claude.ai https://${host}.claudemcpcontent.com`;
+}
 
 const nextConfig: NextConfig = {
   ...(standalone
@@ -76,17 +94,12 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // Framed by this site only — except in the embed proof, where the
-          // origins in MARKBASE_EMBED_FRAME_ANCESTORS may frame it too
+          // Framed by this site only — except with the embed on, where the
+          // sites in MARKBASE_EMBED_FRAME_ANCESTORS may frame it too
           // (docs/embed-proof.md). frame-ancestors is what browsers honour
           // over X-Frame-Options, so it replaces it rather than joining it.
-          ...(process.env.MARKBASE_EMBED_FRAME_ANCESTORS
-            ? [
-                {
-                  key: "Content-Security-Policy",
-                  value: `frame-ancestors 'self' ${process.env.MARKBASE_EMBED_FRAME_ANCESTORS}`,
-                },
-              ]
+          ...(embedFrameAncestors()
+            ? [{ key: "Content-Security-Policy", value: `frame-ancestors 'self' ${embedFrameAncestors()}` }]
             : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }]),
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {

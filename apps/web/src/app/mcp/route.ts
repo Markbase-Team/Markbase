@@ -17,7 +17,7 @@ import {
   type McpHost,
 } from "@markbase/shared/mcp-http";
 import { authenticateAgent } from "@/lib/agent-auth";
-import { embedEnabled } from "@/lib/embed";
+import { claudeCardHost, embedEnabled } from "@/lib/embed";
 import { instanceUrl } from "@/lib/instance-url";
 import { noteMcpEvent } from "@/lib/user-analytics";
 
@@ -106,6 +106,10 @@ export async function POST(req: Request) {
   const docUrlPrefix = `${documentsUrl}/`;
 
   const embed = embedEnabled();
+  // The cards that frame the app get a fixed sandbox host, the one the app
+  // names in frame-ancestors (next.config.ts). It is derived from this
+  // server's URL, which is how Claude derives it.
+  const cardHost = claudeCardHost(`${new URL(documentsUrl).origin}/mcp`);
 
   const host: McpHost = {
     name: "markbase-docs",
@@ -118,9 +122,9 @@ export async function POST(req: Request) {
     // begin" answer are drawn in the conversation. Everywhere else the same
     // tools answer with the same text.
     apps: [
-      docApp(docUrlPrefix, embed ? new URL(documentsUrl).origin : undefined),
+      docApp(docUrlPrefix, embed ? new URL(documentsUrl).origin : undefined, cardHost),
       startApp({ docUrlPrefix, documentsUrl }),
-      ...(embed ? [appApp(new URL(documentsUrl).origin)] : []),
+      ...(embed ? [appApp(new URL(documentsUrl).origin, cardHost)] : []),
     ],
     prompts: MCP_PROMPTS,
     // What the client asked of this server itself. A tool call that reaches a

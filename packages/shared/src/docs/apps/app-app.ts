@@ -47,6 +47,8 @@ export const FRAME_APP_CSS = `
 .stage { flex: 1; min-height: 0; position: relative; }
 :root[data-mode="inline"] .stage { height: 640px; flex: none; }
 iframe.app { border: 0; width: 100%; height: 100%; display: block; background: #fff; }
+.fallback { padding: 32px 24px; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.fallback p { margin: 0; max-width: 28rem; }
 `;
 
 const CSS = `
@@ -54,20 +56,41 @@ html, body { height: 100%; }
 body { padding: 0; display: flex; flex-direction: column; }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--mb-line); }
 .bar .name { font-weight: 600; }
-:root[data-mode="fullscreen"] .bar { display: none; }
+.bar .actions { display: flex; gap: 8px; }
 .state { padding: 24px; text-align: center; }
 ` + FRAME_APP_CSS;
 
 /**
- * frameApp(stage, docId, onFail): frame the real app in `stage` at docId (or
- * the documents list) — full page if the host allows, signed in through a
- * card-only hand-off (me_embedSession), and only if the hand-off is an
- * address on this instance. Needs CONFIG.instance and CONFIG.sessionTool.
+ * frameApp(stage, docId, onFail, expand): frame the real app in `stage` at
+ * docId (or the documents list), signed in through a card-only hand-off
+ * (me_embedSession), and only if the hand-off is an address on this instance.
+ * Needs CONFIG.instance, CONFIG.sessionTool and CONFIG.docUrlPrefix.
+ *
+ * `expand` asks for full page too, and is true only when called from a
+ * click: Claude refuses a full-page request that no press asked for.
+ *
+ * Where the host will not let the card frame the instance — Claude allows a
+ * connector's card only the sites it has approved for that connector — the
+ * card says so and offers the document in Markbase instead of a blank frame.
  */
 export const FRAME_APP_JS = String.raw`
-function frameApp(stage, docId, onFail) {
+function docAddress(docId) {
+  return docId ? CONFIG.docUrlPrefix + encodeURIComponent(docId) : CONFIG.docUrlPrefix.replace(/\/$/, "");
+}
+
+function showFallback(stage, docId) {
+  stage.innerHTML =
+    '<div class="fallback"><p>This assistant does not show Markbase inside the chat yet.</p>' +
+    '<button class="primary" id="fallback-open">' + CONFIG.icons.externalLink + "Open in Markbase</button></div>";
+  document.getElementById("fallback-open").addEventListener("click", function () {
+    mb.openLink(docAddress(docId)).catch(function () {});
+  });
+}
+
+function frameApp(stage, docId, onFail, expand) {
+  if (mb.frameAllowed(CONFIG.instance) === false) { showFallback(stage, docId); return; }
   stage.innerHTML = '<p class="state">Opening Markbase…</p>';
-  if (mb.canExpand() && mb.mode() !== "fullscreen") mb.setMode("fullscreen").catch(function () {});
+  if (expand && mb.canExpand() && mb.mode() !== "fullscreen") mb.setMode("fullscreen").catch(function () {});
   mb.callTool(CONFIG.sessionTool, docId ? { doc: docId } : {}).then(function (result) {
     var url = result.data && result.data.url;
     if (result.error || typeof url !== "string" || url.indexOf(CONFIG.instance + "/") !== 0) {
@@ -92,22 +115,36 @@ var framed = false;
 
 function show(html) { document.getElementById("stage").innerHTML = html; }
 
+var openedDoc = null;
+
+/*
+ * The bar: the name, "Open full page" while the card is inline and the host
+ * can show it full page (a press asks; Claude refuses an unasked request), and
+ * "Open in Markbase" always, so the document is a click away whatever the
+ * frame does.
+ */
 function drawBar() {
-  var expand = mb.canExpand() && mb.mode() !== "fullscreen";
+  var expand = mb.canExpand() && mb.mode() !== "fullscreen" && mb.frameAllowed(CONFIG.instance) !== false;
   document.getElementById("bar").innerHTML =
-    '<span class="name">Markbase</span>' +
-    (expand ? '<button class="primary" id="expand">' + CONFIG.icons.maximize + "Open full page</button>" : "");
+    '<span class="name">Markbase</span><span class="actions">' +
+    (expand ? '<button class="primary" id="expand">' + CONFIG.icons.maximize + "Open full page</button>" : "") +
+    '<button id="open-in">' + CONFIG.icons.externalLink + "Open in Markbase</button></span>";
   var button = document.getElementById("expand");
   if (button) button.addEventListener("click", function () { mb.setMode("fullscreen").then(drawBar, function () {}); });
+  document.getElementById("open-in").addEventListener("click", function () {
+    mb.openLink(docAddress(openedDoc)).catch(function () {});
+  });
 }
 
 function open(docId) {
   if (framed) return;
   framed = true;
+  openedDoc = docId;
+  drawBar();
   frameApp(document.getElementById("stage"), docId, function (message) {
     framed = false;
     show('<p class="state error">' + escapeHtml(message) + "</p>");
-  });
+  }, false);
 }
 
 mb.on("ui/notifications/tool-result", function (params) {
@@ -126,14 +163,20 @@ export function appAppHtml(instance: string): string {
     title: "Markbase",
     css: CSS,
     body: '<div class="bar" id="bar"></div><div class="stage" id="stage"><p class="state">Loading…</p></div>',
-    config: { instance, sessionTool: EMBED_SESSION_TOOL },
+    config: { instance, sessionTool: EMBED_SESSION_TOOL, docUrlPrefix: `${instance}/dashboard/documents/` },
     script: FRAME_APP_JS + SCRIPT,
   });
 }
 
-/** The app card for an instance. `instance` is the shell's to give: it is the only origin the card may frame. */
-export function appApp(instance: string): McpApp {
+/**
+ * The app card for an instance. `instance` is the shell's to give: it is the
+ * only origin the card may frame. `domain` is the card's fixed sandbox host
+ * (see claudeCardHost in the web app), so the instance can name exactly that
+ * host in frame-ancestors rather than every connector's.
+ */
+export function appApp(instance: string, domain?: string): McpApp {
   return {
+    ...(domain ? { domain } : {}),
     uri: APP_APP_URI,
     name: "Markbase app",
     description: "The real Markbase app, full page beside the conversation.",

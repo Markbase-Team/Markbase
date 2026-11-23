@@ -69,7 +69,7 @@ function draw(result) {
       '<div class="row spread">' +
         '<h1 class="title">' + escapeHtml(doc.title || "Untitled") + "</h1>" +
         '<div class="row">' +
-          (CONFIG.instance ? '<button id="full">' + CONFIG.icons.maximize + "Open full page</button>" : "") +
+          (CONFIG.instance && mb.frameAllowed(CONFIG.instance) !== false ? '<button id="full">' + CONFIG.icons.maximize + "Open full page</button>" : "") +
           '<button class="primary" id="open">' + CONFIG.icons.externalLink + "Open in Markbase</button>" +
         "</div>" +
       "</div>" +
@@ -86,7 +86,7 @@ function draw(result) {
     frameApp(document.getElementById("stage"), doc.id, function (message) {
       document.body.classList.remove("framing");
       draw({ error: message });
-    });
+    }, true);
   });
 
   document.getElementById("open").addEventListener("click", function () {
@@ -135,8 +135,9 @@ body.framing #root { flex: 1; min-height: 0; display: flex; flex-direction: colu
  * The document card for an instance. The address is the shell's to give: a
  * feature does not know where the app that shows its documents lives.
  */
-export function docApp(docUrlPrefix: string, instance?: string): McpApp {
+export function docApp(docUrlPrefix: string, instance?: string, domain?: string): McpApp {
   return {
+    ...(instance && domain ? { domain } : {}),
     uri: DOC_APP_URI,
     name: "Markbase document",
     description: "A Markbase document, shown as it reads, with a button that opens it in Markbase.",

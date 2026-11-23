@@ -185,6 +185,8 @@ var mb = (function () {
 
   /* The host's theme and style variables, applied as it sends them. */
   var hostContext = {};
+  /* What the host said it allows this card, from its answer to ui/initialize. */
+  var hostCapabilities = {};
 
   function applyContext(context) {
     if (!context || typeof context !== "object") return;
@@ -229,6 +231,7 @@ var mb = (function () {
       clientInfo: { name: info.name, version: info.version },
       appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] }
     }).then(function (result) {
+      if (result && result.hostCapabilities && typeof result.hostCapabilities === "object") hostCapabilities = result.hostCapabilities;
       applyContext(result.hostContext);
       notify("ui/notifications/initialized", {});
       if (typeof ResizeObserver === "function") new ResizeObserver(reportSize).observe(document.documentElement);
@@ -250,6 +253,17 @@ var mb = (function () {
       return Array.isArray(hostContext.availableDisplayModes) && hostContext.availableDisplayModes.indexOf("fullscreen") !== -1;
     },
     mode: function () { return hostContext.displayMode === "fullscreen" ? "fullscreen" : "inline"; },
+    /*
+     * May this card frame the origin? true or false when the host said which
+     * sites it let into the card's frame policy (hostCapabilities.sandbox.csp),
+     * null when it did not say. Claude leaves out any site it does not allow
+     * for the connector, and a frame of it would only ever be blank.
+     */
+    frameAllowed: function (origin) {
+      var csp = hostCapabilities.sandbox && hostCapabilities.sandbox.csp;
+      if (!csp || !Array.isArray(csp.frameDomains)) return null;
+      return csp.frameDomains.indexOf(origin) !== -1;
+    },
     /* Ask to be shown full page or inline; the host answers with the mode it chose. */
     setMode: function (mode) {
       return request("ui/request-display-mode", { mode: mode }).then(function (result) {
