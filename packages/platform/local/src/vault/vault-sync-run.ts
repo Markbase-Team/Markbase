@@ -23,6 +23,7 @@ import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
 import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/shared/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
 import { syncHeaders } from "./sync-headers";
+import type { SyncNudges } from "./sync-nudges";
 import { agentCredit, takeHookEvents } from "./agent-audit";
 import { HOOK_EVENTS_PATH, type HookEvent, type HookEventsAnswer } from "@markbase/shared/analytics/hook-events";
 import {
@@ -192,6 +193,14 @@ export interface VaultSyncOptions {
    * vault polls its own.
    */
   changesFeed?: CrdtChangesFeed;
+  /**
+   * Nudges from the server that something changed, shared by every vault this
+   * process syncs (sync-nudges.ts). While they arrive, the vault asks what
+   * moved when nudged and otherwise only rarely; without them, or while they
+   * do not arrive, it polls at its usual pace. A host that passes a shared
+   * `changesFeed` asks that feed on content nudges itself.
+   */
+  nudges?: SyncNudges;
   /**
    * Which vault this folder holds. A document's path is vault-relative, so
    * without this the daemon would pour every document you can see into one
@@ -521,6 +530,14 @@ function makeReportHookEvents(appUrl: string, apiKey: string): (events: HookEven
     }
   };
 }
+
+/**
+ * How often a vault checks for structural changes, and asks what moved, while
+ * nudges are arriving: they say when to ask, so this is only the safety net
+ * for a nudge that never came.
+ */
+export const NUDGED_RECONCILE_MS = 15 * 60_000;
+export const NUDGED_FEED_MS = 5 * 60_000;
 
 /** How many times a rename retries before the cloud's path is allowed to win. */
 const PATH_PERSIST_TRIES = 20;
@@ -1983,10 +2000,18 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
   const reconcileMs = opts.reconcileMs ?? 60_000;
   let reconcileTimer: ReturnType<typeof setTimeout> | undefined;
   let failedPasses = 0;
-  const schedulePass = (): void => {
+  // While nudges arrive, a pass runs when one says the structure changed, and
+  // otherwise only as a safety net. One pass at a time: a nudge during a pass
+  // asks for another straight after it.
+  let passRunning = false;
+  let passAgain = false;
+  const passEveryMs = (): number => (opts.nudges?.connected ? NUDGED_RECONCILE_MS : reconcileMs);
+  const schedulePass = (delayMs?: number): void => {
     if (stopped || reconcileMs <= 0) return;
-    const delay = nextPollDelay(reconcileMs, failedPasses);
+    if (reconcileTimer) clearTimeout(reconcileTimer);
+    const delay = delayMs ?? nextPollDelay(passEveryMs(), failedPasses);
     reconcileTimer = setTimeout(() => {
+      passRunning = true;
       void (async () => {
         // Both catch. reconcile() did not, and it is the pass that talks to the
         // cloud every minute — so an outage rejected it with a
@@ -2011,10 +2036,14 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
         }
         failedPasses = docsOk && mediaOk ? 0 : failedPasses + 1;
         if (failedPasses > 0) {
-          const next = nextPollDelay(reconcileMs, failedPasses);
+          const next = nextPollDelay(passEveryMs(), failedPasses);
           log(`cloud unreachable — trying again in ${Math.round(next / 1000)}s`);
         }
-        schedulePass();
+        passRunning = false;
+        if (passAgain && !stopped) {
+          passAgain = false;
+          schedulePass(0);
+        } else schedulePass();
       })();
     }, delay);
   };
@@ -2066,12 +2095,15 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
     }, checkpointMs);
   }
 
+  // Declared before stop(), which leaves them.
+  const leaveNudges: (() => void)[] = [];
   const stop = async (): Promise<void> => {
     lock?.release();
     if (stopped) return;
     stopped = true;
     log("stopping…");
     if (reconcileTimer) clearTimeout(reconcileTimer);
+    for (const leave of leaveNudges) leave();
     if (assetTimer) clearTimeout(assetTimer);
     if (checkpointTimer) clearInterval(checkpointTimer);
     for (const { timer } of pendingRemoval.values()) clearTimeout(timer);
@@ -2097,6 +2129,31 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
   // vault whose documents are already syncing.
   void reconcileAssets().catch((e) => log(`media sync failed: ${String(e)}`));
   schedulePass(); // same reason: it reads `stopped`
+
+  // Nudges: a structural change runs a pass now; a content change asks the
+  // change feed now (a host's shared feed is asked by the host). While they
+  // arrive, both slow to a safety pace; when they stop, back to the usual one.
+  const passSoon = (): void => {
+    if (stopped) return;
+    if (passRunning) passAgain = true;
+    else schedulePass(0);
+  };
+  const ownFeed = !opts.changesFeed;
+  if (opts.nudges) {
+    const nudges = opts.nudges;
+    leaveNudges.push(
+      nudges.onNudge((kind) => {
+        if (kind === "structure") passSoon();
+        else if (ownFeed) void transport.poll();
+      }),
+      nudges.onConnection((connected) => {
+        if (ownFeed) transport.setPollMs(connected ? NUDGED_FEED_MS : null);
+        if (!passRunning) schedulePass();
+      })
+    );
+    if (ownFeed && nudges.connected) transport.setPollMs(NUDGED_FEED_MS);
+    if (nudges.connected && !passRunning) schedulePass();
+  }
 
   return stop;
 }

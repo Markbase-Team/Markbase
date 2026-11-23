@@ -10,6 +10,7 @@
     "./analytics/user-analytics-recorder": "./src/analytics/user-analytics-recorder.ts",
     "./analytics/user-analytics-store": "./src/analytics/user-analytics-store.ts",
     "./api-keys": "./src/api-keys.ts",
+    "./nudges": "./src/nudges.ts",
     "./caller": "./src/caller.ts",
     "./db/*": "./src/db/*.ts",
     "./features": "./src/features.ts",

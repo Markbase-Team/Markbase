@@ -118,6 +118,16 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
     "why": "The sync daemon's report of its machine's hook ledgers. An agent's own calls are recorded as they happen."
   },
   {
+    "id": "docs_nudgeChannel",
+    "method": "GET",
+    "path": "/nudge",
+    "capability": null,
+    "scope": "read",
+    "summary": "Where this account's syncs listen for changes",
+    "humanOnly": true,
+    "why": "The topic a vault sync listens on to hear that something changed. Nothing an agent would ask for."
+  },
+  {
     "id": "docs_listDocs",
     "method": "GET",
     "path": "/docs",

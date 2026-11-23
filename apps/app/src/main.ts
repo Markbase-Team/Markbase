@@ -13,6 +13,8 @@ import {
 } from "electron";
 import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/shared/docs/crdt-api";
 import { syncHeaders } from "@markbase/local/vault/sync-headers";
+import { SyncNudges } from "@markbase/local/vault/sync-nudges";
+import { NUDGED_FEED_MS } from "@markbase/local/vault/vault-sync-run";
 import { fetchWithTimeout } from "@markbase/shared/timeout-fetch";
 import type { MenuItemConstructorOptions } from "electron";
 import { startTicketWorkerHost, type TicketWorkerHost, type TicketWorkerStatus } from "./ticket-worker";
@@ -375,6 +377,22 @@ const changesFeed = new CrdtChangesFeed(
   bearerCrdtRequest(APP_URL, () => readApiKey(), (url, init) => fetchWithTimeout(url, init)),
   { log: (m) => logVault(`change feed: ${m}`) }
 );
+
+/**
+ * The one listener for this account's nudges (sync-nudges.ts). While they
+ * arrive the feed above asks only when nudged and otherwise rarely, and each
+ * vault checks its structure only when nudged; while they do not, both poll
+ * as they always did.
+ */
+const syncNudges = new SyncNudges({
+  appUrl: APP_URL,
+  apiKey: () => readApiKey(),
+  log: (m) => logVault(`nudges: ${m}`),
+});
+syncNudges.onNudge((kind) => {
+  if (kind === "content") void changesFeed.poll();
+});
+syncNudges.onConnection((connected) => changesFeed.setPollMs(connected ? NUDGED_FEED_MS : null));
 
 function readApiKey(): string | null {
   const own = readOwnKey();
@@ -1148,6 +1166,7 @@ async function startVaultDaemon(v: MountedVault): Promise<() => Promise<void>> {
       onDocsChanged: () => sendVaultDocsChanged(v.vaultId),
       onForeignVault: (found) => void offerRepoint(found, v.name),
       changesFeed,
+      nudges: syncNudges,
       sharedHost: isShared ? sharedVaultHost() : undefined,
     });
     if (!isShared) return stop;
@@ -3434,6 +3453,9 @@ app.whenReady().then(async () => {
   // SUPABASE_KEY above is handed to the windows alone (windowArgs), for the
   // renderer's live document channel.
   configureCrdtHost(APP_URL, readApiKey, logVault, changesFeed);
+  // Find out where to listen. With no key yet it asks again later; polling
+  // carries on meanwhile.
+  void syncNudges.start();
 
   // An install from before the registries merged kept its mounts in the app's
   // own settings. Move them across once, then forget them — the shared registry

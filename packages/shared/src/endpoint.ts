@@ -161,10 +161,10 @@ export type EndpointObserver = (call: EndpointCall) => void;
 // Kept on globalThis, not in a module variable: the server's start-up hook and
 // its route handlers can be bundled apart, each with its own copy of this
 // module, and an observer set in one copy must be the one the other calls.
-const OBSERVER = Symbol.for("markbase.endpoint-observer");
+const OBSERVERS = Symbol.for("markbase.endpoint-observers");
 const DEFINED_IDS = Symbol.for("markbase.endpoint-ids");
 interface EndpointGlobals {
-  [OBSERVER]?: EndpointObserver | null;
+  [OBSERVERS]?: Set<EndpointObserver>;
   [DEFINED_IDS]?: Set<string>;
 }
 const globals: EndpointGlobals = globalThis as typeof globalThis & EndpointGlobals;
@@ -173,14 +173,26 @@ function definedIds(): Set<string> {
   return (globals[DEFINED_IDS] ??= new Set<string>());
 }
 
+function observers(): Set<EndpointObserver> {
+  return (globals[OBSERVERS] ??= new Set<EndpointObserver>());
+}
+
 /**
  * Be told of every call to every endpoint defined through an `endpointSet`,
- * in any feature. One observer at a time; null removes it. This is how the
- * server records user analytics without any endpoint knowing: an endpoint
- * that is defined is observed, with nothing to remember when one is added.
+ * in any feature. Returns the way to stop; null removes every observer. This
+ * is how the server records user analytics and nudges syncs without any
+ * endpoint knowing: an endpoint that is defined is observed, with nothing to
+ * remember when one is added.
  */
-export function observeEndpointCalls(observer: EndpointObserver | null): void {
-  globals[OBSERVER] = observer;
+export function observeEndpointCalls(observer: EndpointObserver | null): () => void {
+  if (observer === null) {
+    observers().clear();
+    return () => undefined;
+  }
+  observers().add(observer);
+  return () => {
+    observers().delete(observer);
+  };
 }
 
 /** Whether an endpoint with this id has been defined, in any feature's set. */
@@ -188,14 +200,14 @@ export function isDefinedEndpointId(id: string): boolean {
   return definedIds().has(id);
 }
 
-/** Tell the observer, if there is one. An observer that throws is not the caller's problem. */
+/** Tell every observer. One that throws is not the caller's problem, nor the others'. */
 function observed(call: EndpointCall): void {
-  const observer = globals[OBSERVER];
-  if (!observer) return;
-  try {
-    observer(call);
-  } catch (err) {
-    console.warn(`[endpoint] observer failed for ${call.def.id}: ${err instanceof Error ? err.message : String(err)}`);
+  for (const observer of observers()) {
+    try {
+      observer(call);
+    } catch (err) {
+      console.warn(`[endpoint] observer failed for ${call.def.id}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 }
 

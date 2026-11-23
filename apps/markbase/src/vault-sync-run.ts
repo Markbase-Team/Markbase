@@ -5,6 +5,7 @@
 
 import { existsSync, readdirSync } from "node:fs";
 import { syncHeaders } from "@markbase/local/vault/sync-headers";
+import { SyncNudges } from "@markbase/local/vault/sync-nudges";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
@@ -147,6 +148,15 @@ export async function startVaultSyncDaemons(): Promise<VaultSyncHandle | null> {
     rd.close?.();
   }
 
+  // One listener for the whole process: every vault hears its account's
+  // nudges from it, and polls slowly while they arrive.
+  const nudges = new SyncNudges({
+    appUrl: cfg.appUrl,
+    apiKey: () => cfg.apiKey,
+    log: (m) => console.log(`[vault-sync] ${m}`),
+  });
+  void nudges.start();
+
   /** Start one folder syncing. The supervisor calls this; so does the fallback. */
   const startOne = async (t: { vaultId?: string; name: string; dir: string }) => {
     const log = (m: string): void => console.log(`[${t.name}] ${m}`);
@@ -171,6 +181,7 @@ export async function startVaultSyncDaemons(): Promise<VaultSyncHandle | null> {
       vaultId: t.vaultId,
       appUrl: cfg.appUrl,
       apiKey: cfg.apiKey,
+      nudges,
       ...(owner ? { ownerId: owner } : {}),
       log,
       // A vault found sitting inside this one — dragged there in Finder,
@@ -241,6 +252,7 @@ export async function startVaultSyncDaemons(): Promise<VaultSyncHandle | null> {
     stop: async () => {
       await supervisor.stop();
       if (stopLegacy) await stopLegacy();
+      nudges.stop();
     },
     count: () => supervisor.running().length + (stopLegacy ? 1 : 0),
   };

@@ -10,7 +10,7 @@ import { routeFiles, type GeneratedFile } from "@markbase/shared/endpoint-gen";
 // (src/proxy.ts).
 
 /** The directories under src/app/api/v1 whose every route file is generated. */
-export const GENERATED_API_DIRS = ["docs", "vaults", "assets", "hook-events"] as const;
+export const GENERATED_API_DIRS = ["docs", "vaults", "assets", "hook-events", "nudge"] as const;
 
 export type GeneratedRoute = GeneratedFile;
 
