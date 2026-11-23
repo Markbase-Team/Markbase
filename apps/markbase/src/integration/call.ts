@@ -19,7 +19,13 @@ export interface CallResult {
 export async function callEndpoint(
   ep: { method: HttpMethod; path: string },
   params: { [name: string]: Json },
-  opts: { clientName?: string; sessionToken?: string; apiKey?: string } = {}
+  opts: {
+    clientName?: string;
+    sessionToken?: string;
+    apiKey?: string;
+    /** An MCP tool call: the API answers an agent leaner than the editor (docs_readDoc). */
+    viaMcp?: boolean;
+  } = {}
 ): Promise<CallResult> {
   const request = toolRequest(ep, params);
 
@@ -34,6 +40,7 @@ export async function callEndpoint(
   };
   if (opts.clientName) headers["X-MCP-Client"] = opts.clientName;
   if (opts.sessionToken) headers["X-MCP-Session"] = opts.sessionToken;
+  if (opts.viaMcp) headers["X-Markbase-Via"] = "mcp";
   const init: RequestInit = { method: request.method, headers };
   if (request.body !== undefined) {
     headers["content-type"] = "application/json";
