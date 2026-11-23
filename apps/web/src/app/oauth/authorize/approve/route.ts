@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ensureFirstVault } from "@markbase/docs/server";
 import { createApiKey } from "@markbase/server/api-keys";
 import { checkAuthorize, sealCode } from "@markbase/server/mcp-oauth";
-import { pickedCapability } from "@/lib/capabilities";
+import { CONNECTOR_DEFAULT_CAPABILITY, pickedCapability } from "@/lib/capabilities";
 import { instanceUrl } from "@/lib/instance-url";
 import { oauthSecret } from "@/lib/mcp-oauth";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   if (form.get("decision") !== "allow") {
     back.searchParams.set("error", "access_denied");
   } else {
-    const capability = pickedCapability(form.get("capability"));
+    const capability = pickedCapability(form.get("capability"), CONNECTOR_DEFAULT_CAPABILITY);
     const { token } = await createApiKey({
       name: `${checked.client.name} · ${new Date().toISOString().slice(0, 10)}`,
       ownerId: user.id,

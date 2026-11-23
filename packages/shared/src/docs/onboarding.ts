@@ -20,7 +20,7 @@ export const MCP_INSTRUCTIONS = [
   "Markbase is the person's collaborative markdown workspace: documents live in vaults, and people and their agents edit the same documents.",
   `When the person has just connected Markbase, asks what it is or what they can do with it, or seems unsure where to begin, call ${GET_STARTED_TOOL} first and offer what it suggests.`,
   "To write something for them, create a document with docs_createDoc (it goes to their default vault unless they name one). To change one, read it with docs_readDoc, then use docs_editDoc on the exact passage. Leave a comment with docs_addComment instead of editing when you are suggesting rather than changing.",
-  "To share a document, create a share link with docs_createLink (`member` for a signed-in person and their agent, `guest` for anyone with the link) and give the person the link. Sharing needs Owner access on this connection; if it is refused, say they can share from Markbase with the Share button or allow it under API keys.",
+  "To share a document, create a share link with docs_createLink (`member` for a signed-in person and their agent, `guest` for anyone with the link) and give the person the link. If it is refused because this connection was given less than Owner access, say they can share from Markbase with the Share button or raise the connection under API keys.",
   "After creating or changing a document, tell the person its title and that they can open it in Markbase.",
 ].join(" ");
 
