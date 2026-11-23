@@ -7,6 +7,7 @@ import {
   signedIn,
   type Access,
   type EndpointCall,
+  type JsonValue,
   type EndpointDef,
 } from "../src/endpoint";
 import { descriptionModule, routeFiles } from "../src/endpoint-gen";
@@ -218,5 +219,33 @@ describe("observing endpoint calls", () => {
     a.define(def({ id: "alpha_list" }), allow, async () => Response.json({}));
     expect(isDefinedEndpointId("alpha_list")).toBe(true);
     expect(isDefinedEndpointId("alpha_missing")).toBe(false);
+  });
+});
+
+describe("an observer reading what a call answered", () => {
+  it("can read the answer while it is told, and the caller still gets the whole answer", async () => {
+    const reads: Promise<JsonValue | null>[] = [];
+    const stop = observeEndpointCalls((call) => {
+      reads.push(call.readBody());
+    });
+    const set = endpointSet<EndpointDef>("answered");
+    set.define(def({ id: "answered_make", method: "POST" }), allow, async () => Response.json({ doc: { id: "d1" } }, { status: 201 }));
+    const res = await set.route("answered_make")(req(), { params: Promise.resolve({}) });
+    stop();
+    expect(await res.json()).toEqual({ doc: { id: "d1" } });
+    expect(await reads[0]).toEqual({ doc: { id: "d1" } });
+  });
+
+  it("reads null for an answer that is not JSON", async () => {
+    const reads: Promise<JsonValue | null>[] = [];
+    const stop = observeEndpointCalls((call) => {
+      reads.push(call.readBody());
+    });
+    const set = endpointSet<EndpointDef>("plain");
+    set.define(def({ id: "plain_text" }), allow, async () => new Response("hello"));
+    const res = await set.route("plain_text")(req(), { params: Promise.resolve({}) });
+    stop();
+    expect(await res.text()).toBe("hello");
+    expect(await reads[0]).toBeNull();
   });
 });
