@@ -1,6 +1,7 @@
 "use client";
 
-import { DocsShell, browserDocsPorts, type DocsRouting } from "@markbase/docs/ui";
+import { useSearchParams } from "next/navigation";
+import { DocsShell, EmbedModeProvider, browserDocsPorts, type DocsRouting } from "@markbase/docs/ui";
 
 /**
  * Where this shell puts documents, bound to the docs surface.
@@ -36,18 +37,24 @@ const routing: DocsRouting = {
 export function DocsSurface({
   userId,
   userName,
+  embed,
   children,
 }: {
   userId: string | null;
   userName: string;
+  /** Inside a card's frame (lib/embed-mode): the documents surface without the rest of the app. */
+  embed: boolean;
   children: React.ReactNode;
 }) {
+  const asked = useSearchParams().get("embed") === "1";
   return (
-    // A browser: links open in a new tab, and there are no local vaults, no
-    // agent, no snapshots served from disk. The desktop shell supplies all of
-    // those from its bridge.
-    <DocsShell userId={userId} userName={userName} routing={routing} ports={browserDocsPorts}>
-      {children}
-    </DocsShell>
+    <EmbedModeProvider embed={embed || asked}>
+      {/* A browser: links open in a new tab, and there are no local vaults, no
+          agent, no snapshots served from disk. The desktop shell supplies all
+          of those from its bridge. */}
+      <DocsShell userId={userId} userName={userName} routing={routing} ports={browserDocsPorts}>
+        {children}
+      </DocsShell>
+    </EmbedModeProvider>
   );
 }

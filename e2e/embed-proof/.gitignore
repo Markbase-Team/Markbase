@@ -1,0 +1,8 @@
+*.pem
+local.env
+results.json
+shot-*.png
+node_modules/
+package*.json
+proxy/app-card.html
+proxy/doc-card.html

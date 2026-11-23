@@ -79,6 +79,16 @@ export interface McpApp {
   description: string;
   /** The tools whose answer this card shows. */
   tools: readonly string[];
+  /**
+   * Tools the card calls itself and the model never sees: listed for the
+   * card only (`_meta.ui.visibility: ["app"]`), so what they answer goes to
+   * the card and stays out of the conversation.
+   */
+  cardOnlyTools?: readonly string[];
+  /** Origins the card may frame (`_meta.ui.csp.frameDomains`). None: it frames nothing. */
+  frameDomains?: readonly string[];
+  /** Whether the host should draw its border around the card. */
+  prefersBorder?: boolean;
   /** The whole page. */
   html: string;
 }
@@ -163,8 +173,16 @@ async function callTool(params: JsonObject, host: McpHost): Promise<JsonObject> 
  * earlier clients read.
  */
 function appLink(tool: string, host: McpHost): JsonObject {
+  if (host.apps?.some((a) => a.cardOnlyTools?.includes(tool))) return { _meta: { ui: { visibility: ["app"] } } };
   const app = host.apps?.find((a) => a.tools.includes(tool));
   return app ? { _meta: { ui: { resourceUri: app.uri }, "ui/resourceUri": app.uri } } : {};
+}
+
+/** What a card's page asks of the host beside its HTML. */
+function appMeta(app: McpApp): JsonObject {
+  const ui: JsonObject = { prefersBorder: app.prefersBorder ?? true };
+  if (app.frameDomains?.length) ui.csp = { frameDomains: [...app.frameDomains] };
+  return { ui };
 }
 
 /**
@@ -240,7 +258,7 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
             text: app.html,
             // Nothing is loaded from outside the page, so it asks for no
             // domains: the client's default policy (no network) is the right one.
-            _meta: { ui: { prefersBorder: true } },
+            _meta: appMeta(app),
           },
         ],
       });

@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { EMBED_COOKIE_OPTIONS, inForeignFrame } from "./embed-cookies";
 import { instancePublicConfig } from "./instance-config";
 
 // Singleton browser Supabase client. Returning a fresh client on every call
@@ -18,7 +19,11 @@ let client: ReturnType<typeof createBrowserClient> | null = null;
 export function createSupabaseBrowserClient() {
   if (client) return client;
   const { supabaseUrl, supabasePublishableKey } = instancePublicConfig();
-  client = createBrowserClient(supabaseUrl, supabasePublishableKey);
+  // Framed by another site (the embed proof): the session's cookies must be
+  // ones a third-party frame may keep. See ./embed-cookies.
+  client = inForeignFrame()
+    ? createBrowserClient(supabaseUrl, supabasePublishableKey, { cookieOptions: EMBED_COOKIE_OPTIONS })
+    : createBrowserClient(supabaseUrl, supabasePublishableKey);
   return client;
 }
 

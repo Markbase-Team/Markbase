@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>fake sandbox proxy</title>
+<style>html,body{margin:0;height:100%} iframe{border:0;width:100%;height:100%}</style>
+<iframe id="card"></iframe>
+<script>
+  // The card: a srcdoc page, sandboxed the way the variant says, that frames
+  // Markbase full page at the hand-off address.
+  const q = new URLSearchParams(location.search);
+  const card = document.getElementById("card");
+  card.setAttribute("sandbox", q.get("sandbox") || "allow-scripts allow-same-origin allow-forms allow-popups");
+  const src = q.get("app");
+  card.srcdoc = '<!doctype html><meta charset="utf-8"><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style>' +
+    '<iframe id="app" src="' + src.replace(/"/g, "&quot;") + '" allow="clipboard-write"></iframe>';
+</script>

@@ -27,6 +27,7 @@ import { DocsSidebar } from "./docs-sidebar";
 import { setActiveDoc } from "./active-doc";
 import { NewVaultModal, type VaultMeta } from "./new-vault-modal";
 import { ConnectAgentDialog } from "./connect-agent-dialog";
+import { useEmbedMode } from "./embed-mode";
 import { VaultEmptyState, VaultLoadError } from "./vault-empty-state";
 import { SHARED_SCOPE, isSharedScope } from "./scope";
 import { DocsStoreProvider, preloadDocWorkspaces } from "./docs-store";
@@ -210,6 +211,8 @@ export function DocsShell({
   // now something for an agent to work on. Held here, above both trees this
   // shell renders, because creating that vault swaps the empty state for the
   // full one.
+  // Inside an AI app's card (./embed-mode) the person is in their agent already.
+  const embed = useEmbedMode();
   const [connectOpen, setConnectOpen] = useState(false);
   // A confirmed-empty account gets the first-vault dialog straight away, once:
   // the screen behind it has one thing to do, and asking the person to click a
@@ -816,9 +819,9 @@ export function DocsShell({
       // Not offered to an account that already has an agent: a person who
       // connected one before making a vault would read the offer as the
       // connection not having worked.
-      if (vaults.length === 0 && !agentConnected) setConnectOpen(true);
+      if (vaults.length === 0 && !agentConnected && !embed) setConnectOpen(true);
     },
-    [focus, vaults.length]
+    [focus, vaults.length, embed]
   );
 
   const onDeletedVault = useCallback(

@@ -1,4 +1,5 @@
 import type { McpApp } from "../../mcp-http";
+import { EMBED_SESSION_TOOL, FRAME_APP_CSS, FRAME_APP_JS } from "./app-app";
 import { appPage } from "./page";
 
 // The document card: a document, drawn in the conversation.
@@ -67,12 +68,26 @@ function draw(result) {
     '<div class="head">' +
       '<div class="row spread">' +
         '<h1 class="title">' + escapeHtml(doc.title || "Untitled") + "</h1>" +
-        '<button class="primary" id="open">' + CONFIG.icons.externalLink + "Open in Markbase</button>" +
+        '<div class="row">' +
+          (CONFIG.instance ? '<button id="full">' + CONFIG.icons.maximize + "Open full page</button>" : "") +
+          '<button class="primary" id="open">' + CONFIG.icons.externalLink + "Open in Markbase</button>" +
+        "</div>" +
       "</div>" +
       (chips ? '<div class="row meta">' + chips + "</div>" : "") +
     "</div>" +
     '<div class="doc" id="doc">' + (String(doc.content || "").trim() ? renderMarkdown(doc.content) : '<p class="muted">This document is empty.</p>') + "</div>" +
     '<div class="more" id="more" hidden><button id="toggle">' + CONFIG.icons.chevronDown + "<span>Show more</span></button></div>";
+
+  /* Full page: the real app, at this document, in the panel beside the conversation (./app-app). */
+  var full = document.getElementById("full");
+  if (full) full.addEventListener("click", function () {
+    document.body.classList.add("framing");
+    root.innerHTML = '<div class="stage" id="stage"></div>';
+    frameApp(document.getElementById("stage"), doc.id, function (message) {
+      document.body.classList.remove("framing");
+      draw({ error: message });
+    });
+  });
 
   document.getElementById("open").addEventListener("click", function () {
     mb.openLink(CONFIG.docUrlPrefix + encodeURIComponent(doc.id)).catch(function () {});
@@ -95,27 +110,38 @@ mb.on("ui/notifications/tool-cancelled", function () { draw({ error: "The reques
 mb.start({ name: "markbase-doc", version: "1.0.0", protocol: CONFIG.protocol });
 `;
 
-/** The page. `docUrlPrefix` + a document's id is where that document opens on this instance. */
-export function docAppHtml(docUrlPrefix: string): string {
+/**
+ * The page. `docUrlPrefix` + a document's id is where that document opens on
+ * this instance. With `instance` (the embed experiment switched on), the card
+ * also offers "Open full page": the real app at this document, framed.
+ */
+export function docAppHtml(docUrlPrefix: string, instance?: string): string {
   return appPage({
     title: "Markbase document",
-    css: CSS,
+    css: CSS + (instance ? FRAME_APP_CSS + FRAMING_CSS : ""),
     body: '<div id="root"><p class="state">Loading the document…</p></div>',
-    config: { docUrlPrefix },
-    script: SCRIPT,
+    config: instance ? { docUrlPrefix, instance, sessionTool: EMBED_SESSION_TOOL } : { docUrlPrefix },
+    script: (instance ? FRAME_APP_JS : "") + SCRIPT,
   });
 }
+
+/** Once the card frames the app, the frame is the whole card. */
+const FRAMING_CSS = `
+body.framing { padding: 0; height: 100vh; display: flex; flex-direction: column; }
+body.framing #root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+`;
 
 /**
  * The document card for an instance. The address is the shell's to give: a
  * feature does not know where the app that shows its documents lives.
  */
-export function docApp(docUrlPrefix: string): McpApp {
+export function docApp(docUrlPrefix: string, instance?: string): McpApp {
   return {
     uri: DOC_APP_URI,
     name: "Markbase document",
     description: "A Markbase document, shown as it reads, with a button that opens it in Markbase.",
     tools: DOC_APP_TOOLS,
-    html: docAppHtml(docUrlPrefix),
+    ...(instance ? { cardOnlyTools: [EMBED_SESSION_TOOL], frameDomains: [instance] } : {}),
+    html: docAppHtml(docUrlPrefix, instance),
   };
 }

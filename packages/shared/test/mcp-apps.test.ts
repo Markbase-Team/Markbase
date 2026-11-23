@@ -137,3 +137,29 @@ describe("a server with none of them", () => {
     expect(heard.map((e) => e.event)).toEqual(Array(5).fill("unknown_method"));
   });
 });
+
+describe("a card that frames a site and calls a tool of its own", () => {
+  const FRAMER: McpApp = {
+    uri: "ui://markbase/app",
+    name: "Markbase app",
+    description: "The app.",
+    tools: ["docs_readDoc"],
+    cardOnlyTools: ["docs_listDocs"],
+    frameDomains: ["https://markbase.so"],
+    prefersBorder: false,
+    html: "<!doctype html>",
+  };
+  const framing = () => host({ apps: [FRAMER] });
+
+  it("lists the card's own tool for the card only, so its answer never reaches the model", async () => {
+    const tools = ((await ask(framing().h, "tools/list"))?.result as { tools: JsonObject[] }).tools;
+    expect(tools.find((t) => t.name === "docs_listDocs")?._meta).toEqual({ ui: { visibility: ["app"] } });
+    expect(tools.find((t) => t.name === "docs_readDoc")?._meta).toMatchObject({ ui: { resourceUri: "ui://markbase/app" } });
+  });
+
+  it("asks the host to let the card frame that one origin, and nothing else", async () => {
+    const answer = await ask(framing().h, "resources/read", { uri: FRAMER.uri });
+    const content = (answer?.result as { contents: JsonObject[] }).contents[0];
+    expect(content._meta).toEqual({ ui: { prefersBorder: false, csp: { frameDomains: ["https://markbase.so"] } } });
+  });
+});

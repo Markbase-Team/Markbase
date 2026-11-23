@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/supabase/server";
 import { ownerDisplayName } from "@markbase/docs/server";
 import { DocsSurface } from "@/components/docs-surface";
+import { inEmbedFrame } from "@/lib/embed-mode";
 
 // The documents surface is three columns: the documentation sidebar (tree +
 // vault switcher), the open-document tab strip, and the active doc — the last
@@ -40,7 +41,7 @@ export default async function DocumentsLayout({
   // which replicates to everyone the document is shared with.
   const userName = user ? await ownerDisplayName(user.id, user.email ?? null) : "";
   return (
-    <DocsSurface userId={user?.id ?? null} userName={userName}>
+    <DocsSurface userId={user?.id ?? null} userName={userName} embed={await inEmbedFrame()}>
       {children}
     </DocsSurface>
   );

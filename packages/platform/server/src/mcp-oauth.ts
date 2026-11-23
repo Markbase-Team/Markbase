@@ -182,6 +182,59 @@ export function openCode(code: string | null | undefined, secret: string, now: n
   }
 }
 
+// ---- The embed hand-off ---------------------------------------------------
+//
+// A card in an AI app's conversation can show the real Markbase app, framed
+// full page (docs/embed-proof.md). The frame has no session of its own — the
+// person's markbase.so cookies are a different site's, and the browser does
+// not send them there — so the card asks the server, with the connector's
+// key, for a hand-off: the address of /embed with a code that signs the frame
+// in. The code is a Supabase magic-link token (single use) sealed with the
+// account and where to go, and it opens for one minute only.
+
+/** Where a hand-off is redeemed. */
+export const EMBED_PATH = "/embed";
+
+/** How long a hand-off may wait to be redeemed. The card frames it at once. */
+export const EMBED_CODE_TTL_MS = 60_000;
+
+/** What a hand-off code carries. */
+export interface EmbedGrant {
+  /** The Supabase magic-link token hash: single use, it becomes the session. */
+  tokenHash: string;
+  /** The account it signs in, checked against the session it makes. */
+  userId: string;
+  /** Where in the app to land, a path on this instance. */
+  next: string;
+}
+
+export function sealEmbedCode(grant: EmbedGrant, secret: string, now: number = Date.now()): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", derive(secret, "embed"), iv);
+  const plain = JSON.stringify({ h: grant.tokenHash, u: grant.userId, n: grant.next, e: now + EMBED_CODE_TTL_MS });
+  const sealed = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), sealed]).toString("base64url");
+}
+
+/** The grant, or null for a code that is not ours, was altered or has expired. */
+export function openEmbedCode(code: string | null | undefined, secret: string, now: number = Date.now()): EmbedGrant | null {
+  if (!code) return null;
+  try {
+    const raw = Buffer.from(code, "base64url");
+    if (raw.length < 29) return null;
+    const decipher = createDecipheriv("aes-256-gcm", derive(secret, "embed"), raw.subarray(0, 12));
+    decipher.setAuthTag(raw.subarray(12, 28));
+    const plain = Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString("utf8");
+    const parsed: { h?: string; u?: string; n?: string; e?: number } = JSON.parse(plain);
+    const { h, u, n, e } = parsed;
+    if (typeof h !== "string" || typeof u !== "string" || typeof n !== "string") return null;
+    if (typeof e !== "number" || e < now) return null;
+    return { tokenHash: h, userId: u, next: n };
+  } catch {
+    return null;
+  }
+}
+
 /** A PKCE challenge is 43 base64url characters: a SHA-256, unpadded. */
 export function validChallenge(challenge: string | null | undefined): challenge is string {
   return typeof challenge === "string" && /^[A-Za-z0-9_-]{43}$/.test(challenge);

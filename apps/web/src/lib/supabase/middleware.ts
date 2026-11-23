@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { serverEmbedCookieOptions } from "@markbase/shared/embed-cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Refreshes the auth session cookie and gates the /dashboard area: signed-out
@@ -10,6 +11,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      cookieOptions: serverEmbedCookieOptions(process.env.MARKBASE_EMBED_PROOF, request.cookies),
       cookies: {
         getAll() {
           return request.cookies.getAll();
