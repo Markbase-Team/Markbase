@@ -230,55 +230,41 @@ describe("the app card (the embed experiment)", () => {
   });
 });
 
-describe("the document card's Open full page (the embed experiment)", () => {
-  it("is offered only while the embed is on, and frames only the instance through the card-only hand-off", () => {
-    const off = docApp("https://markbase.so/dashboard/documents/");
+describe("a card that frames the app, where the host may block it", () => {
+  const app = appApp("https://markbase.so", "abc.claudemcpcontent.com");
+  const doc = docApp("https://markbase.so/open?doc=", "https://markbase.so", "abc.claudemcpcontent.com");
+
+  it("draws the document first: the app card reads it through the host", () => {
+    expect(app.html).toContain('mb.callTool("docs_readDoc", { id: docId })');
+    expect(app.html).toContain("function draw(result)");
+  });
+
+  it("loads the app hidden, shows it only once it says so, and takes it away otherwise", () => {
+    for (const html of [app.html, doc.html]) {
+      expect(html).toContain("iframe.app { position: fixed;");
+      expect(html).toContain("visibility: hidden");
+      expect(html).toContain(`event.data.type !== "${EMBED_READY_MESSAGE}"`);
+      expect(html).toContain('frame.classList.add("ready")');
+      expect(html).toContain("frame.remove();");
+    }
+  });
+
+  it("opens full page only from a press, with the whole document there", () => {
+    expect(doc.html).toContain('mb.setMode("fullscreen").then(function () {\n      draw(lastDrawn);');
+    expect(doc.html).toContain('if (!full && body.scrollHeight > 400)');
+    // Nothing asks for full page on its own.
+    expect(app.html).not.toMatch(/mb\.on\("ui\/notifications\/tool-result"[\s\S]*?setMode\("fullscreen"\)[\s\S]*?mb\.start/);
+  });
+
+  it("offers the hand-off tool and the frame only with the embed on", () => {
+    const off = docApp("https://markbase.so/open?doc=");
     expect(off.cardOnlyTools).toBeUndefined();
     expect(off.frameDomains).toBeUndefined();
-    expect(off.html).not.toContain("function frameApp(");
-
-    const on = docApp("https://markbase.so/dashboard/documents/", "https://markbase.so");
-    expect(on.cardOnlyTools).toEqual(["me_embedSession"]);
-    expect(on.frameDomains).toEqual(["https://markbase.so"]);
-    expect(on.html).toContain("function frameApp(");
-    expect(on.html).toContain("Open full page");
-    expect(on.html).toContain('"sessionTool":"me_embedSession"');
-    for (const m of on.html.matchAll(/<script>([\s\S]*?)<\/script>/g)) expect(() => new Function(m[1])).not.toThrow();
+    expect(off.html).not.toContain("function overlayApp(");
+    expect(doc.cardOnlyTools).toEqual(["me_embedSession"]);
+    expect(doc.frameDomains).toEqual(["https://markbase.so"]);
+    for (const m of doc.html.matchAll(/<script>([\s\S]*?)<\/script>/g)) expect(() => new Function(m[1])).not.toThrow();
+    for (const m of app.html.matchAll(/<script>([\s\S]*?)<\/script>/g)) expect(() => new Function(m[1])).not.toThrow();
   });
 });
 
-describe("a card in an assistant that will not frame Markbase", () => {
-  const app = appApp("https://markbase.so", "abc.claudemcpcontent.com");
-  const doc = docApp("https://markbase.so/dashboard/documents/", "https://markbase.so", "abc.claudemcpcontent.com");
-
-  it("asks the host which sites it allowed, and offers Open in Markbase instead of a blank frame", () => {
-    expect(app.html).toContain("hostCapabilities.sandbox && hostCapabilities.sandbox.csp");
-    expect(app.html).toContain('if (mb.frameAllowed(CONFIG.instance) === false) { showFallback(stage, docId); return; }');
-    expect(app.html).toContain("Markbase could not be shown inside the chat here.");
-    expect(app.html).toContain('"docUrlPrefix":"https://markbase.so/open?doc="');
-  });
-
-  it("asks for full page only from a press: the app card frames inline, the document card's button asks", () => {
-    expect(app.html).toContain("if (expand && mb.canExpand()");
-    expect(app.html).toMatch(/frameApp\(document\.getElementById\("stage"\), docId, function \(message\) \{[\s\S]*?\}, false\);/);
-    expect(doc.html).toMatch(/frameApp\(document\.getElementById\("stage"\), doc\.id, function \(message\) \{[\s\S]*?\}, true\);/);
-  });
-
-  it("gives the framing cards their fixed sandbox host", () => {
-    expect(app.domain).toBe("abc.claudemcpcontent.com");
-    expect(doc.domain).toBe("abc.claudemcpcontent.com");
-    expect(docApp("https://markbase.so/dashboard/documents/").domain).toBeUndefined();
-  });
-});
-
-describe("a frame the host blocked without saying so", () => {
-  it("is replaced by the fallback when the app never says it is showing", () => {
-    const app = appApp("https://markbase.so", "abc.claudemcpcontent.com");
-    expect(app.html).toContain(`event.data.type !== "${EMBED_READY_MESSAGE}"`);
-    expect(app.html).toContain("showFallback(stage, docId);\n    }, CONFIG.readyTimeoutMs || 12000);");
-  });
-
-  it("opens Markbase through /open, the desktop app first", () => {
-    expect(appApp("https://markbase.so").html).toContain('"docUrlPrefix":"https://markbase.so/open?doc="');
-  });
-});
