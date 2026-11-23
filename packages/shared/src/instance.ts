@@ -186,6 +186,64 @@ export function parseConnectLink(raw: string): ConnectTarget | null {
   }
 }
 
+// ---- The open link -------------------------------------------------------------
+//
+// "Open in Markbase" from somewhere that is not Markbase — a card in an AI
+// app's conversation, an email — prefers the desktop app and falls back to the
+// website. The link it follows is the instance's /open page (`openPageUrl`),
+// which hands the app `markbase://open?instance=…&doc=…` (`openDocLink`) and,
+// when nothing takes it, goes on to the document in the browser.
+
+/** The host inside the scheme that means "open this instance, at this document". */
+const OPEN_HOST = "open";
+
+/** A document id as it may sit in a link: a uuid, or anything as plain. */
+const DOC_ID = /^[A-Za-z0-9-]{1,64}$/;
+
+/** What an open link names. */
+export interface OpenTarget {
+  /** The instance, normalized. */
+  appUrl: string;
+  /** The document to show; null for the documents list. */
+  docId: string | null;
+}
+
+/** The link that asks the desktop app to show `docId` (or the documents list) on `appUrl`. */
+export function openDocLink(appUrl: string, docId?: string | null): string {
+  const base = `${CONNECT_SCHEME}://${OPEN_HOST}?instance=${encodeURIComponent(normalizeInstanceUrl(appUrl))}`;
+  return docId && DOC_ID.test(docId) ? `${base}&doc=${encodeURIComponent(docId)}` : base;
+}
+
+/** What an open link names, or null when `raw` is not one (another host, no instance, a malformed id). */
+export function parseOpenLink(raw: string): OpenTarget | null {
+  let url: URL;
+  try {
+    url = new URL(raw.trim());
+  } catch {
+    return null;
+  }
+  if (url.protocol !== `${CONNECT_SCHEME}:` || url.host !== OPEN_HOST) return null;
+  const instance = url.searchParams.get("instance");
+  if (!instance) return null;
+  const doc = url.searchParams.get("doc");
+  if (doc !== null && !DOC_ID.test(doc)) return null;
+  try {
+    return { appUrl: normalizeInstanceUrl(instance), docId: doc };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The page on the instance that opens `docId` in the desktop app when it is
+ * installed and on the website when it is not. What a link from outside
+ * Markbase points at.
+ */
+export function openPageUrl(appUrl: string, docId?: string | null): string {
+  const page = `${normalizeInstanceUrl(appUrl)}/open`;
+  return docId && DOC_ID.test(docId) ? `${page}?doc=${encodeURIComponent(docId)}` : page;
+}
+
 /**
  * The instance's join page — the one link an admin shares with a teammate.
  * The page (apps/web/src/app/join) gets them an account there and offers the

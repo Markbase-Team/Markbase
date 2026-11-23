@@ -7,4 +7,4 @@ import { docAppHtml } from "../../packages/shared/src/docs/apps/doc-app";
 
 const instance = process.argv[2] ?? "https://localhost:3443";
 writeFileSync(new URL("./proxy/app-card.html", import.meta.url), appAppHtml(instance));
-writeFileSync(new URL("./proxy/doc-card.html", import.meta.url), docAppHtml(`${instance}/dashboard/documents/`, instance));
+writeFileSync(new URL("./proxy/doc-card.html", import.meta.url), docAppHtml(`${instance}/open?doc=`, instance));

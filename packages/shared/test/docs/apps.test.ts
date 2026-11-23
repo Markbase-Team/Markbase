@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { agentTools } from "../../src/docs/agent-tools";
 import { EMBED_TOOLS, appApp } from "../../src/docs/apps/app-app";
+import { EMBED_READY_MESSAGE } from "../../src/embed-cookies";
 import { DOC_APP_TOOLS, DOC_APP_URI, docApp, docAppHtml } from "../../src/docs/apps/doc-app";
 import { VIEW_LIB_JS, scriptJson } from "../../src/docs/apps/page";
 import { START_APP_URI, startApp, startAppHtml } from "../../src/docs/apps/start-app";
@@ -253,8 +254,8 @@ describe("a card in an assistant that will not frame Markbase", () => {
   it("asks the host which sites it allowed, and offers Open in Markbase instead of a blank frame", () => {
     expect(app.html).toContain("hostCapabilities.sandbox && hostCapabilities.sandbox.csp");
     expect(app.html).toContain('if (mb.frameAllowed(CONFIG.instance) === false) { showFallback(stage, docId); return; }');
-    expect(app.html).toContain("does not show Markbase inside the chat yet");
-    expect(app.html).toContain('"docUrlPrefix":"https://markbase.so/dashboard/documents/"');
+    expect(app.html).toContain("Markbase could not be shown inside the chat here.");
+    expect(app.html).toContain('"docUrlPrefix":"https://markbase.so/open?doc="');
   });
 
   it("asks for full page only from a press: the app card frames inline, the document card's button asks", () => {
@@ -267,5 +268,17 @@ describe("a card in an assistant that will not frame Markbase", () => {
     expect(app.domain).toBe("abc.claudemcpcontent.com");
     expect(doc.domain).toBe("abc.claudemcpcontent.com");
     expect(docApp("https://markbase.so/dashboard/documents/").domain).toBeUndefined();
+  });
+});
+
+describe("a frame the host blocked without saying so", () => {
+  it("is replaced by the fallback when the app never says it is showing", () => {
+    const app = appApp("https://markbase.so", "abc.claudemcpcontent.com");
+    expect(app.html).toContain(`event.data.type !== "${EMBED_READY_MESSAGE}"`);
+    expect(app.html).toContain("showFallback(stage, docId);\n    }, CONFIG.readyTimeoutMs || 12000);");
+  });
+
+  it("opens Markbase through /open, the desktop app first", () => {
+    expect(appApp("https://markbase.so").html).toContain('"docUrlPrefix":"https://markbase.so/open?doc="');
   });
 });

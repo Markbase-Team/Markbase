@@ -1,5 +1,6 @@
 import { agentJson, authenticateAgent, preflight } from "@/lib/agent-auth";
 import { EMBED_DOC_ID, embedEnabled } from "@/lib/embed";
+import { openPageUrl } from "@markbase/shared/instance";
 import { instanceUrl } from "@/lib/instance-url";
 
 export const runtime = "nodejs";
@@ -22,7 +23,8 @@ export async function GET(req: Request) {
   // Said as what may happen, not what did: an app that does not draw cards
   // shows nothing, and one that does may not allow the frame. The address is
   // always there to give the person.
-  const url = `${await instanceUrl()}/dashboard/documents${doc ? `/${doc}` : ""}`;
+  // Through /open: the desktop app when it is installed, the website otherwise.
+  const url = openPageUrl(await instanceUrl(), doc);
   return agentJson({
     doc_id: doc,
     url,

@@ -61,3 +61,11 @@ export function serverEmbedCookieOptions(
   if (flag === "1") return EMBED_COOKIE_OPTIONS;
   return cookies?.get(EMBED_MARKER_COOKIE) ? EMBED_COOKIE_OPTIONS : undefined;
 }
+
+/**
+ * What the app says to the card that framed it once it is showing (see
+ * apps/web/src/components/docs-surface.tsx). The card waits for it: a host
+ * that will not let it frame the app blocks the frame without telling it, and
+ * a frame that never says this is replaced by "Open in Markbase".
+ */
+export const EMBED_READY_MESSAGE = "markbase:embed-ready";

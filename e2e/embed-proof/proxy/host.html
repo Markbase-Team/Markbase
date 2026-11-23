@@ -11,6 +11,14 @@
   // Which sites the host lets into the card's frame policy, as Claude reports
   // it: "allowed" (the instance), "blocked" (none), or unset (not reported).
   const FRAMES = q.get("frames");
+  // "silent": block the frame with this page's own policy and report nothing,
+  // which is what Claude does today.
+  if (FRAMES === "silent") {
+    const policy = document.createElement("meta");
+    policy.httpEquiv = "Content-Security-Policy";
+    policy.content = "frame-src 'self'";
+    document.head.appendChild(policy);
+  }
   const card = document.getElementById("card");
   card.setAttribute("sandbox", q.get("sandbox") || "allow-scripts allow-same-origin allow-forms allow-popups");
   window.hostLog = [];
@@ -22,7 +30,7 @@
     const refuse = (message) => post({ jsonrpc: "2.0", id: m.id, error: { code: -32000, message } });
     window.hostLog.push(m.method || "response");
     if (m.method === "ui/initialize") {
-      const sandbox = FRAMES ? { sandbox: { csp: { frameDomains: FRAMES === "allowed" ? [APP] : [] } } } : {};
+      const sandbox = FRAMES === "allowed" || FRAMES === "blocked" ? { sandbox: { csp: { frameDomains: FRAMES === "allowed" ? [APP] : [] } } } : {};
       reply({ protocolVersion: "2026-01-26", hostInfo: { name: "fake", version: "0" }, hostCapabilities: { openLinks: {}, serverTools: {}, ...sandbox },
         hostContext: { theme: "light", displayMode: "inline", availableDisplayModes: ["inline", "fullscreen"] } });
     } else if (m.method === "ui/notifications/initialized") {

@@ -5,6 +5,9 @@ import {
   connectLink,
   joinLink,
   parseConnectLink,
+  openDocLink,
+  openPageUrl,
+  parseOpenLink,
 } from "../src/instance";
 
 // Joining an instance is one URL typed once — in the terminal or in the desktop
@@ -163,5 +166,38 @@ describe("joinLink", () => {
     expect(joinLink("https://markbase.example.com", "k3y_+/=")).toBe(
       "https://markbase.example.com/join?code=k3y_%2B%2F%3D"
     );
+  });
+});
+
+// "Open in Markbase" from outside Markbase goes to the instance's /open page,
+// which hands the desktop app this link and falls back to the website.
+describe("openDocLink / parseOpenLink / openPageUrl", () => {
+  const DOC = "31dfca16-881b-46ba-aaf6-b3837ddcd9c9";
+
+  it("round-trips a document on an instance", () => {
+    const link = openDocLink("https://markbase.so/", DOC);
+    expect(link).toBe(`markbase://open?instance=https%3A%2F%2Fmarkbase.so&doc=${DOC}`);
+    expect(parseOpenLink(link)).toEqual({ appUrl: "https://markbase.so", docId: DOC });
+  });
+
+  it("without a document, names the documents list", () => {
+    expect(parseOpenLink(openDocLink("https://markbase.so"))).toEqual({ appUrl: "https://markbase.so", docId: null });
+  });
+
+  it("is not a connect link, and a connect link is not one", () => {
+    expect(parseConnectLink(openDocLink("https://markbase.so", DOC))).toBeNull();
+    expect(parseOpenLink(connectLink("https://markbase.so"))).toBeNull();
+  });
+
+  it("refuses an id that could be anything but an id, and a link with no instance", () => {
+    expect(parseOpenLink("markbase://open?instance=https%3A%2F%2Fmarkbase.so&doc=..%2Fsettings")).toBeNull();
+    expect(parseOpenLink("markbase://open?doc=abc")).toBeNull();
+    expect(parseOpenLink("https://open?instance=https%3A%2F%2Fmarkbase.so")).toBeNull();
+    expect(openDocLink("https://markbase.so", "../x")).toBe("markbase://open?instance=https%3A%2F%2Fmarkbase.so");
+  });
+
+  it("points a link from outside at the instance's /open page", () => {
+    expect(openPageUrl("https://markbase.so/", DOC)).toBe(`https://markbase.so/open?doc=${DOC}`);
+    expect(openPageUrl("https://markbase.so")).toBe("https://markbase.so/open");
   });
 });

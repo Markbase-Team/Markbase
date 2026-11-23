@@ -54,7 +54,7 @@ import { homedir } from "node:os";
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { SUPABASE_KEY_DEFAULT, SUPABASE_URL_DEFAULT } from "./supabase-defaults";
-import { DEFAULT_APP_URL, parseConnectLink } from "@markbase/shared/instance";
+import { DEFAULT_APP_URL, parseConnectLink, parseOpenLink } from "@markbase/shared/instance";
 import { connectToInstance, instanceStatus, type InstanceStatus } from "./instance";
 import {
   awaitDeviceAuth,
@@ -3270,6 +3270,44 @@ async function handleConnectLink(raw: string): Promise<void> {
   if (!res.ok) dialog.showErrorBox("Couldn't join the instance", res.error);
 }
 
+// ---- Open links -------------------------------------------------------------
+// "Open in Markbase" from outside the app — a card in an AI app's
+// conversation — goes to the instance's /open page, which hands the app
+// markbase://open?instance=<url>&doc=<id> (@markbase/shared/instance) and
+// falls back to the website when nothing takes it. Opening a document is
+// harmless, so unlike a join link it asks nothing: it shows the document.
+
+async function handleOpenLink(raw: string): Promise<void> {
+  const link = parseOpenLink(raw);
+  if (!link) return;
+  const path = link.docId ? `/dashboard/documents/${encodeURIComponent(link.docId)}` : "/dashboard/documents";
+  // Another instance's document is not in this app: show it where it is.
+  if (link.appUrl !== APP_URL) {
+    logVault(`open link for another instance (${hostOf(link.appUrl)}), opened in the browser`);
+    void shell.openExternal(`${link.appUrl}${path}`);
+    return;
+  }
+  // Signed out: the window's sign-in comes first, and the document is a click away after.
+  if (!readApiKey()) {
+    showMainWindow();
+    return;
+  }
+  const url = link.docId ? `${HOME_URL}/${encodeURIComponent(link.docId)}` : HOME_URL;
+  const win = appWindow();
+  if (win) {
+    win.show();
+    win.focus();
+    void win.loadURL(url);
+    return;
+  }
+  createWindow(url);
+}
+
+/** A markbase:// link the OS handed over: open a document, or join an instance. */
+function handleLink(raw: string): Promise<void> {
+  return parseOpenLink(raw) ? handleOpenLink(raw) : handleConnectLink(raw);
+}
+
 /**
  * Links that arrived before the app was ready. `open-url` fires before
  * app.whenReady() on a cold launch — clicking the join link with the app closed
@@ -3283,7 +3321,7 @@ function acceptLink(url: string): void {
     pendingLinks.push(url);
     return;
   }
-  void handleConnectLink(url);
+  void handleLink(url);
 }
 
 /** The join links in a command line: how Windows and Linux hand them over. */
@@ -3833,7 +3871,7 @@ app.whenReady().then(async () => {
 app.whenReady().then(() => {
   linksReady = true;
   connectLinksIn(process.argv).forEach((l) => pendingLinks.push(l));
-  for (const l of pendingLinks.splice(0)) void handleConnectLink(l);
+  for (const l of pendingLinks.splice(0)) void handleLink(l);
 });
 
 // Let the daemons close their channels and flush before the app exits.

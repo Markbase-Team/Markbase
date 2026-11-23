@@ -17,6 +17,7 @@ import {
   type McpHost,
 } from "@markbase/shared/mcp-http";
 import { authenticateAgent } from "@/lib/agent-auth";
+import { openPageUrl } from "@markbase/shared/instance";
 import { claudeCardHost, embedEnabled } from "@/lib/embed";
 import { instanceUrl } from "@/lib/instance-url";
 import { noteMcpEvent } from "@/lib/user-analytics";
@@ -100,10 +101,12 @@ export async function POST(req: Request) {
   const named = messages.map(clientNameIn).find((n) => n !== null) ?? null;
   const clientName = named ?? clientNameOf(req.headers.get(MCP_SESSION_HEADER));
 
-  // Where this instance's app shows documents. The cards open them there; a
-  // card is built here because the address is the shell's to know.
-  const documentsUrl = `${await instanceUrl()}/dashboard/documents`;
-  const docUrlPrefix = `${documentsUrl}/`;
+  // Where a card's "Open in Markbase" goes: this instance's /open page, which
+  // tries the desktop app and falls back to the website. Built here because
+  // the address is the shell's to know.
+  const instance = await instanceUrl();
+  const documentsUrl = openPageUrl(instance);
+  const docUrlPrefix = `${openPageUrl(instance)}?doc=`;
 
   const embed = embedEnabled();
   // The cards that frame the app get a fixed sandbox host, the one the app
