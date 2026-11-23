@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { toolRequest, type AgentTool } from "../src/endpoint-tools";
 import {
   answerMcp,
+  answerMcpLine,
   clientNameIn,
   clientNameOf,
   sessionIdFor,
@@ -178,5 +179,79 @@ describe("what the host is told of", () => {
         { jsonrpc: "2.0", method: "notifications/initialized" },
       ])
     ).toEqual([]);
+  });
+});
+
+describe("what a host may do", () => {
+  it("may take a moment to say which tools it has", async () => {
+    const { h } = host();
+    const tools = h.tools();
+    h.tools = async () => tools;
+    const listed = await answerMcp({ jsonrpc: "2.0", id: 1, method: "tools/list" }, h);
+    expect(listed).toMatchObject({ result: { tools: [{ name: "docs_readDoc" }, { name: "docs_editDoc" }] } });
+    const called = await answerMcp({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "docs_readDoc", arguments: { id: "d1" } } }, h);
+    expect(called).toMatchObject({ result: { isError: false } });
+  });
+
+  it("may throw to tell the agent something other than a status", async () => {
+    const { h } = host();
+    h.call = async () => {
+      throw new Error("Sign in at https://example.test/login, then try again.");
+    };
+    const a = await answerMcp({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "docs_readDoc", arguments: { id: "d1" } } }, h);
+    expect(a).toEqual({
+      jsonrpc: "2.0",
+      id: 1,
+      result: { content: [{ type: "text", text: "Sign in at https://example.test/login, then try again." }], isError: true },
+    });
+  });
+
+  it("answers an older client in the protocol revision it asked for", async () => {
+    const { h } = host();
+    const a = await answerMcp({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2024-11-05" } }, h);
+    expect(a).toMatchObject({ result: { protocolVersion: "2024-11-05" } });
+  });
+});
+
+describe("answerMcpLine", () => {
+  const INIT = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"clientInfo":{"name":"claude-code"}}}';
+
+  it("answers one message on a line with one line", async () => {
+    const { h } = host();
+    const out = await answerMcpLine(INIT, h);
+    expect(JSON.parse(out ?? "")).toMatchObject({ id: 1, result: { serverInfo: { name: "markbase-docs" } } });
+    expect(out).not.toContain("\n");
+  });
+
+  it("has nothing to say to a notification or a blank line", async () => {
+    const { h } = host();
+    expect(await answerMcpLine('{"jsonrpc":"2.0","method":"notifications/initialized"}', h)).toBeNull();
+    expect(await answerMcpLine("   ", h)).toBeNull();
+  });
+
+  it("answers a line that is not JSON with a parse error", async () => {
+    const { h } = host();
+    expect(JSON.parse((await answerMcpLine("{not json", h)) ?? "")).toMatchObject({ id: null, error: { code: -32700 } });
+  });
+
+  it("answers a batch with a batch, leaving out its notifications", async () => {
+    const { h } = host();
+    const out = await answerMcpLine(
+      '[{"jsonrpc":"2.0","id":1,"method":"ping"},{"jsonrpc":"2.0","method":"notifications/initialized"},{"jsonrpc":"2.0","id":2,"method":"ping"}]',
+      h
+    );
+    expect(JSON.parse(out ?? "")).toEqual([
+      { jsonrpc: "2.0", id: 1, result: {} },
+      { jsonrpc: "2.0", id: 2, result: {} },
+    ]);
+  });
+
+  it("shows each message to the caller before answering it", async () => {
+    const { h } = host();
+    const methods: string[] = [];
+    await answerMcpLine(INIT, h, (m) => {
+      if (typeof m === "object" && m !== null && !Array.isArray(m) && typeof m.method === "string") methods.push(m.method);
+    });
+    expect(methods).toEqual(["initialize"]);
   });
 });

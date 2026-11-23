@@ -14,7 +14,7 @@ export default defineConfig({
     "@markbase/shared",
     "@markbase/local",
   ],
-  external: ["@supabase/supabase-js", "@modelcontextprotocol/sdk"],
+  external: ["@supabase/supabase-js"],
   banner: { js: "#!/usr/bin/env node" },
   // Inline imported .md files (the skill SKILL.md) as raw text.
   esbuildOptions(options) {

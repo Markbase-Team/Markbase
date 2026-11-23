@@ -1,13 +1,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import { AGENT_TOOLS_PATH, toolInputSchema } from "@markbase/shared/docs/agent-tools";
+import { createInterface } from "node:readline";
+import { AGENT_TOOLS_PATH } from "@markbase/shared/docs/agent-tools";
 import {
   hookAgentsOf,
   installAuditHooks,
@@ -21,7 +16,8 @@ import {
 import { canOpenBrowser } from "@markbase/local/flows/node";
 import { appUrl, environmentApiKey, loadConfig, savedApiKey } from "../config";
 import { agentBrowserLogin, ensureAuthenticated } from "../login";
-import { toolAnnotations, type Json } from "@markbase/shared/endpoint-tools";
+import type { Json } from "@markbase/shared/endpoint-tools";
+import { answerMcpLine, clientNameIn, type McpHost } from "@markbase/shared/mcp-http";
 import { callEndpoint } from "./call";
 import { printHookResults } from "../audit-install";
 import { mcpAuth } from "./mcp-auth";
@@ -153,20 +149,49 @@ async function fetchServedTools(key: string): Promise<string | null> {
   return res.ok ? res.text() : null;
 }
 
-export async function runMcp(): Promise<void> {
-  const server = new Server(
-    { name: "markbase-docs", version: version() },
-    { capabilities: { tools: {} } }
-  );
+/** The streams the server talks over; a test hands in its own. */
+export interface McpStreams {
+  input: NodeJS.ReadableStream;
+  output: NodeJS.WritableStream;
+}
 
+/**
+ * Serve MCP over a pair of streams: one JSON-RPC message per line in, one per
+ * line out. Resolves when the input ends and every answer has been written.
+ * Lines are answered as they arrive, not one at a time, so a slow tool call
+ * does not hold up a ping behind it.
+ */
+export async function serveMcpLines(
+  host: McpHost,
+  streams: McpStreams,
+  seen?: (message: Json) => void
+): Promise<void> {
+  const lines = createInterface({ input: streams.input, crlfDelay: Infinity });
+  const pending = new Set<Promise<void>>();
+  for await (const line of lines) {
+    const answering = answerMcpLine(line, host, seen)
+      .then((answer) => {
+        if (answer !== null) streams.output.write(`${answer}\n`);
+      })
+      .catch((err: Error) => {
+        // Nothing goes to stdout but protocol; a failure to answer is ours to note.
+        process.stderr.write(`markbase mcp: ${err.message}\n`);
+      })
+      .finally(() => {
+        pending.delete(answering);
+      });
+    pending.add(answering);
+  }
+  await Promise.all(pending);
+}
+
+export async function runMcp(streams: McpStreams = { input: process.stdin, output: process.stdout }): Promise<void> {
   // A sign-in the agent started ends with the agent: the loopback it waits
   // on would otherwise keep this process alive after the agent has gone. The
-  // agent going is its end of stdin closing, which the transport does not
-  // report, so both are listened for.
+  // agent going is its end of stdin closing.
   const leaving = new AbortController();
-  server.onclose = () => leaving.abort();
-  process.stdin.once("end", () => leaving.abort());
-  process.stdin.once("close", () => leaving.abort());
+  streams.input.once("end", () => leaving.abort());
+  streams.input.once("close", () => leaving.abort());
   const auth = mcpAuth({
     environmentKey: environmentApiKey,
     savedKey: savedApiKey,
@@ -174,65 +199,35 @@ export async function runMcp(): Promise<void> {
     signIn: (opened) => agentBrowserLogin(opened, leaving.signal),
   });
 
-  const tools = toolSource(() => fetchServedTools(auth.key()));
+  // The connecting client's name, from its `initialize`. Forwarded with every
+  // tool call so the API records which tool this is.
+  let clientName: string | undefined;
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: (await tools()).map((t) => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: toolInputSchema(t),
-      title: toolAnnotations(t).title,
-      annotations: toolAnnotations(t),
-    })),
-  }));
-
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const e = (await tools()).find((t) => t.name === req.params.name);
-    if (!e) {
-      return {
-        isError: true,
-        content: [{ type: "text", text: `Unknown tool: ${req.params.name}` }],
-      };
-    }
-    try {
-      // Forward the connecting client's name (from the MCP initialize handshake)
-      // so the API records which provider this is, and — when this server is
-      // bound to a session via MARKBASE_SESSION_TOKEN — the session token so doc
-      // actions attribute to that agent session.
+  // The same server the hosted /mcp route runs (@markbase/shared/mcp-http);
+  // only the way in differs. Here a message is a line on stdin.
+  const host: McpHost = {
+    name: "markbase-docs",
+    version: version(),
+    tools: toolSource(() => fetchServedTools(auth.key())),
+    async call(tool, args) {
       // With a key that works: the one this machine has or, when the API
       // refuses it or there is none, the one a sign-in in the browser gives.
+      // When this server is bound to a session via MARKBASE_SESSION_TOKEN, the
+      // token goes too, so doc actions attribute to that agent session.
       const r = await auth.call((apiKey) =>
-        callEndpoint(e, (req.params.arguments ?? {}) as { [name: string]: Json }, {
-          clientName: server.getClientVersion()?.name,
+        callEndpoint(tool, args, {
+          clientName,
           sessionToken: process.env.MARKBASE_SESSION_TOKEN,
           apiKey,
         })
       );
-      if ("needsSignIn" in r) {
-        return { isError: true, content: [{ type: "text", text: r.needsSignIn }] };
-      }
-      let text = r.body;
-      try {
-        text = JSON.stringify(JSON.parse(r.body), null, 2);
-      } catch {
-        // not JSON
-      }
-      return {
-        isError: !r.ok,
-        content: [
-          { type: "text", text: r.ok ? text : `HTTP ${r.status}\n${text}` },
-        ],
-      };
-    } catch (err) {
-      return {
-        isError: true,
-        content: [
-          { type: "text", text: err instanceof Error ? err.message : String(err) },
-        ],
-      };
-    }
-  });
+      // Thrown, so the agent is told the sign-in message and nothing else.
+      if ("needsSignIn" in r) throw new Error(r.needsSignIn);
+      return r;
+    },
+  };
 
-  await server.connect(new StdioServerTransport());
-  // stdio server runs until the transport closes; nothing else to do.
+  await serveMcpLines(host, streams, (message) => {
+    clientName = clientNameIn(message) ?? clientName;
+  });
 }
