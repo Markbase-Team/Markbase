@@ -40,6 +40,9 @@ export const USER_ANALYTICS_EVENT_ACTIONS = [
   "mcp.tools_list",
   "mcp.unknown_tool",
   "mcp.unknown_method",
+  "mcp.resources_read",
+  "mcp.prompts_list",
+  "mcp.prompts_get",
   "hook.read",
   "hook.write",
 ] as const;
@@ -153,11 +156,19 @@ export const USER_ANALYTICS_MAX_LIMIT = 200;
 export const USER_ANALYTICS_CLIENT_MAX = 80;
 export const USER_ANALYTICS_DETAIL_MAX = 80;
 
-/** The actions whose row says what was asked for, because it was not there. */
-const DETAILED_ACTIONS: readonly string[] = ["mcp.unknown_tool", "mcp.unknown_method"];
+/**
+ * The actions whose row says what was asked for: a tool or method that was
+ * not there, or which card was shown and which starter was picked.
+ */
+const DETAILED_ACTIONS: readonly string[] = [
+  "mcp.unknown_tool",
+  "mcp.unknown_method",
+  "mcp.resources_read",
+  "mcp.prompts_get",
+];
 
 /**
- * The detail to keep for an action: the name a client asked for, for the two
+ * The detail to keep for an action: the name a client asked for, for the
  * actions that have one, and nothing for any other. It comes from the client,
  * so it is cut to one short line of printable characters.
  */

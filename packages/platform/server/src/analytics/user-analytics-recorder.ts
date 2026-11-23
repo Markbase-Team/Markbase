@@ -71,7 +71,7 @@ export function eventForMcpEvent(
     actor: actorOf(caller, client),
     channel: "mcp",
     action: `mcp.${event}`,
-    // Kept only for the two events that have one; the store drops it otherwise.
+    // Kept only for the events that have one; the store drops it otherwise.
     detail: asked,
     outcome: event === "unknown_tool" || event === "unknown_method" ? "error" : "success",
   };

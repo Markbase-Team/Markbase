@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { agentTools } from "@markbase/shared/docs/agent-tools";
+import { docApp } from "@markbase/shared/docs/apps/doc-app";
+import { startApp } from "@markbase/shared/docs/apps/start-app";
+import { MCP_INSTRUCTIONS, MCP_PROMPTS } from "@markbase/shared/docs/onboarding";
 import { forwardedCaller, offersToken } from "@markbase/server/caller";
 import { signInChallenge } from "@markbase/server/mcp-oauth";
 import { toolRequest, type Json } from "@markbase/shared/endpoint-tools";
@@ -95,10 +98,21 @@ export async function POST(req: Request) {
   const named = messages.map(clientNameIn).find((n) => n !== null) ?? null;
   const clientName = named ?? clientNameOf(req.headers.get(MCP_SESSION_HEADER));
 
+  // Where this instance's app shows documents. The cards open them there; a
+  // card is built here because the address is the shell's to know.
+  const documentsUrl = `${await instanceUrl()}/dashboard/documents`;
+  const docUrlPrefix = `${documentsUrl}/`;
+
   const host: McpHost = {
     name: "markbase-docs",
     version: "1.0.0",
     tools: agentTools,
+    instructions: MCP_INSTRUCTIONS,
+    // In an app that shows cards (Claude), a document and the "where to
+    // begin" answer are drawn in the conversation. Everywhere else the same
+    // tools answer with the same text.
+    apps: [docApp(docUrlPrefix), startApp({ docUrlPrefix, documentsUrl })],
+    prompts: MCP_PROMPTS,
     // What the client asked of this server itself. A tool call that reaches a
     // tool is recorded by the API that answers it, not here.
     onEvent: (event, asked) => noteMcpEvent(forwardedCaller(caller), clientName, event, asked),
