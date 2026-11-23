@@ -3,7 +3,7 @@
 // The browser remembers its FIRST visit to the site in a cookie: the page that
 // sent it (document.referrer), the URL it landed on, and any utm_* the link
 // carried. When that browser later creates an account, the server copies the
-// cookie into public.signup_sources (signup-source-server.ts) so the question
+// cookie into public.signup_sources (@markbase/server/analytics/funnel/signup-source-store) so the question
 // "did this person come from Reddit or from Google?" has an answer per account.
 //
 // First touch wins: a return visit a week later from a bookmark must not erase

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { callerFromHeaders } from "@markbase/shared/auth";
-import { parseProductEvent, type ProductEventBody } from "@markbase/shared/product-events";
-import { recordProductEvent } from "@/lib/product-events-server";
+import { parseProductEvent, type ProductEventBody } from "@markbase/shared/analytics/funnel/events";
+import { recordProductEvent } from "@markbase/server/analytics/funnel/events-store";
 
 export const runtime = "nodejs";
 

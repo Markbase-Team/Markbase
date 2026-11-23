@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@markbase/server/supabase", () => ({ supabase: {} }));
+vi.mock("../../../src/supabase", () => ({ supabase: {} }));
 
-import { recordProductEvent, type EventWriter, type ProductEventRow } from "../src/lib/product-events-server";
+import { recordProductEvent, type EventWriter, type ProductEventRow } from "../../../src/analytics/funnel/events-store";
 
 describe("recordProductEvent", () => {
   it("writes the event for the caller", async () => {

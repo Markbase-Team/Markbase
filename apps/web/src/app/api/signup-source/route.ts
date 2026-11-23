@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/server";
-import { SIGNUP_SOURCE_COOKIE } from "@/lib/signup-source";
-import { recordSignupSource } from "@/lib/signup-source-server";
+import { SIGNUP_SOURCE_COOKIE } from "@markbase/shared/analytics/funnel/signup-source";
+import { recordSignupSource } from "@markbase/server/analytics/funnel/signup-source-store";
 
 export const runtime = "nodejs";
 

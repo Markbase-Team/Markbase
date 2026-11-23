@@ -1,8 +1,8 @@
-import { supabase } from "@markbase/server/supabase";
-import { isFreshAccount, parseSource } from "./signup-source";
+import { supabase } from "../../supabase";
+import { isFreshAccount, parseSource } from "@markbase/shared/analytics/funnel/signup-source";
 
 // Where a sign-up came from — the server half. Copies the browser's source
-// cookie (see ./signup-source) into public.signup_sources for an account that
+// cookie (see @markbase/shared/analytics/funnel/signup-source) into public.signup_sources for an account that
 // was just created. Both doors call it: the OAuth callback with the cookie it
 // was handed, and POST /api/signup-source for a sign-up that never passes
 // through the callback.
