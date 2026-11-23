@@ -7,7 +7,7 @@
 
 export const MCP_SERVER_NAME = "markbase-docs";
 
-export type ConnectKind = "link" | "command" | "paste";
+export type ConnectKind = "link" | "command" | "paste" | "page";
 
 export interface ConnectOption {
   id: "claude" | "claude-code" | "codex" | "cursor" | "vscode";
@@ -15,7 +15,7 @@ export interface ConnectOption {
   /** What kind of app it is, under the name. */
   caption: string;
   kind: ConnectKind;
-  /** link: the address to open. paste: the page where the address is pasted. */
+  /** link: the address to open. paste: the page where the address is pasted. page: a web page that connects it. */
   href?: string;
   /** command: what to run. paste: the address to paste. Copied on click. */
   copy?: string;
@@ -83,17 +83,39 @@ export function vscodeSteps(mcpUrl: string): string[] {
 /** Where Claude's connectors are added. It has no link that adds one, so the address is pasted there. */
 export const CLAUDE_CONNECTORS_URL = "https://claude.ai/settings/connectors";
 
-export function connectOptions(mcpUrl: string): ConnectOption[] {
-  return [
-    {
+/** Markbase's listing in Claude's connectors directory, for markbase.so itself. */
+export const CLAUDE_DIRECTORY_URL = "https://claude.ai/directory/markbase";
+
+/** The hosted service, which is the one listed in Claude's directory. A self-hosted instance is not. */
+export function isHostedMarkbase(mcpUrl: string): boolean {
+  return new URL(mcpUrl).host === "markbase.so";
+}
+
+function claudeOption(mcpUrl: string): ConnectOption {
+  if (isHostedMarkbase(mcpUrl)) {
+    return {
       id: "claude",
       name: "Claude",
-      caption: "Custom connector",
-      kind: "paste",
-      href: CLAUDE_CONNECTORS_URL,
-      copy: mcpUrl,
-      after: "Address copied. In Claude, choose Add custom connector and paste it.",
-    },
+      caption: "Connectors directory",
+      kind: "page",
+      href: CLAUDE_DIRECTORY_URL,
+      after: "Opened Markbase in Claude's directory. Choose Connect, then sign in.",
+    };
+  }
+  return {
+    id: "claude",
+    name: "Claude",
+    caption: "Custom connector",
+    kind: "paste",
+    href: CLAUDE_CONNECTORS_URL,
+    copy: mcpUrl,
+    after: "Address copied. In Claude, choose Add custom connector and paste it.",
+  };
+}
+
+export function connectOptions(mcpUrl: string): ConnectOption[] {
+  return [
+    claudeOption(mcpUrl),
     {
       id: "claude-code",
       name: "Claude Code",

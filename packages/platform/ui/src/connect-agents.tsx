@@ -6,7 +6,7 @@ import { Check, Code, Copy, Download, ExternalLink, MessageSquare, Terminal } fr
 import { connectOptions, type ConnectOption } from "@markbase/shared/connect-links";
 import { AgentLogo, hasAgentLogo } from "./agent-logo";
 
-const ICONS = { "Custom connector": MessageSquare, CLI: Terminal, IDE: Code } as const;
+const ICONS = { "Custom connector": MessageSquare, "Connectors directory": MessageSquare, CLI: Terminal, IDE: Code } as const;
 
 function iconFor(option: ConnectOption) {
   return ICONS[option.caption as keyof typeof ICONS] ?? Code;
