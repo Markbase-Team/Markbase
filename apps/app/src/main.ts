@@ -12,6 +12,7 @@ import {
   type IpcMainEvent,
 } from "electron";
 import { CrdtChangesFeed, bearerCrdtRequest } from "@markbase/shared/docs/crdt-api";
+import { syncHeaders } from "@markbase/local/vault/sync-headers";
 import { fetchWithTimeout } from "@markbase/shared/timeout-fetch";
 import type { MenuItemConstructorOptions } from "electron";
 import { startTicketWorkerHost, type TicketWorkerHost, type TicketWorkerStatus } from "./ticket-worker";
@@ -1184,7 +1185,8 @@ async function fetchCloudVaults(): Promise<CloudVault[] | null> {
   if (!apiKey) return null;
   try {
     const res = await fetch(`${APP_URL}/api/v1/vaults`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
+      // The vault supervisor checking which vaults exist: the sync, not an agent.
+      headers: syncHeaders(apiKey),
     });
     if (!res.ok) return null;
     const body = (await res.json()) as { vaults?: CloudVault[] };
@@ -1211,7 +1213,7 @@ async function confirmVaultDeleted(vaultId: string): Promise<boolean> {
   if (!apiKey) return false;
   try {
     const res = await fetch(`${APP_URL}/api/v1/vaults/${encodeURIComponent(vaultId)}`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: syncHeaders(apiKey),
     });
     return res.status === 404;
   } catch {

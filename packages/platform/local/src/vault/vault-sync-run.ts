@@ -22,6 +22,7 @@ import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/shared/timeout-
 import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
 import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/shared/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
+import { syncHeaders } from "./sync-headers";
 import { agentCredit, takeHookEvents } from "./agent-audit";
 import { HOOK_EVENTS_PATH, type HookEvent, type HookEventsAnswer } from "@markbase/shared/analytics/hook-events";
 import {
@@ -318,7 +319,7 @@ async function listDocs(
   const qs = params.toString();
   const url = `${appUrl}/api/v1/docs${qs ? `?${qs}` : ""}`;
   const res = await fetchWithTimeout(url, {
-    headers: { Authorization: `Bearer ${apiKey}` },
+    headers: syncHeaders(apiKey),
   });
   if (!res.ok) throw new Error(`couldn't list documents (${res.status})`);
   const body = (await res.json()) as { docs?: DocSummary[] };
@@ -334,7 +335,7 @@ async function fetchDocContent(
 ): Promise<string | null> {
   try {
     const res = await fetchWithTimeout(`${appUrl}/api/v1/docs/${id}`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: syncHeaders(apiKey),
     });
     if (!res.ok) return null;
     const body = (await res.json()) as { doc?: { content?: string | null } };
@@ -370,7 +371,7 @@ async function listCloudAssets(
 ): Promise<CloudAssetList | null> {
   const params = new URLSearchParams({ vault: vaultId });
   if (!opts.urls) params.set("urls", "0");
-  const headers: Record<string, string> = { Authorization: `Bearer ${apiKey}` };
+  const headers: Record<string, string> = syncHeaders(apiKey);
   if (opts.etag) headers["If-None-Match"] = opts.etag;
   const res = await fetchWithTimeout(`${appUrl}/api/v1/assets?${params}`, { headers });
   if (res.status === 304) return null;
@@ -408,7 +409,7 @@ async function uploadAsset(
   const res = await fetchWithTimeout(`${appUrl}/api/v1/assets`, {
     timeoutMs: TRANSFER_TIMEOUT_MS,
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}` },
+    headers: syncHeaders(apiKey),
     body: form,
   });
   return res.ok;
@@ -438,7 +439,7 @@ export function makeAdopt(
     const written_by = writtenBy ? { agent: writtenBy(path, content) } : undefined;
     const res = await fetchWithTimeout(`${appUrl}/api/v1/docs`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+      headers: syncHeaders(apiKey, { "content-type": "application/json" }),
       // The new doc joins the vault this folder holds, not the default one.
       // `adopt`: this came from a folder, so it may be a document that left and
       // came back rather than a new one. The server decides — it is the only
@@ -491,7 +492,7 @@ function makeDeleteDoc(
   return async (docId) => {
     const res = await fetchWithTimeout(`${appUrl}/api/v1/docs/${docId}${suffix}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: syncHeaders(apiKey),
     });
     return res.ok;
   };
@@ -508,7 +509,7 @@ function makeReportHookEvents(appUrl: string, apiKey: string): (events: HookEven
     try {
       const res = await fetchWithTimeout(`${appUrl}${HOOK_EVENTS_PATH}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+        headers: syncHeaders(apiKey, { "content-type": "application/json" }),
         body: JSON.stringify({ events }),
       });
       if (res.status !== 200) return null;
@@ -578,7 +579,7 @@ class PathWriter {
       const target = this.shared ? `/api/v1/docs/${docId}/membership` : `/api/v1/docs/${docId}`;
       const res = await fetchWithTimeout(`${this.appUrl}${target}`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${this.apiKey}`, "content-type": "application/json" },
+        headers: syncHeaders(this.apiKey, { "content-type": "application/json" }),
         body: JSON.stringify({ path: held.path }),
       });
       ok = res.ok;
@@ -1802,7 +1803,7 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
       }
       if (pairs.length === 0) continue;
       const cached = sharedAssetLists.get(r.id);
-      const headers: Record<string, string> = { Authorization: `Bearer ${apiKey}` };
+      const headers: Record<string, string> = syncHeaders(apiKey);
       if (cached?.etag) headers["If-None-Match"] = cached.etag;
       let listed = cached;
       try {
@@ -1828,7 +1829,7 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
       let signed: Array<{ path: string; url: string | null }> = [];
       try {
         const res = await fetchWithTimeout(`${appUrl}/api/v1/assets?doc=${encodeURIComponent(r.id)}`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
+          headers: syncHeaders(apiKey),
         });
         if (!res.ok) throw new Error(`couldn't list media (${res.status})`);
         signed = ((await res.json()) as { assets?: Array<{ path: string; url: string | null }> }).assets ?? [];
