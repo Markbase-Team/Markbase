@@ -33,7 +33,7 @@ const ME: Caller = { via: "api_key", ownerId: "me", key: { id: "k", provider: "c
 function call(d: EndpointDef, status = 200, params: { [k: string]: string } = {}, caller: Caller | null = ME): EndpointCall {
   const headers = new Headers();
   if (caller) headers.set(CALLER_HEADER, serializeCaller(caller));
-  return { def: d, req: new Request("https://x.test", { headers }), params, status, durationMs: 1 };
+  return { def: d, req: new Request("https://x.test", { headers }), params, status, durationMs: 1, readBody: async () => null };
 }
 
 beforeEach(() => {

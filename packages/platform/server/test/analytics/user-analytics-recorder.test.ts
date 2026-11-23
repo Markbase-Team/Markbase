@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
-import type { EndpointCall, EndpointDef } from "@markbase/shared/endpoint";
+import type { EndpointCall, EndpointDef, JsonValue } from "@markbase/shared/endpoint";
 import { SYNC_REQUEST_HEADER } from "@markbase/shared/analytics/user-analytics";
-import { eventForEndpointCall, eventForMcpEvent } from "../../src/analytics/user-analytics-recorder";
+import { createdIdsIn, createdIdsOf, eventForEndpointCall, eventForMcpEvent } from "../../src/analytics/user-analytics-recorder";
 
 // Which handled requests become a line in a customer's record, and what the
 // line says.
@@ -41,6 +41,7 @@ function call(
     params: def.path.includes(":id") ? { id: "id-1" } : {},
     status: 200,
     durationMs: 12,
+    readBody: async () => null,
     ...over,
   };
 }
@@ -120,5 +121,33 @@ describe("eventForMcpEvent", () => {
       detail: "resources/list",
       outcome: "error",
     });
+  });
+});
+
+describe("what a create made", () => {
+  const CREATE_DOC: EndpointDef = { id: "docs_createDoc", method: "POST", path: "/docs", scope: "write", summary: "Create" };
+  const CREATE_VAULT: EndpointDef = { id: "docs_createVault", method: "POST", path: "/vaults", scope: "write", summary: "Create" };
+
+  it("reads the new document and its vault from a document create's answer", async () => {
+    const created = createdIdsOf(call(CREATE_DOC, person, { status: 201, readBody: async () => ({ doc: { id: "d9", vault_id: "v9", title: "T" } }) }));
+    expect(await created).toEqual({ docId: "d9", vaultId: "v9" });
+  });
+
+  it("reads the new vault from a vault create's answer", async () => {
+    expect(await createdIdsOf(call(CREATE_VAULT, person, { status: 201, readBody: async () => ({ vault: { id: "v1" } }) }))).toEqual({ vaultId: "v1" });
+  });
+
+  it("does not read the answer of anything that is not a create that worked", () => {
+    let asked = 0;
+    const readBody = async () => (asked++, null);
+    expect(createdIdsOf(call(READ, person, { readBody }))).toBeNull();
+    expect(createdIdsOf(call(EDIT, person, { readBody }))).toBeNull();
+    expect(createdIdsOf(call(CREATE_DOC, person, { status: 400, readBody }))).toBeNull();
+    expect(asked).toBe(0);
+  });
+
+  it("finds nothing in an answer that is not the shape it expects", () => {
+    const bodies: JsonValue[] = [null, "x", [], { doc: "d1" }, { doc: { id: 3 } }, { vault: {} }];
+    for (const body of bodies) expect(createdIdsIn(body)).toEqual({});
   });
 });

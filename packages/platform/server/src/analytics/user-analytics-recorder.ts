@@ -1,5 +1,5 @@
 import { callerFromHeaders, type Caller } from "@markbase/shared/auth";
-import type { EndpointCall } from "@markbase/shared/endpoint";
+import type { EndpointCall, JsonValue } from "@markbase/shared/endpoint";
 import type { McpProtocolEvent } from "@markbase/shared/mcp-http";
 import {
   actorOf,
@@ -15,6 +15,9 @@ import {
 // endpoint (@markbase/shared/endpoint) and its MCP server reports what a client
 // asked of it; each is turned into an event here and written by the store. So
 // an endpoint or a tool that is added is recorded with nothing to remember.
+//
+// A create's path names nothing (POST /docs), so what it made is read from
+// its answer instead (`createdIdsOf`).
 //
 // What is recorded, and what is left out:
 //   - Only endpoints an agent may call (not `humanOnly`). Those are exactly the
@@ -80,4 +83,43 @@ export function eventForMcpEvent(
     detail: asked,
     outcome: event === "unknown_tool" || event === "unknown_method" ? "error" : "success",
   };
+}
+
+/** What a create made, as far as the record keeps it. */
+export interface CreatedIds {
+  docId?: string;
+  vaultId?: string;
+}
+
+function objectOf(value: JsonValue | undefined): { [key: string]: JsonValue } | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : null;
+}
+
+function idIn(value: JsonValue | undefined): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+/** The ids a create's answer names: `{ doc: { id, vault_id } }` or `{ vault: { id } }`. */
+export function createdIdsIn(body: JsonValue | null): CreatedIds {
+  const top = objectOf(body ?? undefined);
+  const doc = objectOf(top?.doc);
+  const vault = objectOf(top?.vault);
+  const ids: CreatedIds = {};
+  const docId = idIn(doc?.id);
+  const vaultId = idIn(vault?.id) ?? idIn(doc?.vault_id);
+  if (docId) ids.docId = docId;
+  if (vaultId) ids.vaultId = vaultId;
+  return ids;
+}
+
+/**
+ * For a create — a POST whose path names nothing, which succeeded — the ids it
+ * made, read from its answer: the path cannot say what a create made, so the
+ * row would otherwise not know. Null for anything else. Must be called while
+ * the observer is being told, since the answer is copied then.
+ */
+export function createdIdsOf(call: EndpointCall): Promise<CreatedIds> | null {
+  const { def, status } = call;
+  if (def.method !== "POST" || def.path.includes(":") || status < 200 || status >= 300) return null;
+  return call.readBody().then(createdIdsIn, () => ({}));
 }

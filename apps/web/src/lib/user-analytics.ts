@@ -3,6 +3,7 @@ import type { Caller } from "@markbase/shared/auth";
 import { observeEndpointCalls } from "@markbase/shared/endpoint";
 import type { McpProtocolEvent } from "@markbase/shared/mcp-http";
 import {
+  createdIdsOf,
   eventForEndpointCall,
   eventForMcpEvent,
 } from "@markbase/server/analytics/user-analytics-recorder";
@@ -19,9 +20,12 @@ import { recordUserAnalytics } from "@markbase/server/analytics/user-analytics-s
 /** Observe every defined endpoint. Called once, when the server starts. */
 export function startUserAnalytics(): void {
   observeEndpointCalls((call) => {
-    // Read the request now, while it is live; only the write waits.
+    // Read the request now, while it is live; only the write waits. A create's
+    // answer is copied now too, for the ids it made.
     const event = eventForEndpointCall(call);
-    if (event) afterResponse(() => recordUserAnalytics(event));
+    if (!event) return;
+    const created = createdIdsOf(call);
+    afterResponse(async () => recordUserAnalytics(created ? { ...event, ...(await created) } : event));
   });
 }
 

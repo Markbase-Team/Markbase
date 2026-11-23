@@ -143,10 +143,12 @@ export interface EndpointSet<Def extends EndpointDef> {
  * A feature's endpoints. `feature` prefixes every id (`docs_readDoc`), which is
  * what keeps ids — and so MCP tool names — unique across features.
  */
+/** A JSON value, as a response body parses to. */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 /**
  * One call to a defined endpoint, as it ended. What an observer is told:
- * which endpoint, the request it got, and the status and time it took. Never
- * the response body.
+ * which endpoint, the request it got, and the status and time it took.
  */
 export interface EndpointCall {
   def: EndpointDef;
@@ -154,6 +156,13 @@ export interface EndpointCall {
   params: RouteParams;
   status: number;
   durationMs: number;
+  /**
+   * The response body, parsed, or null when it is not JSON or there was none
+   * (a handler that threw). Copied only when asked for, and only while the
+   * observer is being told: ask synchronously, await later. For what a call
+   * made (a create's new id) and nothing else.
+   */
+  readBody(): Promise<JsonValue | null>;
 }
 
 export type EndpointObserver = (call: EndpointCall) => void;
@@ -258,11 +267,23 @@ export function endpointSet<Def extends EndpointDef>(feature: string): EndpointS
         const started = Date.now();
         try {
           const response = await e.handle(req, params);
-          observed({ def: e.def, req, params: named, status: response.status, durationMs: Date.now() - started });
+          let body: Promise<JsonValue | null> | null = null;
+          const readBody = (): Promise<JsonValue | null> => {
+            if (!body) {
+              try {
+                body = (response.clone().json() as Promise<JsonValue>).catch(() => null);
+              } catch {
+                body = Promise.resolve(null); // already read: asked too late
+              }
+            }
+            return body;
+          };
+          observed({ def: e.def, req, params: named, status: response.status, durationMs: Date.now() - started, readBody });
           return response;
         } catch (err) {
           // What a thrown handler becomes once the framework answers for it.
-          observed({ def: e.def, req, params: named, status: 500, durationMs: Date.now() - started });
+          const readBody = (): Promise<JsonValue | null> => Promise.resolve(null);
+          observed({ def: e.def, req, params: named, status: 500, durationMs: Date.now() - started, readBody });
           throw err;
         }
       };
