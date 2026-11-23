@@ -149,3 +149,34 @@ describe("the client's name in the session id", () => {
     expect(clientNameOf(sessionIdFor("a\nb"))).toBeNull();
   });
 });
+
+describe("what the host is told of", () => {
+  async function eventsFor(messages: JsonObject[]): Promise<string[]> {
+    const events: string[] = [];
+    const { h } = host();
+    h.onEvent = (event, asked) => events.push(asked ? `${event}:${asked}` : event);
+    for (const m of messages) await answerMcp(m, h);
+    return events;
+  }
+
+  it("hears the hello, the tool listing, and a tool or method that is not there", async () => {
+    expect(
+      await eventsFor([
+        { jsonrpc: "2.0", id: 1, method: "initialize", params: {} },
+        { jsonrpc: "2.0", id: 2, method: "tools/list" },
+        { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "docs_dropEverything" } },
+        { jsonrpc: "2.0", id: 4, method: "resources/list" },
+      ])
+    ).toEqual(["initialize", "tools_list", "unknown_tool:docs_dropEverything", "unknown_method:resources/list"]);
+  });
+
+  it("hears nothing for a tool call that reaches a tool, a ping or a notification", async () => {
+    expect(
+      await eventsFor([
+        { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "docs_readDoc", arguments: { id: "d1" } } },
+        { jsonrpc: "2.0", id: 2, method: "ping" },
+        { jsonrpc: "2.0", method: "notifications/initialized" },
+      ])
+    ).toEqual([]);
+  });
+});

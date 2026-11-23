@@ -17,6 +17,10 @@ const RETRY_MS = 3000;
 
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  // Before anything that may return early: every instance records, hosted or
+  // not. Imported here for the same reason as the invite below.
+  const { startUserAnalytics } = await import("@/lib/user-analytics");
+  startUserAnalytics();
   const url = process.env.APP_URL?.replace(/\/+$/, "") ?? `http://localhost:${process.env.PORT ?? 3000}`;
   if (url === DEFAULT_APP_URL) return;
   // Imported here, not at the top: the module brings in the Supabase client,

@@ -15,6 +15,7 @@
 import type { Provider } from "../agent-sessions";
 import type { Caller } from "../auth";
 import { ALL_ENDPOINTS } from "../docs/endpoints";
+import { isDefinedEndpointId } from "../endpoint";
 
 export const USER_ANALYTICS_PATH = "/api/v1/user-analytics";
 
@@ -47,15 +48,17 @@ export type UserAnalyticsEventAction = (typeof USER_ANALYTICS_EVENT_ACTIONS)[num
 const ENDPOINT_ACTIONS: ReadonlySet<string> = new Set(ALL_ENDPOINTS.map((endpoint) => endpoint.id));
 
 /**
- * Whether an action may be recorded. The set is closed: an endpoint id from
- * the registry (`docs_readDoc`), or one of the events above. The column is
+ * Whether an action may be recorded. The set is closed: the id of an endpoint
+ * — one in the registry (`docs_readDoc`) or one any feature has defined
+ * through an endpoint set — or one of the events above. The column is
  * text, so this check is what keeps a typo or a made-up name out of the
  * record — and a new endpoint is recordable the moment it is registered, with
  * no migration.
  */
 export function isUserAnalyticsAction(value: string | null | undefined): boolean {
   if (!value) return false;
-  return ENDPOINT_ACTIONS.has(value) || (USER_ANALYTICS_EVENT_ACTIONS as readonly string[]).includes(value);
+  if (ENDPOINT_ACTIONS.has(value) || isDefinedEndpointId(value)) return true;
+  return (USER_ANALYTICS_EVENT_ACTIONS as readonly string[]).includes(value);
 }
 
 /**
@@ -85,12 +88,21 @@ export type UserAnalyticsActor =
 
 /** One action, as the server hands it to the store. */
 export interface UserAnalyticsEvent {
-  /** Whose data was touched. */
+  /**
+   * The account the action was made under: the person, or the person an
+   * agent's key belongs to. For a shared document that is the one who acted,
+   * not the document's owner — who still sees it, through the document.
+   */
   ownerId: string;
   actor: UserAnalyticsActor;
   channel: UserAnalyticsChannel;
   /** One `isUserAnalyticsAction` accepts: an endpoint id, or an MCP or hook event. */
   action: string;
+  /**
+   * Only for `mcp.unknown_tool` and `mcp.unknown_method`: the name the client
+   * asked for. A protocol name, never an argument or content.
+   */
+  detail?: string | null;
   vaultId?: string | null;
   docId?: string | null;
   outcome: UserAnalyticsOutcome;
@@ -106,6 +118,7 @@ export interface UserAnalyticsRecord {
   actor: UserAnalyticsActor;
   channel: UserAnalyticsChannel;
   action: string;
+  detail: string | null;
   vaultId: string | null;
   docId: string | null;
   outcome: UserAnalyticsOutcome;
@@ -138,6 +151,21 @@ export interface UserAnalyticsQuery {
 export const USER_ANALYTICS_DEFAULT_LIMIT = 50;
 export const USER_ANALYTICS_MAX_LIMIT = 200;
 export const USER_ANALYTICS_CLIENT_MAX = 80;
+export const USER_ANALYTICS_DETAIL_MAX = 80;
+
+/** The actions whose row says what was asked for, because it was not there. */
+const DETAILED_ACTIONS: readonly string[] = ["mcp.unknown_tool", "mcp.unknown_method"];
+
+/**
+ * The detail to keep for an action: the name a client asked for, for the two
+ * actions that have one, and nothing for any other. It comes from the client,
+ * so it is cut to one short line of printable characters.
+ */
+export function userAnalyticsDetail(action: string, detail: string | null | undefined): string | null {
+  if (!DETAILED_ACTIONS.includes(action) || !detail) return null;
+  const clean = detail.replace(/[^\x20-\x7e]/g, "").trim().slice(0, USER_ANALYTICS_DETAIL_MAX);
+  return clean || null;
+}
 
 /** A page size within bounds, whatever was asked for. */
 export function clampUserAnalyticsLimit(limit: number | null | undefined): number {

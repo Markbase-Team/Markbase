@@ -7,11 +7,12 @@
 -- the only trace of an agent was api_keys.last_used_at, once every five
 -- minutes, with no word on what it asked for.
 --
--- One row per action. It says whose data was touched (owner_id), who acted
--- (a person, or an agent under one of the owner's keys), through which door
+-- One row per action. It says which account it was made under (owner_id), who
+-- acted (that person, or an agent under one of their keys), through which door
 -- (channel), what was asked (action — an endpoint or tool id, never its
 -- arguments) and how it ended. It holds no document content and no argument
--- values.
+-- values; the one free-text field, detail, is the name of a tool or method a
+-- client asked for that does not exist.
 --
 -- vault_id and doc_id are plain ids with no foreign key on purpose: the row
 -- outlives the thing it describes, so "an agent deleted this document" is
@@ -34,7 +35,10 @@ create type public.user_analytics_actor as enum ('person', 'agent');
 
 create table public.user_analytics_events (
   id          bigint generated always as identity primary key,
-  -- Whose data this is. Their rows go when the account does.
+  -- The account the action was made under: the person, or the person the
+  -- agent's key belongs to. On a shared document that is the one who acted,
+  -- not the document's owner, who finds the row by doc_id. Rows go when the
+  -- account does.
   owner_id    uuid not null references auth.users (id) on delete cascade,
   actor_kind  public.user_analytics_actor not null,
   -- For an agent: the key it used, the tool that holds the key (claude, codex,
@@ -47,6 +51,11 @@ create table public.user_analytics_events (
   -- An endpoint or tool id, or an MCP method. Text, not an enum: the set grows
   -- with every endpoint the API gains, and the code is what knows it.
   action      text not null,
+  -- For the two actions that mean "the client asked for something we do not
+  -- have" (mcp.unknown_tool, mcp.unknown_method): the name it asked for, which
+  -- is the whole point of the row. A protocol name, never an argument or
+  -- content, and clipped by the API. Null for everything else.
+  detail      text,
   vault_id    uuid,
   doc_id      uuid,
   outcome     public.user_analytics_outcome not null,

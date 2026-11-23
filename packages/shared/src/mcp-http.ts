@@ -30,12 +30,26 @@ export interface ToolAnswer {
   body: string;
 }
 
+/**
+ * What a client asked of the server itself, as opposed to of a tool: it said
+ * hello, it listed the tools, or it asked for a tool or a method that does not
+ * exist. A tool call that reaches a tool is not one of these — the API that
+ * answers it is where that is seen.
+ */
+export const MCP_PROTOCOL_EVENTS = ["initialize", "tools_list", "unknown_tool", "unknown_method"] as const;
+export type McpProtocolEvent = (typeof MCP_PROTOCOL_EVENTS)[number];
+
 /** What the route supplies: who this server is, its tools, and how one is run. */
 export interface McpHost {
   name: string;
   version: string;
   tools(): AgentTool[];
   call(tool: AgentTool, args: JsonObject): Promise<ToolAnswer>;
+  /**
+   * Told of each protocol event, if the host wants to know. `asked` is the
+   * tool or method that was asked for and is not there. Must not throw.
+   */
+  onEvent?(event: McpProtocolEvent, asked?: string): void;
 }
 
 function isObject(value: Json | undefined): value is JsonObject {
@@ -64,7 +78,10 @@ function pretty(body: string): string {
 
 async function callTool(params: JsonObject, host: McpHost): Promise<JsonObject> {
   const tool = host.tools().find((t) => t.name === params.name);
-  if (!tool) return toolResult(`Unknown tool: ${String(params.name)}`, true);
+  if (!tool) {
+    host.onEvent?.("unknown_tool", typeof params.name === "string" ? params.name : undefined);
+    return toolResult(`Unknown tool: ${String(params.name)}`, true);
+  }
   const args = isObject(params.arguments) ? params.arguments : {};
   try {
     const answer = await host.call(tool, args);
@@ -91,6 +108,7 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
   switch (method) {
     case "initialize": {
       const asked = params.protocolVersion;
+      host.onEvent?.("initialize");
       const protocolVersion =
         typeof asked === "string" && MCP_PROTOCOL_VERSIONS.includes(asked) ? asked : MCP_PROTOCOL_VERSIONS[0];
       return result(id, {
@@ -102,6 +120,7 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
     case "ping":
       return result(id, {});
     case "tools/list":
+      host.onEvent?.("tools_list");
       return result(id, {
         tools: host.tools().map((t) => ({
           name: t.name,
@@ -115,6 +134,7 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
     case "tools/call":
       return result(id, await callTool(params, host));
     default:
+      host.onEvent?.("unknown_method", method);
       return failure(id, -32601, `Method not found: ${method}`);
   }
 }

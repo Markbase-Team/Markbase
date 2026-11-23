@@ -49,6 +49,7 @@ describe("recordUserAnalytics", () => {
         client: "claude-ai",
         channel: "mcp",
         action: "docs_readDoc",
+        detail: null,
         vault_id: "v1",
         doc_id: "d1",
         outcome: "success",
@@ -69,6 +70,14 @@ describe("recordUserAnalytics", () => {
     expect(await recordUserAnalytics({ ...agentRead, action: "mcp.unknown_tool", outcome: "error" }, writer)).toBe(true);
     expect(await recordUserAnalytics({ ...agentRead, channel: "hook", action: "hook.read" }, writer)).toBe(true);
     expect(rows.map((r) => r.action)).toEqual(["mcp.unknown_tool", "hook.read"]);
+  });
+
+  it("keeps what was asked for, for an unknown tool or method only", async () => {
+    const { rows, writer } = collecting();
+    await recordUserAnalytics({ ...agentRead, action: "mcp.unknown_method", detail: "resources/list", outcome: "error" }, writer);
+    await recordUserAnalytics({ ...agentRead, action: "docs_readDoc", detail: "should not be kept" }, writer);
+    await recordUserAnalytics({ ...agentRead, action: "mcp.unknown_tool", detail: `  a\nb${"x".repeat(200)}  `, outcome: "error" }, writer);
+    expect(rows.map((r) => r.detail)).toEqual(["resources/list", null, `ab${"x".repeat(78)}`]);
   });
 
   it("refuses an action that is not in the closed set", async () => {
@@ -111,6 +120,7 @@ describe("listUserAnalytics", () => {
         actor: { kind: "agent", keyId: "k1", provider: "claude_code", client: "claude-ai" },
         channel: "mcp",
         action: "docs_readDoc",
+        detail: null,
         vaultId: "v1",
         docId: "d1",
         outcome: "success",

@@ -5,6 +5,7 @@ import {
   isUserAnalyticsAction,
   isUserAnalyticsChannel,
   isUserAnalyticsOutcome,
+  userAnalyticsDetail,
   type UserAnalyticsActor,
   type UserAnalyticsEvent,
   type UserAnalyticsQuery,
@@ -27,6 +28,7 @@ export interface UserAnalyticsRow {
   client: string | null;
   channel: string;
   action: string;
+  detail: string | null;
   vault_id: string | null;
   doc_id: string | null;
   outcome: string;
@@ -55,7 +57,7 @@ export interface UserAnalyticsReader {
 
 const TABLE = "user_analytics_events";
 const COLUMNS =
-  "id, created_at, owner_id, actor_kind, key_id, provider, client, channel, action, vault_id, doc_id, outcome, status, duration_ms";
+  "id, created_at, owner_id, actor_kind, key_id, provider, client, channel, action, detail, vault_id, doc_id, outcome, status, duration_ms";
 
 const tableWriter: UserAnalyticsWriter = {
   insert: async (row) => {
@@ -97,6 +99,7 @@ export function toUserAnalyticsRow(event: UserAnalyticsEvent): UserAnalyticsRow 
     client: agent?.client ?? null,
     channel: event.channel,
     action: event.action,
+    detail: userAnalyticsDetail(event.action, event.detail),
     vault_id: event.vaultId ?? null,
     doc_id: event.docId ?? null,
     outcome: event.outcome,
@@ -124,6 +127,7 @@ export function toUserAnalyticsRecord(row: StoredUserAnalyticsRow): UserAnalytic
     actor: actorOfRow(row),
     channel: row.channel,
     action: row.action,
+    detail: row.detail,
     vaultId: row.vault_id,
     docId: row.doc_id,
     outcome: row.outcome,

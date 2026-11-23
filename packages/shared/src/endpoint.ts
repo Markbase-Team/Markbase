@@ -143,6 +143,62 @@ export interface EndpointSet<Def extends EndpointDef> {
  * A feature's endpoints. `feature` prefixes every id (`docs_readDoc`), which is
  * what keeps ids — and so MCP tool names — unique across features.
  */
+/**
+ * One call to a defined endpoint, as it ended. What an observer is told:
+ * which endpoint, the request it got, and the status and time it took. Never
+ * the response body.
+ */
+export interface EndpointCall {
+  def: EndpointDef;
+  req: Request;
+  params: RouteParams;
+  status: number;
+  durationMs: number;
+}
+
+export type EndpointObserver = (call: EndpointCall) => void;
+
+// Kept on globalThis, not in a module variable: the server's start-up hook and
+// its route handlers can be bundled apart, each with its own copy of this
+// module, and an observer set in one copy must be the one the other calls.
+const OBSERVER = Symbol.for("markbase.endpoint-observer");
+const DEFINED_IDS = Symbol.for("markbase.endpoint-ids");
+interface EndpointGlobals {
+  [OBSERVER]?: EndpointObserver | null;
+  [DEFINED_IDS]?: Set<string>;
+}
+const globals: EndpointGlobals = globalThis as typeof globalThis & EndpointGlobals;
+
+function definedIds(): Set<string> {
+  return (globals[DEFINED_IDS] ??= new Set<string>());
+}
+
+/**
+ * Be told of every call to every endpoint defined through an `endpointSet`,
+ * in any feature. One observer at a time; null removes it. This is how the
+ * server records user analytics without any endpoint knowing: an endpoint
+ * that is defined is observed, with nothing to remember when one is added.
+ */
+export function observeEndpointCalls(observer: EndpointObserver | null): void {
+  globals[OBSERVER] = observer;
+}
+
+/** Whether an endpoint with this id has been defined, in any feature's set. */
+export function isDefinedEndpointId(id: string): boolean {
+  return definedIds().has(id);
+}
+
+/** Tell the observer, if there is one. An observer that throws is not the caller's problem. */
+function observed(call: EndpointCall): void {
+  const observer = globals[OBSERVER];
+  if (!observer) return;
+  try {
+    observer(call);
+  } catch (err) {
+    console.warn(`[endpoint] observer failed for ${call.def.id}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
 export function endpointSet<Def extends EndpointDef>(feature: string): EndpointSet<Def> {
   const defined = new Map<string, Endpoint<Def>>();
 
@@ -159,6 +215,7 @@ export function endpointSet<Def extends EndpointDef>(feature: string): EndpointS
       throw new Error(`Endpoint ${id} says why it is hidden from agents, but is not`);
     }
     defined.set(id, e);
+    definedIds().add(id);
     return e;
   }
 
@@ -181,7 +238,22 @@ export function endpointSet<Def extends EndpointDef>(feature: string): EndpointS
     route(endpointId) {
       const e = defined.get(endpointId);
       if (!e) throw new Error(`No endpoint is defined with the id ${endpointId}`);
-      return async (req, ctx) => e.handle(req, await ctx.params);
+      return async (req, ctx) => {
+        const params = await ctx.params;
+        // A route with no dynamic segment is handed no params at all, whatever
+        // the type says; an observer should not have to know that.
+        const named: RouteParams = params ?? {};
+        const started = Date.now();
+        try {
+          const response = await e.handle(req, params);
+          observed({ def: e.def, req, params: named, status: response.status, durationMs: Date.now() - started });
+          return response;
+        } catch (err) {
+          // What a thrown handler becomes once the framework answers for it.
+          observed({ def: e.def, req, params: named, status: 500, durationMs: Date.now() - started });
+          throw err;
+        }
+      };
     },
   };
 }
