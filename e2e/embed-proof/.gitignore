@@ -4,3 +4,4 @@ results.json
 shot-*.png
 node_modules/
 package*.json
+proxy/app-card.html

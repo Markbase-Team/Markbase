@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
       {
-        cookieOptions: serverEmbedCookieOptions(process.env.MARKBASE_EMBED_PROOF),
+        cookieOptions: serverEmbedCookieOptions(process.env.MARKBASE_EMBED_PROOF, req.cookies),
         cookies: {
           getAll() {
             return req.cookies.getAll();

@@ -184,8 +184,12 @@ var mb = (function () {
   function notify(method, params) { post({ jsonrpc: "2.0", method: method, params: params || {} }); }
 
   /* The host's theme and style variables, applied as it sends them. */
+  var hostContext = {};
+
   function applyContext(context) {
     if (!context || typeof context !== "object") return;
+    Object.keys(context).forEach(function (key) { hostContext[key] = context[key]; });
+    document.documentElement.setAttribute("data-mode", hostContext.displayMode === "fullscreen" ? "fullscreen" : "inline");
     var root = document.documentElement;
     if (context.theme === "light" || context.theme === "dark") root.setAttribute("data-theme", context.theme);
     var variables = context.styles && context.styles.variables;
@@ -223,7 +227,7 @@ var mb = (function () {
       protocolVersion: info.protocol,
       appInfo: { name: info.name, version: info.version },
       clientInfo: { name: info.name, version: info.version },
-      appCapabilities: { availableDisplayModes: ["inline"] }
+      appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] }
     }).then(function (result) {
       applyContext(result.hostContext);
       notify("ui/notifications/initialized", {});
@@ -236,7 +240,22 @@ var mb = (function () {
     start: start,
     on: function (method, handler) { handlers[method] = handler; },
     openLink: function (url) { return request("ui/open-link", { url: url }); },
-    sendMessage: function (text) { return request("ui/message", { role: "user", content: { type: "text", text: text } }); }
+    sendMessage: function (text) { return request("ui/message", { role: "user", content: { type: "text", text: text } }); },
+    /* Run one of this server's tools through the host; resolves to what readToolResult makes of the answer. */
+    callTool: function (name, args) {
+      return request("tools/call", { name: name, arguments: args || {} }).then(readToolResult);
+    },
+    /* Whether the host will show this card full page (in Claude: the panel beside the conversation). */
+    canExpand: function () {
+      return Array.isArray(hostContext.availableDisplayModes) && hostContext.availableDisplayModes.indexOf("fullscreen") !== -1;
+    },
+    mode: function () { return hostContext.displayMode === "fullscreen" ? "fullscreen" : "inline"; },
+    /* Ask to be shown full page or inline; the host answers with the mode it chose. */
+    setMode: function (mode) {
+      return request("ui/request-display-mode", { mode: mode }).then(function (result) {
+        applyContext({ displayMode: result && typeof result.mode === "string" ? result.mode : mode });
+      });
+    }
   };
 })();
 
@@ -314,6 +333,8 @@ export const ICONS = {
   arrowRight:
     '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
   check: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+  maximize:
+    '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/><path d="M9 21H3v-6"/></svg>',
   chevronDown: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
 } as const;
 

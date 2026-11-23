@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { agentTools } from "@markbase/shared/docs/agent-tools";
+import { EMBED_TOOLS, appApp } from "@markbase/shared/docs/apps/app-app";
 import { docApp } from "@markbase/shared/docs/apps/doc-app";
 import { startApp } from "@markbase/shared/docs/apps/start-app";
 import { MCP_INSTRUCTIONS, MCP_PROMPTS } from "@markbase/shared/docs/onboarding";
@@ -16,6 +17,7 @@ import {
   type McpHost,
 } from "@markbase/shared/mcp-http";
 import { authenticateAgent } from "@/lib/agent-auth";
+import { embedEnabled } from "@/lib/embed";
 import { instanceUrl } from "@/lib/instance-url";
 import { noteMcpEvent } from "@/lib/user-analytics";
 
@@ -103,15 +105,19 @@ export async function POST(req: Request) {
   const documentsUrl = `${await instanceUrl()}/dashboard/documents`;
   const docUrlPrefix = `${documentsUrl}/`;
 
+  const embed = embedEnabled();
+
   const host: McpHost = {
     name: "markbase-docs",
     version: "1.0.0",
-    tools: agentTools,
+    // The embed experiment (docs/embed-proof.md) adds the real app, full page,
+    // as a card and its two tools — only while it is switched on.
+    tools: () => (embed ? [...agentTools(), ...EMBED_TOOLS] : agentTools()),
     instructions: MCP_INSTRUCTIONS,
     // In an app that shows cards (Claude), a document and the "where to
     // begin" answer are drawn in the conversation. Everywhere else the same
     // tools answer with the same text.
-    apps: [docApp(docUrlPrefix), startApp({ docUrlPrefix, documentsUrl })],
+    apps: [docApp(docUrlPrefix), startApp({ docUrlPrefix, documentsUrl }), ...(embed ? [appApp(new URL(documentsUrl).origin)] : [])],
     prompts: MCP_PROMPTS,
     // What the client asked of this server itself. A tool call that reaches a
     // tool is recorded by the API that answers it, not here.

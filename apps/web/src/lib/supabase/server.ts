@@ -10,7 +10,7 @@ export async function createSupabaseServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
-      cookieOptions: serverEmbedCookieOptions(process.env.MARKBASE_EMBED_PROOF),
+      cookieOptions: serverEmbedCookieOptions(process.env.MARKBASE_EMBED_PROOF, cookieStore),
       cookies: {
         getAll() {
           return cookieStore.getAll();

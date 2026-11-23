@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { agentTools } from "../../src/docs/agent-tools";
+import { EMBED_TOOLS, appApp } from "../../src/docs/apps/app-app";
 import { DOC_APP_TOOLS, DOC_APP_URI, docApp, docAppHtml } from "../../src/docs/apps/doc-app";
 import { VIEW_LIB_JS, scriptJson } from "../../src/docs/apps/page";
 import { START_APP_URI, startApp, startAppHtml } from "../../src/docs/apps/start-app";
@@ -204,5 +205,26 @@ describe("a link whose address has brackets in it", () => {
     expect(lib.renderMarkdown("[wiki](https://en.wikipedia.org/wiki/Markdown_(disambiguation))")).toContain(
       'data-href="https://en.wikipedia.org/wiki/Markdown_(disambiguation)"'
     );
+  });
+});
+
+describe("the app card (the embed experiment)", () => {
+  const app = appApp("https://markbase.so");
+
+  it("frames only the instance, gets its sign-in through a card-only tool, and is opened by me_openApp", () => {
+    expect(app.frameDomains).toEqual(["https://markbase.so"]);
+    expect(app.cardOnlyTools).toEqual(["me_embedSession"]);
+    expect(app.tools).toEqual(["me_openApp"]);
+    expect(EMBED_TOOLS.map((t) => t.name)).toEqual(["me_openApp", "me_embedSession"]);
+  });
+
+  it("frames a hand-off address only if it is on the instance", () => {
+    expect(app.html).toContain('url.indexOf(CONFIG.instance + "/") !== 0');
+    expect(app.html).toContain('"instance":"https://markbase.so"');
+  });
+
+  it("loads nothing of its own from anywhere, and its scripts parse", () => {
+    expect(app.html).not.toMatch(/<script[^>]+src=|<link\b|<img\b|\bfetch\(|XMLHttpRequest/);
+    for (const m of app.html.matchAll(/<script>([\s\S]*?)<\/script>/g)) expect(() => new Function(m[1])).not.toThrow();
   });
 });
