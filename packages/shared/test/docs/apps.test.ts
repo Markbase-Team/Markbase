@@ -163,16 +163,29 @@ describe("the cards and the tools they show", () => {
 });
 
 describe("what a newly connected person is offered", () => {
-  it("always has something that works on an empty account", () => {
+  it("is the three things to try: summarize, review, share", () => {
+    expect(startSuggestions(null).map((s) => s.title)).toEqual([
+      "Summarize this conversation as a document",
+      "Review a document and comment on it",
+      "Share a document with someone",
+    ]);
+  });
+
+  it("names the newest document when there is one, and asks which when there is none", () => {
+    const some = startSuggestions("Welcome to Markbase");
+    expect(some[1].prompt).toContain('"Welcome to Markbase"');
+    expect(some[2].prompt).toContain('"Welcome to Markbase"');
     const none = startSuggestions(null);
-    expect(none.length).toBeGreaterThanOrEqual(2);
+    expect(none[1].prompt).toContain("ask me which");
+    expect(none[2].prompt).toContain("ask me which");
     for (const s of none) expect(s.prompt).toMatch(/Markbase/);
   });
 
-  it("offers a review of the newest document when there is one", () => {
-    const some = startSuggestions("Welcome to Markbase");
-    expect(some).toHaveLength(startSuggestions(null).length + 1);
-    expect(some.at(-1)?.prompt).toContain('"Welcome to Markbase"');
+  it("asks for a review without an edit, and says what to do when sharing is refused", () => {
+    const [, review, share] = startSuggestions("Plan");
+    expect(review.prompt).toContain("Do not edit the text");
+    expect(share.prompt).toMatch(/view, comment or edit/);
+    expect(share.prompt).toMatch(/Share button/);
   });
 
   it("tells the agent which tool to begin with, and that tool exists", () => {

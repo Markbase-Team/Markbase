@@ -69,7 +69,12 @@ describe("GET /docs/start", () => {
         updated_at: "2026-11-21T00:00:00Z",
       },
     ]);
-    expect(body.suggestions).toHaveLength(3);
+    expect(body.suggestions.map((s: { title: string }) => s.title)).toEqual([
+      "Summarize this conversation as a document",
+      "Review a document and comment on it",
+      "Share a document with someone",
+    ]);
+    expect(body.suggestions[1].prompt).toContain("Welcome to Markbase 👋");
     expect(body.suggestions[2].prompt).toContain("Welcome to Markbase 👋");
     for (const s of body.suggestions) expect(Object.keys(s).sort()).toEqual(["description", "prompt", "title"]);
   });
@@ -77,14 +82,15 @@ describe("GET /docs/start", () => {
   it("still has something to try on an account with no documents", async () => {
     const body = await (await getStartedEndpoint.handle(get(AGENT), {})).json();
     expect(body.documents).toEqual([]);
-    expect(body.suggestions).toHaveLength(2);
+    expect(body.suggestions).toHaveLength(3);
+    expect(body.suggestions[1].prompt).toContain("ask me which");
   });
 
-  it("carries the five newest documents, and suggests reviewing the newest", async () => {
+  it("carries the five newest documents, and names the newest in its suggestions", async () => {
     listDocumentsForUser.mockResolvedValue([7, 6, 5, 4, 3, 2, 1].map(doc));
     const body = await (await getStartedEndpoint.handle(get(AGENT), {})).json();
     expect(body.documents.map((d: { id: string }) => d.id)).toEqual(["doc_7", "doc_6", "doc_5", "doc_4", "doc_3"]);
-    expect(body.suggestions[2].prompt).toContain('"Doc 7"');
+    expect(body.suggestions[1].prompt).toContain('"Doc 7"');
   });
 
   it("is refused without a signed-in caller", async () => {
