@@ -89,6 +89,12 @@ export interface McpApp {
   frameDomains?: readonly string[];
   /** Whether the host should draw its border around the card. */
   prefersBorder?: boolean;
+  /**
+   * The card's fixed sandbox host (`_meta.ui.domain`). Without it the host
+   * picks a different one per conversation, so a framed site could only allow
+   * them all.
+   */
+  domain?: string;
   /** The whole page. */
   html: string;
 }
@@ -182,6 +188,7 @@ function appLink(tool: string, host: McpHost): JsonObject {
 function appMeta(app: McpApp): JsonObject {
   const ui: JsonObject = { prefersBorder: app.prefersBorder ?? true };
   if (app.frameDomains?.length) ui.csp = { frameDomains: [...app.frameDomains] };
+  if (app.domain) ui.domain = app.domain;
   return { ui };
 }
 

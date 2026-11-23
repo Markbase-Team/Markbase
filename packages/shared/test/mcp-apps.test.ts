@@ -163,3 +163,12 @@ describe("a card that frames a site and calls a tool of its own", () => {
     expect(content._meta).toEqual({ ui: { prefersBorder: false, csp: { frameDomains: ["https://markbase.so"] } } });
   });
 });
+
+describe("a card with a fixed sandbox host", () => {
+  it("tells the host its domain, so the framed site can name exactly that host", async () => {
+    const card: McpApp = { uri: "ui://markbase/app", name: "App", description: "", tools: ["docs_readDoc"], frameDomains: ["https://markbase.so"], domain: "abc.claudemcpcontent.com", html: "<!doctype html>" };
+    const answer = await ask(host({ apps: [card] }).h, "resources/read", { uri: card.uri });
+    const content = (answer?.result as { contents: JsonObject[] }).contents[0];
+    expect(content._meta).toEqual({ ui: { prefersBorder: true, csp: { frameDomains: ["https://markbase.so"] }, domain: "abc.claudemcpcontent.com" } });
+  });
+});

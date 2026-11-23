@@ -53,14 +53,37 @@ async function chrome(frame) {
   };
 }
 
-async function run(name, engine, card, sandbox) {
-  const r = { variant: `${card}-card ${name}${sandbox ? " +allow-downloads" : ""}`, steps: {} };
+async function run(name, engine, card, frames) {
+  const r = { variant: `${card}-card ${name}${frames ? ` frames=${frames}` : ""}`, steps: {} };
   const browser = await engine.launch({ headless: true });
   try {
     const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1280, height: 900 } });
     const page = await ctx.newPage();
-    const sandboxParam = sandbox ? `&sandbox=${encodeURIComponent(sandbox)}` : "";
-    await page.goto(`http://127.0.0.1:8766/card.html?card=${card}&app=${encodeURIComponent(APP)}&key=${encodeURIComponent(KEY)}&doc=${DOC}${sandboxParam}`);
+    const framesParam = frames ? `&frames=${frames}` : "";
+    await page.goto(`http://127.0.0.1:8766/card.html?card=${card}&app=${encodeURIComponent(APP)}&key=${encodeURIComponent(KEY)}&doc=${DOC}${framesParam}`);
+    if (frames === "blocked") {
+      // The host will not let the card frame the instance: the card says so and
+      // offers the document in Markbase, without asking for a sign-in.
+      let cardFrame = null;
+      for (let i = 0; i < 80 && !cardFrame; i++) {
+        cardFrame = page.frames().find((f) => f.url() === "about:srcdoc");
+        if (!cardFrame) await page.waitForTimeout(250);
+      }
+      await page.waitForTimeout(1500);
+      const proxyFrame = page.frames().find((f) => f.url().startsWith("http://127.0.0.1:8767/host.html"));
+      r.steps.fullPageOffered = (await cardFrame.getByRole("button", { name: "Open full page" }).count()) > 0;
+      if (card === "doc") {
+        r.steps.docShownInline = (await cardFrame.getByText("The card's own view.").count()) > 0;
+      } else {
+        r.steps.fallbackShown = (await cardFrame.getByText("does not show Markbase inside the chat yet").count()) > 0;
+        await cardFrame.locator("#fallback-open").click();
+        await page.waitForTimeout(300);
+        r.steps.fallbackOpens = await proxyFrame.evaluate(() => window.openedLink ?? null);
+      }
+      r.steps.handOffAsked = (await proxyFrame.evaluate(() => window.handOffStatus ?? null)) !== null;
+      r.steps.framedApp = (await appFrame(page, 1000)) !== null;
+      return r;
+    }
     if (card === "doc") {
       // The document card shows its own view first; the person presses "Open full page".
       let cardFrame = null;
@@ -85,7 +108,7 @@ async function run(name, engine, card, sandbox) {
     await page.waitForTimeout(1000);
     r.chrome = await chrome(frame);
     await page.screenshot({ path: `card-${card}-${name}.png` });
-    if (card === "doc" || sandbox) return r;
+    if (card === "doc") return r;
     r.cookies = (await ctx.cookies()).filter((c) => c.name.startsWith("sb-") || c.name === "mb-embed").map((c) => ({ name: c.name.replace(/-auth-token.*/, "-auth-token*"), sameSite: c.sameSite, partitioned: Boolean(c.partitionKey), httpOnly: c.httpOnly }));
 
     // The person works in it: a to-do at the end of the document, then ticked.
@@ -141,5 +164,9 @@ async function run(name, engine, card, sandbox) {
 const only = process.argv[2];
 const engines = [["chromium", chromium], ["webkit", webkit]].filter(([n]) => !only || n === only);
 for (const card of ["app", "doc"]) {
-  for (const [name, engine] of engines) console.log(JSON.stringify(await run(name, engine, card)));
+  for (const [name, engine] of engines) console.log(JSON.stringify(await run(name, engine, card, "allowed")));
+}
+// What Claude does today for markbase.so: the site is left out of the card's frame policy.
+for (const card of ["app", "doc"]) {
+  for (const [name, engine] of engines) console.log(JSON.stringify(await run(name, engine, card, "blocked")));
 }

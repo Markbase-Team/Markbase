@@ -8,6 +8,9 @@
   // page. Query: app (instance), key, doc, sandbox.
   const q = new URLSearchParams(location.search);
   const APP = q.get("app"), KEY = q.get("key"), DOC = q.get("doc"), CARD = q.get("card") || "app";
+  // Which sites the host lets into the card's frame policy, as Claude reports
+  // it: "allowed" (the instance), "blocked" (none), or unset (not reported).
+  const FRAMES = q.get("frames");
   const card = document.getElementById("card");
   card.setAttribute("sandbox", q.get("sandbox") || "allow-scripts allow-same-origin allow-forms allow-popups");
   window.hostLog = [];
@@ -19,7 +22,8 @@
     const refuse = (message) => post({ jsonrpc: "2.0", id: m.id, error: { code: -32000, message } });
     window.hostLog.push(m.method || "response");
     if (m.method === "ui/initialize") {
-      reply({ protocolVersion: "2026-01-26", hostInfo: { name: "fake", version: "0" }, hostCapabilities: { openLinks: {}, serverTools: {} },
+      const sandbox = FRAMES ? { sandbox: { csp: { frameDomains: FRAMES === "allowed" ? [APP] : [] } } } : {};
+      reply({ protocolVersion: "2026-01-26", hostInfo: { name: "fake", version: "0" }, hostCapabilities: { openLinks: {}, serverTools: {}, ...sandbox },
         hostContext: { theme: "light", displayMode: "inline", availableDisplayModes: ["inline", "fullscreen"] } });
     } else if (m.method === "ui/notifications/initialized") {
       post({ jsonrpc: "2.0", method: "ui/notifications/tool-input", params: { arguments: { doc: DOC } } });
@@ -28,6 +32,9 @@
         ? { doc: { id: DOC, title: "Welcome to Markbase", version: 1, content: "# Welcome to Markbase\n\nThe card's own view." }, capability: "owner" }
         : { doc_id: DOC };
       post({ jsonrpc: "2.0", method: "ui/notifications/tool-result", params: { content: [{ type: "text", text: JSON.stringify(answer) }], isError: false } });
+    } else if (m.method === "ui/open-link") {
+      window.openedLink = m.params.url;
+      reply({});
     } else if (m.method === "ui/request-display-mode") {
       window.fullscreenRequested = m.params.mode;
       reply({ mode: m.params.mode });

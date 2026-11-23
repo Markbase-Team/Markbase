@@ -24,9 +24,27 @@
    - The browser client uses the same cookies whenever it is in another site's frame.
 5. The app runs as it does anywhere else: the editor, comments, history, and live co-editing over Supabase Realtime.
 
+## What Claude allows (found 2026-11-22)
+
+Tried in claude.ai with the flag on in production: the card drew, and the frame stayed blank. Claude's console:
+
+- **Claude left markbase.so out of the card's frame policy.** The site is not among the sites Claude allows this connector to show. Per Claude's "Embed a website in an MCP App" docs:
+  - A directory connector with a **Verified** listing can frame the origins the listing allows.
+  - A **Community** listing cannot.
+  - A **custom connector** (added by URL) needs the person to allow each site in the conversation, which only some organizations can do.
+  - The connector in that test was a custom one, and the message is the custom-connector wording. The docs describe no form for adding an origin. The contacts they name are mcp-review@anthropic.com and mcp-apps@anthropic.com.
+- **Full page must be asked for from a press.** The card asked as it loaded, and Claude refused.
+
+So the cards now do three things:
+- **Check what Claude allowed.** They read the sites Claude let into their frame policy (`hostCapabilities.sandbox.csp.frameDomains`). Where markbase.so is left out, they show "This assistant does not show Markbase inside the chat yet" and **Open in Markbase**, instead of a blank frame. The document card drops its Open full page button.
+- **Ask for full page only from a click.**
+- **Set a fixed sandbox host (`_meta.ui.domain`).** It is the first 32 hex of SHA-256 of the server URL, under claudemcpcontent.com: `24fa4c91ecc164bc81314abf23f2cf7d.claudemcpcontent.com` for `https://markbase.so/mcp`. That lets the app allow exactly that host to frame it.
+
+`me_openApp` no longer says the document "is open in the panel". It returns the document's address, and tells the agent not to claim it opened.
+
 ## The flag
 
-All of it is off unless **`MARKBASE_EMBED_FRAME_ANCESTORS`** is set: the sites allowed to frame the app, for Claude `https://claude.ai https://*.claudemcpcontent.com`. Unset, as in production today:
+All of it is off unless **`MARKBASE_EMBED_FRAME_ANCESTORS`** is set: the sites allowed to frame the app. For Claude, set it to **`claude`**. The app then allows `https://claude.ai` and this server's own card host, derived from `APP_URL` the same way Claude derives it. Avoid the `https://*.claudemcpcontent.com` wildcard: it would let every connector's cards frame markbase.so. Unset, as in production today:
 
 - `X-Frame-Options: SAMEORIGIN` stays as it is.
 - `/embed` and `/api/v1/me/embed/*` answer 404.
@@ -99,7 +117,7 @@ The MCP Apps spec says a web host's sandbox proxy has `allow-scripts allow-same-
 
 ## Testing it in Claude
 
-1. Set `MARKBASE_EMBED_FRAME_ANCESTORS=https://claude.ai https://*.claudemcpcontent.com` on the deployment, then deploy.
+1. Set `MARKBASE_EMBED_FRAME_ANCESTORS=claude` on the deployment, then deploy. Claude must also allow markbase.so for the connector (above). Until it does, the cards show the fallback.
 2. In Claude, disconnect the Markbase connector and connect it again, so Claude reads the new tool list.
 3. Ask Claude to open a document in Markbase. It should call `me_openApp`, and the panel should show the app, signed in.
 4. If the panel stays blank, the browser console names the refusal. A `frame-ancestors` error that names `null` is the sandbox condition above.
@@ -109,7 +127,7 @@ To switch it off, unset the variable and deploy.
 ## Still open
 
 - **Security review of the hand-off.** It grants a real session for a minute, once. It is never logged, it is only for a connector's key, and its answer is card-only. It still needs a second look before it is more than an experiment.
-- **The exact frame-ancestors.** Claude may assign a fixed card domain (`_meta.ui.domain`). If so, name it instead of the wildcard.
+- **Getting markbase.so allowed** for the Markbase connector in Claude (above).
 - **Server-side session refresh in the frame.** The browser client refreshes the session itself. A refresh that happens on the server writes embed cookies only because of the marker; a frame open for more than an hour is untested.
 - **Firefox**, on a machine where it launches.
 

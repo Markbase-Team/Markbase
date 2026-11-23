@@ -1,5 +1,6 @@
 import { agentJson, authenticateAgent, preflight } from "@/lib/agent-auth";
 import { EMBED_DOC_ID, embedEnabled } from "@/lib/embed";
+import { instanceUrl } from "@/lib/instance-url";
 
 export const runtime = "nodejs";
 
@@ -18,8 +19,15 @@ export async function GET(req: Request) {
   if (!auth.ok) return agentJson({ error: auth.error }, auth.status);
   const doc = new URL(req.url).searchParams.get("doc");
   if (doc && !EMBED_DOC_ID.test(doc)) return agentJson({ error: "doc is not a document id" }, 400);
+  // Said as what may happen, not what did: an app that does not draw cards
+  // shows nothing, and one that does may not allow the frame. The address is
+  // always there to give the person.
+  const url = `${await instanceUrl()}/dashboard/documents${doc ? `/${doc}` : ""}`;
   return agentJson({
     doc_id: doc,
-    shown: "Markbase is open in the panel beside the conversation.",
+    url,
+    note:
+      "Where the assistant's app shows Markbase cards, the document appears in one, with Open full page and Open in Markbase. " +
+      "Do not tell the person it opened beside the conversation; offer this address to open it in Markbase.",
   });
 }
