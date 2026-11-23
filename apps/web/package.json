@@ -8,14 +8,15 @@
     "gen:slots": "tsx scripts/gen-feature-slots.ts",
     "gen:api": "tsx scripts/gen-api-routes.ts",
     "lint": "eslint",
-    "prebuild": "npm run gen:slots && npm run gen:docs",
-    "predev": "npm run gen:slots && npm run gen:docs",
-    "pretypecheck": "npm run gen:slots && npm run gen:docs",
+    "prebuild": "npm run gen:slots && npm run gen:docs && npm run gen:card",
+    "predev": "npm run gen:slots && npm run gen:docs && npm run gen:card",
+    "pretypecheck": "npm run gen:slots && npm run gen:docs && npm run gen:card",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "gen:docs": "tsx scripts/gen-docs.ts",
-    "pretest": "npm run gen:docs"
+    "pretest": "npm run gen:docs && npm run gen:card",
+    "gen:card": "tsx scripts/gen-editor-card.ts"
   },
   "dependencies": {
     "@codemirror/lang-css": "^6.3.1",
@@ -74,6 +75,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
