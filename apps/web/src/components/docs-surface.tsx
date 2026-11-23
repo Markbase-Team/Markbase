@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { EMBED_READY_MESSAGE } from "@markbase/shared/embed-cookies";
 import { DocsShell, EmbedModeProvider, browserDocsPorts, type DocsRouting } from "@markbase/docs/ui";
 
 /**
@@ -47,6 +49,13 @@ export function DocsSurface({
   children: React.ReactNode;
 }) {
   const asked = useSearchParams().get("embed") === "1";
+  // Inside a card's frame, tell the card the app is showing; it takes the
+  // frame away if this never comes (a host that blocked it says nothing).
+  // The message carries nothing but its name.
+  useEffect(() => {
+    if (!(embed || asked) || window.parent === window) return;
+    window.parent.postMessage({ type: EMBED_READY_MESSAGE }, "*");
+  }, [embed, asked]);
   return (
     <EmbedModeProvider embed={embed || asked}>
       {/* A browser: links open in a new tab, and there are no local vaults, no

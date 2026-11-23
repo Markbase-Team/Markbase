@@ -80,7 +80,7 @@ function docAddress(docId) {
 
 function showFallback(stage, docId) {
   stage.innerHTML =
-    '<div class="fallback"><p>This assistant does not show Markbase inside the chat yet.</p>' +
+    '<div class="fallback"><p>Markbase could not be shown inside the chat here.</p>' +
     '<button class="primary" id="fallback-open">' + CONFIG.icons.externalLink + "Open in Markbase</button></div>";
   document.getElementById("fallback-open").addEventListener("click", function () {
     mb.openLink(docAddress(docId)).catch(function () {});
@@ -104,6 +104,24 @@ function frameApp(stage, docId, onFail, expand) {
     frame.src = url;
     stage.innerHTML = "";
     stage.appendChild(frame);
+    /*
+     * The app says when it is showing (MARKBASE_EMBED_READY). A host that will
+     * not let the card frame the instance blocks the frame silently — Claude
+     * does not tell the card which sites it allowed — so a frame that never
+     * says it loaded is taken away and the fallback offered instead.
+     */
+    var ready = false;
+    function onMessage(event) {
+      if (event.source !== frame.contentWindow || !event.data || event.data.type !== "markbase:embed-ready") return;
+      ready = true;
+      window.removeEventListener("message", onMessage);
+    }
+    window.addEventListener("message", onMessage);
+    setTimeout(function () {
+      if (ready) return;
+      window.removeEventListener("message", onMessage);
+      showFallback(stage, docId);
+    }, CONFIG.readyTimeoutMs || 12000);
   }, function (err) {
     onFail((err && err.message) || "The assistant's app would not let this card sign in.");
   });
@@ -163,7 +181,8 @@ export function appAppHtml(instance: string): string {
     title: "Markbase",
     css: CSS,
     body: '<div class="bar" id="bar"></div><div class="stage" id="stage"><p class="state">Loading…</p></div>',
-    config: { instance, sessionTool: EMBED_SESSION_TOOL, docUrlPrefix: `${instance}/dashboard/documents/` },
+    // "Open in Markbase" goes through the instance's /open page: the desktop app first, the website when it is not there.
+    config: { instance, sessionTool: EMBED_SESSION_TOOL, docUrlPrefix: `${instance}/open?doc=` },
     script: FRAME_APP_JS + SCRIPT,
   });
 }
