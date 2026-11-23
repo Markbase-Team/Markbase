@@ -1,5 +1,6 @@
 import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { syncHeaders } from "./sync-headers";
 import { join } from "node:path";
 import {
   assignFilenames,
@@ -44,8 +45,7 @@ async function api<T>(
   const res = await fetch(`${ctx.appUrl}${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${ctx.apiKey}`,
-      "content-type": "application/json",
+      ...syncHeaders(ctx.apiKey, { "content-type": "application/json" }),
       ...(init?.headers ?? {}),
     },
   });

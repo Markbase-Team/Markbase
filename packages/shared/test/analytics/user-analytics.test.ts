@@ -4,6 +4,8 @@ import {
   USER_ANALYTICS_MAX_LIMIT,
   actorOf,
   clampUserAnalyticsLimit,
+  SYNC_REQUEST_HEADER,
+  isSyncRequest,
   isUserAnalyticsAction,
   isUserAnalyticsChannel,
   isUserAnalyticsOutcome,
@@ -108,5 +110,17 @@ describe("isUserAnalyticsAction", () => {
     for (const a of ["docs_readdoc", "readDoc", "mcp.launch", "", null, undefined]) {
       expect(isUserAnalyticsAction(a), String(a)).toBe(false);
     }
+  });
+});
+
+describe("isSyncRequest", () => {
+  it("knows a vault sync's request by its mark, and nothing else", () => {
+    expect(isSyncRequest(new Headers({ [SYNC_REQUEST_HEADER]: "1" }))).toBe(true);
+    expect(isSyncRequest(new Headers())).toBe(false);
+    expect(isSyncRequest(new Headers({ [SYNC_REQUEST_HEADER]: "yes" }))).toBe(false);
+  });
+
+  it("is a header the gate does not strip", () => {
+    expect(SYNC_REQUEST_HEADER.startsWith("x-markbase-")).toBe(false);
   });
 });

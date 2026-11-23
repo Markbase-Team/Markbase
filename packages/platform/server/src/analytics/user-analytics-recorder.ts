@@ -3,6 +3,7 @@ import type { EndpointCall } from "@markbase/shared/endpoint";
 import type { McpProtocolEvent } from "@markbase/shared/mcp-http";
 import {
   actorOf,
+  isSyncRequest,
   outcomeOfStatus,
   type UserAnalyticsChannel,
   type UserAnalyticsEvent,
@@ -25,6 +26,9 @@ import {
 //   - A person's calls only when they change something. The app reads all day
 //     on its own, and a row per page load would bury the rest.
 //   - A request with no caller. There is no account to record it under.
+//   - A vault sync's reads (SYNC_REQUEST_HEADER). The machine keeping a folder
+//     in step asks what changed every few seconds; none of that is an agent.
+//     What a sync changes is still recorded.
 
 /** The MCP client that made this request, when it came through the MCP server. */
 function mcpClientOf(req: Request): string | null {
@@ -43,6 +47,7 @@ export function eventForEndpointCall(call: EndpointCall): UserAnalyticsEvent | n
   const caller = callerFromHeaders(req.headers);
   if (!caller) return null;
   if (caller.via === "session" && def.scope === "read") return null;
+  if (def.scope === "read" && isSyncRequest(req.headers)) return null;
   const client = mcpClientOf(req);
   // `/docs/:id/…` and `/vaults/:id/…` name what was touched in the path itself.
   const id = params.id ?? null;

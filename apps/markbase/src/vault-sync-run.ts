@@ -4,6 +4,7 @@
 // daemon per vault, stop them all on Ctrl-C.
 
 import { existsSync, readdirSync } from "node:fs";
+import { syncHeaders } from "@markbase/local/vault/sync-headers";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
@@ -84,7 +85,8 @@ function reconcileDeps(cfg: ReturnType<typeof loadConfig>): ReconcileDeps {
     listCloudVaults: async () => {
       try {
         const res = await fetch(`${cfg.appUrl}/api/v1/vaults`, {
-          headers: { Authorization: `Bearer ${cfg.apiKey}` },
+          // The sync checking which vaults exist, every so often: not an agent.
+          headers: syncHeaders(cfg.apiKey),
         });
         if (!res.ok) return null;
         const body = (await res.json()) as { vaults?: { id: string; name: string }[] };

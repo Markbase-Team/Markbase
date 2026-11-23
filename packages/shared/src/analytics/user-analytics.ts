@@ -20,6 +20,23 @@ import { isDefinedEndpointId } from "../endpoint";
 export const USER_ANALYTICS_PATH = "/api/v1/user-analytics";
 
 /**
+ * Set on every request a vault's sync makes (the desktop app's or the CLI's):
+ * the machine keeping a folder in step with its documents, not an agent at
+ * work. It asks what changed every few seconds, and a row for each of those
+ * questions would bury what agents actually did, so its reads are not
+ * recorded. What it changes still is.
+ *
+ * Not under `x-markbase-`: the gate removes every incoming header with that
+ * prefix, which is how a caller is kept from forging the one it attaches.
+ */
+export const SYNC_REQUEST_HEADER = "x-vault-sync";
+
+/** Whether a request says it is a vault's sync. */
+export function isSyncRequest(headers: Headers): boolean {
+  return headers.get(SYNC_REQUEST_HEADER) === "1";
+}
+
+/**
  * The door an action came through: an MCP tool call, a plain API request, an
  * agent's hook on the person's machine (a file read or written directly), or
  * the app itself.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 import type { EndpointCall, EndpointDef } from "@markbase/shared/endpoint";
+import { SYNC_REQUEST_HEADER } from "@markbase/shared/analytics/user-analytics";
 import { eventForEndpointCall, eventForMcpEvent } from "../../src/analytics/user-analytics-recorder";
 
 // Which handled requests become a line in a customer's record, and what the
@@ -23,10 +24,17 @@ const WRITE_CRDT: EndpointDef = {
   why: "The editor's own sync, not something to hand an agent.",
 };
 
-function call(def: EndpointDef, caller: Caller | null, over: Partial<EndpointCall> = {}, client?: string): EndpointCall {
+function call(
+  def: EndpointDef,
+  caller: Caller | null,
+  over: Partial<EndpointCall> = {},
+  client?: string,
+  sync = false
+): EndpointCall {
   const headers = new Headers();
   if (caller) headers.set(CALLER_HEADER, serializeCaller(caller));
   if (client) headers.set("X-MCP-Client", client);
+  if (sync) headers.set(SYNC_REQUEST_HEADER, "1");
   return {
     def,
     req: new Request("https://x.test/api/v1/whatever", { headers }),
@@ -75,6 +83,12 @@ describe("eventForEndpointCall", () => {
   it("leaves out an endpoint agents are not offered, whoever calls it", () => {
     expect(eventForEndpointCall(call(WRITE_CRDT, agent))).toBeNull();
     expect(eventForEndpointCall(call(WRITE_CRDT, person))).toBeNull();
+  });
+
+  it("leaves out a vault sync's reads, and keeps what it changes", () => {
+    expect(eventForEndpointCall(call(LIST_VAULTS, agent, {}, undefined, true))).toBeNull();
+    expect(eventForEndpointCall(call(READ, agent, {}, undefined, true))).toBeNull();
+    expect(eventForEndpointCall(call(EDIT, agent, {}, undefined, true))).toMatchObject({ action: "docs_editDoc" });
   });
 
   it("leaves out a request with no caller", () => {

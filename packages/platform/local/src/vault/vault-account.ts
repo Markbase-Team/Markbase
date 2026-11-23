@@ -19,6 +19,7 @@
 // marker — so no existing mount has to be touched by hand.
 
 import { fetchWithTimeout } from "@markbase/shared/timeout-fetch";
+import { syncHeaders } from "./sync-headers";
 import { resolveWorkerConnection } from "@markbase/shared/worker-connection";
 import { isSharedVault } from "@markbase/shared/shared-vault";
 import { readVaultMarkerInfo, writeVaultMarker } from "./vault-fs";
@@ -84,7 +85,7 @@ export async function vaultOwnerPerApi(
   if (isSharedVault(vaultId)) return null;
   try {
     const res = await fetchWithTimeout(`${appUrl}/api/v1/vaults/${encodeURIComponent(vaultId)}`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: syncHeaders(apiKey),
     });
     if (res.status === 403) return "not-ours";
     if (res.status === 404) return "deleted";
