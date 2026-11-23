@@ -1,6 +1,6 @@
 ---
 name: markbase
-version: 0.9.1
+version: 0.9.2
 description: Read and write Markbase collaborative markdown documents over the HTTP API — list/create docs, edit a passage by quoting it, comment, and read version history. Use when the user shares a Markbase doc link (markbase.so/dashboard/documents/…) or asks to work with a Markbase document, or mentions MARKBASE_API_KEY.
 ---
 
