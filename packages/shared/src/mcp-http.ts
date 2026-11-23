@@ -1,11 +1,15 @@
-// The MCP server, as messages: what a hosted `/mcp` route answers.
+// The MCP server, as messages: what both of its doors answer.
 //
-// The local server (`markbase mcp`) speaks MCP over stdio through the SDK and
-// lives with the agent. This is the same server for an agent that has no
-// machine of ours to run a command on — a chat app, a browser — reached at a
-// URL instead. It is written as a function from one JSON-RPC message to its
-// answer, with no transport in it, so the route that hosts it stays a few
-// lines and this can be tested without a server.
+// There is one server and two ways in. The hosted `/mcp` route is for an agent
+// with no machine of ours to run a command on — a chat app, a browser — and
+// takes one message per HTTP request. `markbase mcp` lives with the agent and
+// takes one message per line on stdin. Both hand each message to `answerMcp`,
+// so a client sees the same server whichever way it came, and a fix or a new
+// method lands in both at once.
+//
+// It is written as a function from one JSON-RPC message to its answer, with no
+// transport in it, so each door stays a few lines and this can be tested
+// without a server.
 //
 // Stateless on purpose. Every message is answered from the message alone, so
 // any instance can answer any request and nothing is held between them. The
@@ -16,7 +20,15 @@
 import { toolAnnotations, toolInputSchema, type AgentTool, type Json } from "./endpoint-tools";
 
 /** MCP protocol revisions this server answers, newest first. */
-export const MCP_PROTOCOL_VERSIONS: readonly string[] = ["2025-11-25", "2025-06-18", "2025-03-26"];
+export const MCP_PROTOCOL_VERSIONS: readonly string[] = [
+  "2025-11-25",
+  "2025-06-18",
+  "2025-03-26",
+  // Older clients on stdio still ask for these; what this server answers is
+  // the same under all five.
+  "2024-11-05",
+  "2024-10-07",
+];
 
 /** The header a client repeats on every request after `initialize`. */
 export const MCP_SESSION_HEADER = "Mcp-Session-Id";
@@ -43,7 +55,13 @@ export type McpProtocolEvent = (typeof MCP_PROTOCOL_EVENTS)[number];
 export interface McpHost {
   name: string;
   version: string;
-  tools(): AgentTool[];
+  /** The tools on offer. May be asked of a server, so it may take a moment. */
+  tools(): AgentTool[] | Promise<AgentTool[]>;
+  /**
+   * Run one tool. An answer that is not `ok` is shown with its status; to say
+   * something else instead (there is no key yet, sign in here), throw an Error
+   * and its message is the whole of what the agent is told.
+   */
   call(tool: AgentTool, args: JsonObject): Promise<ToolAnswer>;
   /**
    * Told of each protocol event, if the host wants to know. `asked` is the
@@ -77,7 +95,7 @@ function pretty(body: string): string {
 }
 
 async function callTool(params: JsonObject, host: McpHost): Promise<JsonObject> {
-  const tool = host.tools().find((t) => t.name === params.name);
+  const tool = (await host.tools()).find((t) => t.name === params.name);
   if (!tool) {
     host.onEvent?.("unknown_tool", typeof params.name === "string" ? params.name : undefined);
     return toolResult(`Unknown tool: ${String(params.name)}`, true);
@@ -122,7 +140,7 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
     case "tools/list":
       host.onEvent?.("tools_list");
       return result(id, {
-        tools: host.tools().map((t) => ({
+        tools: (await host.tools()).map((t) => ({
           name: t.name,
           title: toolAnnotations(t).title,
           description: t.description,
@@ -137,6 +155,35 @@ export async function answerMcp(message: Json, host: McpHost): Promise<JsonObjec
       host.onEvent?.("unknown_method", method);
       return failure(id, -32601, `Method not found: ${method}`);
   }
+}
+
+/**
+ * Answer one line of a stdio transport: a JSON-RPC message, or a batch of
+ * them, as text. Null when there is nothing to send back (a notification, a
+ * blank line). `seen` is shown each message before it is answered, for a
+ * caller that needs something from it — the client's name in `initialize`.
+ */
+export async function answerMcpLine(
+  line: string,
+  host: McpHost,
+  seen?: (message: Json) => void
+): Promise<string | null> {
+  if (!line.trim()) return null;
+  let parsed: Json;
+  try {
+    parsed = JSON.parse(line);
+  } catch {
+    return JSON.stringify(failure(null, -32700, "Parse error: the line is not JSON."));
+  }
+  const messages = Array.isArray(parsed) ? parsed : [parsed];
+  const answers: JsonObject[] = [];
+  for (const message of messages) {
+    seen?.(message);
+    const answer = await answerMcp(message, host);
+    if (answer) answers.push(answer);
+  }
+  if (answers.length === 0) return null;
+  return JSON.stringify(Array.isArray(parsed) ? answers : answers[0]);
 }
 
 /** The client's name, when this message is the `initialize` that states it. */
