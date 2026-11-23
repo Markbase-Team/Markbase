@@ -1,9 +1,9 @@
-import { supabase } from "@markbase/server/supabase";
-import type { ProductEvent } from "@markbase/shared/product-events";
+import { supabase } from "../../supabase";
+import type { ProductEvent } from "@markbase/shared/analytics/funnel/events";
 
 // Product events — the server half. Writes one reported event to
 // public.product_events for the account the gate named. See
-// @markbase/shared/product-events for what may be reported.
+// @markbase/shared/analytics/funnel/events for what may be reported.
 
 export interface ProductEventRow {
   user_id: string;

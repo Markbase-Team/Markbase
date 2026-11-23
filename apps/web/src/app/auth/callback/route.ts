@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { safeNext } from "@/lib/routes";
-import { SIGNUP_SOURCE_COOKIE } from "@/lib/signup-source";
-import { recordSignupSource } from "@/lib/signup-source-server";
+import { SIGNUP_SOURCE_COOKIE } from "@markbase/shared/analytics/funnel/signup-source";
+import { recordSignupSource } from "@markbase/server/analytics/funnel/signup-source-store";
 
 export const runtime = "nodejs";
 
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     //
     // What does happen here: if this browser is turning into a NEW account,
     // the source cookie it arrived with (where it came from, see
-    // @/lib/signup-source) is written down against that account. A sign-in by
+    // @markbase/shared/analytics/funnel/signup-source) is written down against that account. A sign-in by
     // an older account records nothing; the cookie goes either way.
     if (!error) {
       if (data.user) {

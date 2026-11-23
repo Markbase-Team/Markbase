@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isProductEventName, parseProductEvent } from "../src/product-events";
+import { isProductEventName, parseProductEvent } from "../../../src/analytics/funnel/events";
 
 describe("product events", () => {
   it("knows the connect-agent events and nothing else", () => {

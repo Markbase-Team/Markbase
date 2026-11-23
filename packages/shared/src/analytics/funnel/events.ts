@@ -5,7 +5,7 @@
 // so a page cannot fill the table with whatever it likes, and props are a few
 // short strings, never free text a person typed.
 
-import { api } from "./api-client";
+import { api } from "../../api-client";
 
 export const PRODUCT_EVENTS = [
   /** The "Connect an agent" modal opened after a first vault. */

@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./analytics/funnel/events-store": "./src/analytics/funnel/events-store.ts",
+    "./analytics/funnel/signup-source-store": "./src/analytics/funnel/signup-source-store.ts",
     "./api-keys": "./src/api-keys.ts",
     "./caller": "./src/caller.ts",
     "./db/*": "./src/db/*.ts",

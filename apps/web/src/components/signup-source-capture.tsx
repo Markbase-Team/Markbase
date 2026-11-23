@@ -9,10 +9,10 @@ import {
   serializeSource,
   shouldReplace,
   sourceCookieAttributes,
-} from "@/lib/signup-source";
+} from "@markbase/shared/analytics/funnel/signup-source";
 
 // Remembers how this browser first arrived, in a cookie the sign-up later
-// reads (see @/lib/signup-source). Mounted once in the root layout so the
+// reads (see @markbase/shared/analytics/funnel/signup-source). Mounted once in the root layout so the
 // first page of a visit — landing, blog post, shared document — is the one
 // that counts; it renders nothing.
 export function SignupSourceCapture() {

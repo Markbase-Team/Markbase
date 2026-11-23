@@ -9,8 +9,8 @@ import {
   serializeSource,
   shouldReplace,
   type SignupSource,
-} from "@/lib/signup-source";
-import { recordSignupSource, type SignupSourceRow, type SourceWriter } from "@/lib/signup-source-server";
+} from "@markbase/shared/analytics/funnel/signup-source";
+import { recordSignupSource, type SignupSourceRow, type SourceWriter } from "../../../src/analytics/funnel/signup-source-store";
 
 // Where a sign-up came from. The first visit is noted in a cookie; the account
 // that browser later creates gets one row saying so.
