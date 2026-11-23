@@ -22,7 +22,8 @@ import { fetchWithTimeout, TRANSFER_TIMEOUT_MS } from "@markbase/shared/timeout-
 import { IGNORE_FILE, loadVaultIgnore, type VaultIgnore } from "./vault-ignore";
 import { ApiCrdtTransport, bearerCrdtRequest, type CrdtChangesFeed } from "@markbase/shared/docs/crdt-api";
 import { docsSyncedFiles } from "./docs-synced-file";
-import { agentCredit, takeAgentReads } from "./agent-audit";
+import { agentCredit, takeHookEvents } from "./agent-audit";
+import { HOOK_EVENTS_PATH, type HookEvent, type HookEventsAnswer } from "@markbase/shared/analytics/hook-events";
 import {
   NodeVaultFs,
   NodeVaultBaseStore,
@@ -493,6 +494,30 @@ function makeDeleteDoc(
       headers: { Authorization: `Bearer ${apiKey}` },
     });
     return res.ok;
+  };
+}
+
+/**
+ * Report what agents' hooks saw to the server, which records it (POST
+ * /hook-events). Whether each event was recorded, in order, or null when there
+ * was no usable answer: unreachable, or a server with no such route yet.
+ * Never throws — an event is not worth a failed sweep.
+ */
+function makeReportHookEvents(appUrl: string, apiKey: string): (events: HookEvent[]) => Promise<boolean[] | null> {
+  return async (events) => {
+    try {
+      const res = await fetchWithTimeout(`${appUrl}${HOOK_EVENTS_PATH}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+        body: JSON.stringify({ events }),
+      });
+      if (res.status !== 200) return null;
+      const answer = (await res.json()) as Partial<HookEventsAnswer>;
+      const recorded = answer.recorded;
+      return Array.isArray(recorded) && recorded.length === events.length ? recorded.map((r) => r === true) : null;
+    } catch {
+      return null;
+    }
   };
 }
 
@@ -1126,10 +1151,13 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
       // Which agent wrote a change, when its hook reported the write
       // (`markbase write-audit`): a version then says so.
       agentCredit: (path) => agentCredit(dir, path),
-      // The reads those hooks reported (`markbase read-audit`), for each
-      // document's tally. Not in the Shared Vault: its documents are other
-      // people's, and what this machine's agents read is not theirs to keep.
-      agentReads: shared ? undefined : () => takeAgentReads(dir, author),
+      // What those hooks saw (`markbase read-audit`, `write-audit`), reported
+      // to the server, which keeps the record (user analytics). A read it does
+      // not take goes in the document's own tally, as reads did before. Not in
+      // the Shared Vault: its documents are other people's, and what this
+      // machine's agents did with them is not theirs to keep.
+      hookEvents: shared ? undefined : () => takeHookEvents(dir),
+      reportHookEvents: shared ? undefined : makeReportHookEvents(appUrl, apiKey),
     }
   );
   if (startedOffline) manager.setClaims(refs);
@@ -2028,8 +2056,8 @@ export async function startVaultSync(opts: VaultSyncOptions): Promise<() => Prom
         }
         const n = manager.checkpointDue();
         if (n > 0) log(`recorded ${n} version(s)`);
-        const reads = manager.recordAgentReads();
-        if (reads > 0) log(`recorded ${reads} agent read(s)`);
+        const events = manager.passOnHookEvents();
+        if (events > 0) log(`passed on ${events} agent hook event(s)`);
       } catch (e) {
         // Keeping history is never worth taking sync down for.
         log(`couldn't record versions: ${e instanceof Error ? e.message : String(e)}`);

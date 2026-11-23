@@ -2,7 +2,14 @@ import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
 import { setMarkdown } from "../../src/docs/crdt";
 import { appendVersion, checkpoint } from "../../src/docs/versions";
-import { addAgentReads, lineCredit, listAgentReads, writerText } from "../../src/docs/analytics";
+import {
+  addAgentReads,
+  docAnalytics,
+  lineCredit,
+  listAgentReads,
+  mergeAgentReads,
+  writerText,
+} from "../../src/docs/analytics";
 
 // A document's analytics: the agents' read tally, and who wrote each line —
 // a person, an agent, and whose agent. The line credit is worked out from the
@@ -148,5 +155,45 @@ describe("lineCredit", () => {
     setMarkdown(doc, "a\n\nb\n");
     checkpoint(doc, { author: "Sam" });
     expect(lineCredit(doc).ranges.map((r) => [r.from, r.to, writerText(r.writer)])).toEqual([[1, 3, "Jessie"]]);
+  });
+});
+
+describe("reads from the record and from the document, as one tally", () => {
+  const T = 1_795_000_000_000;
+
+  it("gives one agent working for one person one row", () => {
+    expect(
+      mergeAgentReads(
+        [{ agent: "claude", owner: "Jessie", count: 3, lastAt: T }],
+        [
+          { agent: "claude", owner: "Jessie", count: 2, lastAt: T + 5 },
+          { agent: "codex", owner: "Jessie", count: 9, lastAt: T - 5 },
+          { agent: "claude", owner: "Sam", count: 1, lastAt: T },
+        ]
+      )
+    ).toEqual([
+      { agent: "codex", owner: "Jessie", count: 9, lastAt: T - 5 },
+      { agent: "claude", owner: "Jessie", count: 5, lastAt: T + 5 },
+      { agent: "claude", owner: "Sam", count: 1, lastAt: T },
+    ]);
+  });
+
+  it("adds what the server recorded to what the document still holds", () => {
+    const doc = new Y.Doc();
+    addAgentReads(doc, [{ agent: "claude", owner: "Jessie", count: 2, lastAt: T }]);
+    const report = docAnalytics(doc, [
+      { agent: "claude", owner: "Jessie", count: 4, lastAt: T + 10 },
+      { agent: "cursor", owner: "Jessie", count: 1, lastAt: T },
+    ]);
+    expect(report.reads).toEqual([
+      { agent: "claude", owner: "Jessie", count: 6, lastAt: T + 10, text: "Jessie's Claude" },
+      { agent: "cursor", owner: "Jessie", count: 1, lastAt: T, text: "Jessie's Cursor" },
+    ]);
+  });
+
+  it("shows the document's own tally when nothing is recorded", () => {
+    const doc = new Y.Doc();
+    addAgentReads(doc, [{ agent: "claude", owner: null, count: 1, lastAt: T }]);
+    expect(docAnalytics(doc).reads).toEqual([{ agent: "claude", owner: null, count: 1, lastAt: T, text: "Claude" }]);
   });
 });

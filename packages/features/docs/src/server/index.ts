@@ -133,7 +133,8 @@ export {
   requireDocCapability,
 } from "./docs-auth";
 export type { EditResult, Writer } from "./doc-crdt";
-export { readDocCrdt, editDocCrdt, versionCredit, apiReader, countApiRead } from "./doc-crdt";
+export { readDocCrdt, editDocCrdt, versionCredit } from "./doc-crdt";
+export { hookProvider, recordHookEvent, recordedDocReads } from "./doc-reads";
 export {
   loadCrdtSnapshot,
   saveCrdtSnapshot,

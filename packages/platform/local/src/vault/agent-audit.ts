@@ -487,65 +487,100 @@ function sameDir(event: { vaultId: string }, dir: string): boolean {
   return mounted === undefined || realPath(resolve(mounted.dir)) === realPath(resolve(dir));
 }
 
-/** Where one vault's reader has got to in the read ledger. */
-function readsCursorPath(dir: string): string {
+/** One thing an agent's hook saw of a file in a vault, as the sync hands it on. */
+export interface FileHookEvent {
+  kind: "read" | "write";
+  agent: string;
+  /** The file's path inside the vault. */
+  path: string;
+  /** When it happened, in milliseconds. */
+  at: number;
+}
+
+/** Where one vault's reader has got to in one ledger. */
+function cursorPath(ledger: "reads" | "writes", dir: string): string {
   const key = createHash("sha256").update(realPath(resolve(dir))).digest("hex");
-  return join(auditDir(), "cursors", `reads-${key}.json`);
+  return join(auditDir(), "cursors", `${ledger}-${key}.json`);
 }
 
 /**
- * The reads agents made of the files of the vault mounted at `dir` since this
- * was last called for it, by path inside the vault — for the sync to add to
- * each document's tally. `owner` is the person whose agents these are: the
- * account this machine's sync is signed in to.
- *
- * Taking consumes: how far the ledger has been read is kept beside it, per
- * vault, so a read is handed over once however often the sync restarts. Only
- * whole lines are taken; one still being written waits for the next call.
+ * The lines of one ledger this vault has not been handed yet, parsed, and the
+ * cursor moved past them. Only whole lines are taken; one still being written
+ * waits for the next call.
  */
-export function takeAgentReads(dir: string, owner: string | null): Map<string, AgentReads[]> {
-  const taken = new Map<string, AgentReads[]>();
-  let ledger: Buffer;
+function takeLedger<E extends { vaultId: string }>(ledger: "reads" | "writes", file: string, dir: string): E[] {
+  let bytes: Buffer;
   try {
-    ledger = readFileSync(readsLedgerPath());
+    bytes = readFileSync(file);
   } catch {
-    return taken;
+    return [];
   }
-  const cursorPath = readsCursorPath(dir);
+  const cursor = cursorPath(ledger, dir);
   let offset = 0;
   try {
-    const cursor: { offset?: number } = JSON.parse(readFileSync(cursorPath, "utf8"));
-    if (typeof cursor.offset === "number" && cursor.offset <= ledger.length) offset = cursor.offset;
+    const saved: { offset?: number } = JSON.parse(readFileSync(cursor, "utf8"));
+    if (typeof saved.offset === "number" && saved.offset <= bytes.length) offset = saved.offset;
   } catch {
     // no cursor yet: everything in the ledger is new to this vault
   }
-  const end = ledger.lastIndexOf(0x0a) + 1;
-  if (end <= offset) return taken;
+  const end = bytes.lastIndexOf(0x0a) + 1;
+  if (end <= offset) return [];
 
-  for (const line of ledger.subarray(offset, end).toString("utf8").split("\n")) {
+  const taken: E[] = [];
+  for (const line of bytes.subarray(offset, end).toString("utf8").split("\n")) {
     if (!line.trim()) continue;
-    let event: ReadEvent;
+    let event: E;
     try {
       event = JSON.parse(line);
     } catch {
       continue;
     }
     if (!sameDir(event, dir) || !mountedHere(event, dir)) continue;
-    const at = Date.parse(event.at);
-    const tallies = taken.get(event.path) ?? [];
-    const tally = tallies.find((t) => t.agent === event.agent);
-    if (tally) {
-      tally.count++;
-      tally.lastAt = Math.max(tally.lastAt, at);
-    } else {
-      tallies.push({ agent: event.agent, owner, count: 1, lastAt: at });
-    }
-    taken.set(event.path, tallies);
+    taken.push(event);
   }
 
-  mkdirSync(dirname(cursorPath), { recursive: true, mode: 0o700 });
-  writeFileSync(cursorPath, JSON.stringify({ offset: end }), { mode: 0o600 });
+  mkdirSync(dirname(cursor), { recursive: true, mode: 0o700 });
+  writeFileSync(cursor, JSON.stringify({ offset: end }), { mode: 0o600 });
   return taken;
+}
+
+/**
+ * What agents' hooks saw of the files of the vault mounted at `dir` since this
+ * was last called for it: every read and every write, one event each, oldest
+ * first — for the sync to report to the server (user analytics).
+ *
+ * Taking consumes: how far each ledger has been read is kept beside it, per
+ * vault, so an event is handed over once however often the sync restarts.
+ * Reading the writes here does not touch what `agentCredit` reads them for.
+ */
+export function takeHookEvents(dir: string): FileHookEvent[] {
+  const reads = takeLedger<ReadEvent>("reads", readsLedgerPath(), dir).map(
+    (e): FileHookEvent => ({ kind: "read", agent: e.agent, path: e.path, at: Date.parse(e.at) })
+  );
+  const writes = takeLedger<WriteEvent>("writes", writesLedgerPath(), dir).map(
+    (e): FileHookEvent => ({ kind: "write", agent: e.agent, path: e.path, at: Date.parse(e.at) })
+  );
+  return [...reads, ...writes].filter((e) => Number.isFinite(e.at)).sort((a, b) => a.at - b.at);
+}
+
+/**
+ * Reads, as the tally a document keeps of them: per agent, how many and when
+ * the last one was. Only for reads the server did not take — the document is
+ * where they go when there is nowhere else (analytics.ts says why).
+ */
+export function tallyReads(events: FileHookEvent[], owner: string | null): AgentReads[] {
+  const tallies: AgentReads[] = [];
+  for (const e of events) {
+    if (e.kind !== "read") continue;
+    const tally = tallies.find((t) => t.agent === e.agent);
+    if (tally) {
+      tally.count++;
+      tally.lastAt = Math.max(tally.lastAt, e.at);
+    } else {
+      tallies.push({ agent: e.agent, owner, count: 1, lastAt: e.at });
+    }
+  }
+  return tallies;
 }
 
 /** Is the vault this event names mounted at `dir`? (An event for a vault mounted nowhere is not ours.) */

@@ -6,7 +6,18 @@ import {
   versionContent,
   type DocJSON,
 } from "@markbase/shared/docs";
-import { readDocCrdt, searchDocuments } from "../server";
+import { callerFromHeaders } from "@markbase/shared/auth";
+import {
+  HOOK_EVENTS_MAX,
+  HOOK_EVENTS_MAX_DOCS,
+  HOOK_EVENT_NEEDS,
+  parseHookEvents,
+  type HookEvent,
+  type HookEventsAnswer,
+  type HookEventsBody,
+} from "@markbase/shared/analytics/hook-events";
+import { readDocCrdt, recordHookEvent, recordedDocReads, searchDocuments } from "../server";
+import { requireDocCapability } from "./actor";
 import { endpoint } from "./define";
 import { json } from "./respond";
 
@@ -89,7 +100,10 @@ export const analyticsEndpoint = endpoint({
     example: `curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/analytics" | jq '.credit.shares'`,
   },
 }, async (_req, { id }, auth) => {
-  return json(await readDocCrdt(id, auth.doc.content, docAnalytics));
+  // Reads come from the record (user analytics); line credit from the
+  // document's own history. Asked for together.
+  const recorded = await recordedDocReads(id);
+  return json(await readDocCrdt(id, auth.doc.content, (doc) => docAnalytics(doc, recorded)));
 });
 
 // GET ?version=V — the document as of CRDT version index V, for previewing a
@@ -157,4 +171,62 @@ export const docDiffEndpoint = endpoint({
       404
     );
   }
+});
+
+// POST /api/v1/hook-events — a sync daemon reporting what agents' hooks saw
+// on its machine: one event per read or write of a vault file, as the hook
+// logged it (@markbase/shared/analytics/hook-events).
+//
+// An agent working on a file never touches the API, so its hook is the only
+// witness, and the daemon is what carries the hook's ledger here. Each event
+// becomes a row in the user analytics record, under the daemon's account.
+//
+// Account-level, because one sweep covers many documents; the role each event
+// needs is checked here, per document: viewer to report a read of it, editor
+// to report a write. An event for a document the caller may not reach is not
+// recorded, and the answer says so, event by event.
+export const reportHookEventsEndpoint = endpoint({
+  id: "docs_reportHookEvents",
+  method: "POST",
+  path: "/hook-events",
+  capability: null,
+  scope: "write",
+  summary: "Report what agents' hooks saw of vault files: reads and writes, one event each",
+  humanOnly: true,
+  why: "The sync daemon's report of its machine's hook ledgers. An agent's own calls are recorded as they happen.",
+}, async (req) => {
+  const caller = callerFromHeaders(req.headers);
+  if (!caller) return json({ error: "Missing credentials." }, 401);
+  let body: HookEventsBody = {};
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON" }, 400);
+  }
+  const events = parseHookEvents(body);
+  if (!events) {
+    return json(
+      { error: `events must be 1 to ${HOOK_EVENTS_MAX} of { kind, agent, docId, at }, naming at most ${HOOK_EVENTS_MAX_DOCS} documents` },
+      400
+    );
+  }
+
+  // Each document and role once, however many events name it.
+  const allowed = new Map<string, Promise<boolean>>();
+  const may = (event: HookEvent): Promise<boolean> => {
+    const need = HOOK_EVENT_NEEDS[event.kind];
+    const key = `${event.docId}\n${need}`;
+    let check = allowed.get(key);
+    if (!check) {
+      check = requireDocCapability(req, event.docId, need).then((auth) => auth.ok);
+      allowed.set(key, check);
+    }
+    return check;
+  };
+
+  const recorded = await Promise.all(
+    events.map(async (event) => (await may(event)) && (await recordHookEvent(caller, event)))
+  );
+  const answer: HookEventsAnswer = { recorded };
+  return json(answer);
 });
