@@ -22,7 +22,10 @@
   const card = document.getElementById("card");
   card.setAttribute("sandbox", q.get("sandbox") || "allow-scripts allow-same-origin allow-forms allow-popups");
   window.hostLog = [];
-  const TOOLS = { me_embedSession: { method: "POST", path: "/me/embed/session" } };
+  const TOOLS = {
+    me_embedSession: { method: "POST", path: () => "/me/embed/session" },
+    docs_readDoc: { method: "GET", path: (args) => "/docs/" + encodeURIComponent(args.id) },
+  };
   window.addEventListener("message", async (e) => {
     if (e.source !== card.contentWindow) return;
     const m = e.data, post = (msg) => card.contentWindow.postMessage(msg, "*");
@@ -49,9 +52,12 @@
     } else if (m.method === "tools/call") {
       const tool = TOOLS[m.params.name];
       if (!tool) return refuse("Unknown tool");
-      const res = await fetch(APP + "/api/v1" + tool.path, { method: tool.method, headers: { authorization: "Bearer " + KEY, "content-type": "application/json" }, body: JSON.stringify(m.params.arguments || {}) });
+      const args = m.params.arguments || {};
+      const res = await fetch(APP + "/api/v1" + tool.path(args), tool.method === "GET"
+        ? { headers: { authorization: "Bearer " + KEY } }
+        : { method: tool.method, headers: { authorization: "Bearer " + KEY, "content-type": "application/json" }, body: JSON.stringify(args) });
       const text = await res.text();
-      window.handOffStatus = res.status;
+      if (m.params.name === "me_embedSession") window.handOffStatus = res.status;
       reply({ content: [{ type: "text", text: res.ok ? text : "HTTP " + res.status + "\n" + text }], isError: !res.ok });
     } else if (m.id !== undefined && m.method) reply({});
   });
