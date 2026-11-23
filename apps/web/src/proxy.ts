@@ -97,10 +97,6 @@ const GUARDED: ReadonlyArray<{ prefix: string; identity: Identity }> = [
   { prefix: "/api/v1/me/plan", identity: "required" },
   // What the app reports about itself: a modal shown, a button pressed.
   { prefix: "/api/v1/events", identity: "required" },
-  // What a sync daemon reports of its machine's agent hooks (user analytics).
-  { prefix: "/api/v1/hook-events", identity: "required" },
-  // Where a sync daemon listens to hear that something changed.
-  { prefix: "/api/v1/nudge", identity: "required" },
   { prefix: "/api/admin/projects", identity: "required" },
   { prefix: "/api/admin/secrets", identity: "required" },
   // A worker's Claude Code session reports a ticket's commits and PR here,

@@ -7,7 +7,7 @@
 --
 -- One topic per account. It is the name of a public broadcast channel, so it
 -- is made unguessable here and handed only to that account's machines
--- (GET /api/v1/nudge). A nudge carries nothing but "content" or "structure",
+-- (GET /api/v1/vaults/sync). A nudge carries nothing but "content" or "structure",
 -- so a topic that leaked would tell someone only that the account changed
 -- something, and when; deleting the row and asking again gives a new one.
 --

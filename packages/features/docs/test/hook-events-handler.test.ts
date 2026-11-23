@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 import type { UserAnalyticsEvent } from "@markbase/shared/analytics/user-analytics";
 
-// POST /hook-events takes a sync daemon's report of what agents' hooks saw.
+// POST /vaults/hook-events takes a sync daemon's report of what agents' hooks saw.
 // It names many documents at once, so the role each event needs is checked
 // here, per document: what is under test is who may report what, and that the
 // answer says, event by event, what was recorded.
@@ -26,7 +26,7 @@ vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
   claimAgentSession: async () => null,
 }));
 
-const { reportHookEventsEndpoint } = await import("../src/handlers/history");
+const { reportVaultHookEventsEndpoint } = await import("../src/handlers/history");
 
 const MINE = "11111111-1111-4111-8111-111111111111";
 const SHARED_TO_VIEW = "22222222-2222-4222-8222-222222222222";
@@ -37,7 +37,7 @@ const AT = 1_795_000_000_000;
 function post(caller: Caller | null, body: string): Promise<Response> {
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (caller) headers[CALLER_HEADER] = serializeCaller(caller);
-  return reportHookEventsEndpoint.handle(new Request("https://markbase.so/api/v1/hook-events", { method: "POST", headers, body }), {});
+  return reportVaultHookEventsEndpoint.handle(new Request("https://markbase.so/api/v1/vaults/hook-events", { method: "POST", headers, body }), {});
 }
 
 beforeEach(() => {
@@ -50,7 +50,7 @@ beforeEach(() => {
   getMemberCapability.mockImplementation(async (doc: string) => (doc === SHARED_TO_VIEW ? "viewer" : null));
 });
 
-describe("POST /hook-events", () => {
+describe("POST /vaults/hook-events", () => {
   it("records what the caller may report, and says which it did not", async () => {
     const res = await post(
       DAEMON,

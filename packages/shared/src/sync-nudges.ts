@@ -9,7 +9,7 @@
 // never arrives costs a delay, never data — the slow safety poll catches it.
 //
 // The topic is a public channel with an unguessable name the API hands the
-// account's own machines (GET /api/v1/nudge). A public channel needs no login
+// account's own machines (GET /api/v1/vaults/sync). A public channel needs no login
 // token, which a sync holding only an API key does not have. What the name
 // protects is small: a nudge carries no document, no title, no content, so
 // someone who learned it would know only that the account changed something,
@@ -18,7 +18,7 @@
 // Two seams keep the transport replaceable: the server sends through one
 // helper (`sendNudges`), and a sync listens through one class (SyncNudges).
 
-export const NUDGE_PATH = "/api/v1/nudge";
+export const NUDGE_PATH = "/api/v1/vaults/sync";
 
 /** The broadcast event a nudge is sent as. */
 export const NUDGE_EVENT = "changed";
@@ -41,7 +41,7 @@ export interface NudgePayload {
   kind: NudgeKind;
 }
 
-/** Where an account's machines listen: GET /api/v1/nudge. */
+/** Where an account's machines listen: GET /api/v1/vaults/sync. */
 export interface NudgeChannel {
   /** The account's topic. Unguessable; anyone who has it hears that the account changed something. */
   topic: string;

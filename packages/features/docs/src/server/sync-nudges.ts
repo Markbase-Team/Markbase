@@ -36,7 +36,7 @@ const NOT_KEPT: ReadonlySet<string> = new Set([
   "docs_deleteLink",
   "docs_publish",
   "docs_unpublish",
-  "docs_reportHookEvents",
+  "docs_reportVaultHookEvents",
 ]);
 
 /** The nudge a call calls for, or null when it changed nothing a sync keeps. */

@@ -7,4 +7,4 @@ import { endpointRoute } from "@markbase/docs/handlers";
 
 export const runtime = "nodejs";
 
-export const GET = endpointRoute("docs_nudgeChannel");
+export const POST = endpointRoute("docs_reportVaultHookEvents");

@@ -50,7 +50,7 @@ describe("nudgeKindFor", () => {
 
   it("nudges for nothing a sync does not keep, nothing read and nothing that failed", () => {
     expect(nudgeKindFor(call(def("docs_addComment", "/docs/:id/comments")))).toBeNull();
-    expect(nudgeKindFor(call(def("docs_reportHookEvents", "/hook-events")))).toBeNull();
+    expect(nudgeKindFor(call(def("docs_reportVaultHookEvents", "/vaults/hook-events")))).toBeNull();
     expect(nudgeKindFor(call(def("docs_readDoc", "/docs/:id", "read")))).toBeNull();
     expect(nudgeKindFor(call(def("docs_renameDoc", "/docs/:id"), 403))).toBeNull();
   });

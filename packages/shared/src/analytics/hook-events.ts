@@ -12,7 +12,7 @@
 // One event is one thing that happened. Nothing here is a count: how often an
 // agent read a document is worked out from the rows when it is asked.
 
-export const HOOK_EVENTS_PATH = "/api/v1/hook-events";
+export const HOOK_EVENTS_PATH = "/api/v1/vaults/hook-events";
 
 /** What a hook can report. A new one is a kind here and an action below. */
 export const HOOK_EVENT_KINDS = ["read", "write"] as const;
