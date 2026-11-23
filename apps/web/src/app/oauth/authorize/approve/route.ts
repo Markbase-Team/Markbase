@@ -6,6 +6,8 @@ import { CONNECTOR_DEFAULT_CAPABILITY, pickedCapability } from "@/lib/capabiliti
 import { instanceUrl } from "@/lib/instance-url";
 import { oauthSecret } from "@/lib/mcp-oauth";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { recordFunnelEvent } from "@markbase/server/analytics/funnel/events-store";
+import "@/lib/funnels";
 
 export const runtime = "nodejs";
 
@@ -75,8 +77,14 @@ export async function POST(req: Request) {
     // the vault, and no read has to become a write. An account that has a
     // vault is left as it is. A failure must not cost the person the
     // connection: a document created without a vault still makes one.
+    await recordFunnelEvent(user.id, {
+      name: "agent.connect",
+      source: "mcp",
+      props: { client: checked.client.name.slice(0, 40) },
+    });
     try {
-      await ensureFirstVault(user.id);
+      const { created } = await ensureFirstVault(user.id);
+      if (created) await recordFunnelEvent(user.id, { name: "vault.provision", source: "mcp", props: {} });
     } catch (error) {
       console.error("[oauth] first vault for a connector sign-in failed", error);
     }

@@ -7,6 +7,8 @@
     ".": "./src/index.ts",
     "./analytics/funnel/events-store": "./src/analytics/funnel/events-store.ts",
     "./analytics/funnel/signup-source-store": "./src/analytics/funnel/signup-source-store.ts",
+    "./analytics/funnel/signup": "./src/analytics/funnel/signup.ts",
+    "./analytics/funnel/funnel-report": "./src/analytics/funnel/funnel-report.ts",
     "./analytics/user-analytics-recorder": "./src/analytics/user-analytics-recorder.ts",
     "./analytics/user-analytics-store": "./src/analytics/user-analytics-store.ts",
     "./api-keys": "./src/api-keys.ts",

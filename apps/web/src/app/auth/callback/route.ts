@@ -4,6 +4,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { safeNext } from "@/lib/routes";
 import { SIGNUP_SOURCE_COOKIE } from "@markbase/shared/analytics/funnel/signup-source";
 import { recordSignupSource } from "@markbase/server/analytics/funnel/signup-source-store";
+import { recordFunnelEvent } from "@markbase/server/analytics/funnel/events-store";
+import { recordSignUp } from "@markbase/server/analytics/funnel/signup";
+import { signupSource } from "@/lib/funnels";
 
 export const runtime = "nodejs";
 
@@ -63,6 +66,18 @@ export async function GET(req: NextRequest) {
     if (!error) {
       if (data.user) {
         await recordSignupSource(data.user, req.cookies.get(SIGNUP_SOURCE_COOKIE)?.value);
+        // Funnel events: a sign-in every time, and a sign-up the first time.
+        // Headed for a connector's authorize page, this account is being made
+        // for an AI app, so its source is "mcp".
+        const source = signupSource(next);
+        await Promise.all([
+          recordSignUp(data.user, source),
+          recordFunnelEvent(data.user.id, {
+            name: "account.sign_in",
+            source: "web",
+            props: { method: data.user.app_metadata?.provider ?? "unknown" },
+          }),
+        ]);
       }
       response.cookies.delete(SIGNUP_SOURCE_COOKIE);
       return response;

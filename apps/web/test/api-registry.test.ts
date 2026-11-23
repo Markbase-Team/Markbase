@@ -30,7 +30,7 @@ const apiRoot = join(dirname(fileURLToPath(import.meta.url)), "../src/app/api/v1
  */
 const NOT_REGISTERED: { [prefix: string]: string } = {
   "/": "The public discovery manifest: what an agent reads before it has a key.",
-  "/events": "Product analytics the app reports about itself (a modal shown, a button pressed); not an API for agents, and never an MCP tool.",
+  "/funnel-events": "Funnel events the app reports about itself (a modal shown, a button pressed); not an API for agents, and never an MCP tool.",
   "/instance": "How a client finds and joins an instance before it has a key; nothing to do once it has one.",
   "/keys": "The sign-in handshake that confirms a freshly minted key arrived.",
   "/me/embed": "The embed experiment (docs/embed-proof.md): offered as tools by the hosted MCP server only while it is switched on, so not in the agent skill.",

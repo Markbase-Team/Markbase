@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createApiKey, listApiKeys } from "@markbase/server/api-keys";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { recordFunnelEvent } from "@markbase/server/analytics/funnel/events-store";
+import "@/lib/funnels";
 
 export const runtime = "nodejs";
 
@@ -37,5 +39,6 @@ export async function POST(req: Request) {
     ownerEmail: user.email ?? null,
     capability: body.capability ?? null,
   });
+  await recordFunnelEvent(user.id, { name: "agent.connect", source: "web", props: {} });
   return NextResponse.json({ apiKey, token }, { status: 201 });
 }

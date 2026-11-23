@@ -6,6 +6,7 @@
   "exports": {
     "./handlers": "./src/handlers/index.ts",
     "./server": "./src/server/index.ts",
+    "./funnels": "./src/funnels.ts",
     "./ui": "./src/ui/index.ts",
     "./ui/crdt-editor": "./src/ui/crdt-editor.tsx",
     "./ui/guest-doc": "./src/ui/guest-doc.tsx",

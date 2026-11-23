@@ -39,6 +39,7 @@ export function SignupSourceCapture() {
  * passes through /auth/callback (an email sign-up that is signed in at once,
  * or an invite-code join). Fire-and-forget: the account is made either way.
  */
-export function reportSignupSource(): void {
-  void fetch("/api/signup-source", { method: "POST", keepalive: true }).catch(() => undefined);
+export function reportSignupSource(next?: string): void {
+  const query = next ? `?next=${encodeURIComponent(next)}` : "";
+  void fetch(`/api/signup-source${query}`, { method: "POST", keepalive: true }).catch(() => undefined);
 }
