@@ -17,6 +17,8 @@ import {
   type HookEventsBody,
 } from "@markbase/shared/analytics/hook-events";
 import { readDocCrdt, recordHookEvent, recordedDocReads, searchDocuments } from "../server";
+import { nudgeChannel } from "@markbase/server/nudges";
+import type { NudgeChannel } from "@markbase/shared/sync-nudges";
 import { requireDocCapability } from "./actor";
 import { endpoint } from "./define";
 import { json } from "./respond";
@@ -173,7 +175,7 @@ export const docDiffEndpoint = endpoint({
   }
 });
 
-// POST /api/v1/hook-events — a sync daemon reporting what agents' hooks saw
+// POST /api/v1/vaults/hook-events — a vault sync reporting what agents' hooks saw
 // on its machine: one event per read or write of a vault file, as the hook
 // logged it (@markbase/shared/analytics/hook-events).
 //
@@ -185,10 +187,10 @@ export const docDiffEndpoint = endpoint({
 // needs is checked here, per document: viewer to report a read of it, editor
 // to report a write. An event for a document the caller may not reach is not
 // recorded, and the answer says so, event by event.
-export const reportHookEventsEndpoint = endpoint({
-  id: "docs_reportHookEvents",
+export const reportVaultHookEventsEndpoint = endpoint({
+  id: "docs_reportVaultHookEvents",
   method: "POST",
-  path: "/hook-events",
+  path: "/vaults/hook-events",
   capability: null,
   scope: "write",
   summary: "Report what agents' hooks saw of vault files: reads and writes, one event each",
@@ -229,4 +231,26 @@ export const reportHookEventsEndpoint = endpoint({
   );
   const answer: HookEventsAnswer = { recorded };
   return json(answer);
+});
+
+// GET /api/v1/vaults/sync — where this account's machines listen to hear that
+// something changed (@markbase/shared/sync-nudges). A vault sync asks once
+// when it starts and then polls slowly, asking the API what moved only when
+// nudged. 404 when this deployment has no public Realtime to offer; the sync
+// then keeps polling as it always did.
+export const vaultSyncEndpoint = endpoint({
+  id: "docs_vaultSync",
+  method: "GET",
+  path: "/vaults/sync",
+  capability: null,
+  scope: "read",
+  summary: "Where this account's syncs listen for changes",
+  humanOnly: true,
+  why: "The topic a vault sync listens on to hear that something changed. Nothing an agent would ask for.",
+}, async (req) => {
+  const caller = callerFromHeaders(req.headers);
+  if (!caller) return json({ error: "Missing credentials." }, 401);
+  const channel: NudgeChannel | null = await nudgeChannel(caller.ownerId);
+  if (!channel) return json({ error: "This instance offers no change notifications." }, 404);
+  return json(channel);
 });

@@ -108,14 +108,24 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
     "summary": "Word-level diff between two versions"
   },
   {
-    "id": "docs_reportHookEvents",
+    "id": "docs_reportVaultHookEvents",
     "method": "POST",
-    "path": "/hook-events",
+    "path": "/vaults/hook-events",
     "capability": null,
     "scope": "write",
     "summary": "Report what agents' hooks saw of vault files: reads and writes, one event each",
     "humanOnly": true,
     "why": "The sync daemon's report of its machine's hook ledgers. An agent's own calls are recorded as they happen."
+  },
+  {
+    "id": "docs_vaultSync",
+    "method": "GET",
+    "path": "/vaults/sync",
+    "capability": null,
+    "scope": "read",
+    "summary": "Where this account's syncs listen for changes",
+    "humanOnly": true,
+    "why": "The topic a vault sync listens on to hear that something changed. Nothing an agent would ask for."
   },
   {
     "id": "docs_listDocs",

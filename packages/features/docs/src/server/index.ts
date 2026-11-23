@@ -136,6 +136,7 @@ export {
 export type { EditResult, Writer } from "./doc-crdt";
 export { readDocCrdt, editDocCrdt, versionCredit } from "./doc-crdt";
 export { hookProvider, recordHookEvent, recordedDocReads } from "./doc-reads";
+export { nudgeAfterWrite, nudgeKindFor } from "./sync-nudges";
 export {
   loadCrdtSnapshot,
   saveCrdtSnapshot,

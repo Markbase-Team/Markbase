@@ -317,3 +317,58 @@ describe("bearerCrdtRequest", () => {
     ]);
   });
 });
+
+describe("changing the pace of asking (sync nudges)", () => {
+  const changesAsks = (api: FakeApi) => api.calls.filter((c) => /\/docs\/crdt\/changes/.test(c.path)).length;
+
+  it("a feed asks at the new pace from now on, and back at the default when told", async () => {
+    vi.useFakeTimers();
+    try {
+      const api = new FakeApi();
+      const feed = new CrdtChangesFeed(api.request, { pollMs: 1_000 });
+      const t = new ApiCrdtTransport(api.request, { feed });
+      api.bump("d1", bytes(1));
+      await t.store.load("d1");
+      t.pubsub.subscribe("d1", () => undefined);
+      const start = changesAsks(api);
+      await vi.advanceTimersByTimeAsync(3_000);
+      const atDefault = changesAsks(api) - start;
+      expect(atDefault).toBeGreaterThanOrEqual(2);
+
+      // Through the transport, which hands it to the shared feed.
+      t.setPollMs(60_000);
+      const slowed = changesAsks(api);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(changesAsks(api) - slowed).toBe(0);
+
+      feed.setPollMs(null);
+      const restored = changesAsks(api);
+      await vi.advanceTimersByTimeAsync(2_500);
+      expect(changesAsks(api) - restored).toBeGreaterThanOrEqual(2);
+      t.close();
+      feed.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a transport polling on its own slows down too, and still asks at once when told to", async () => {
+    vi.useFakeTimers();
+    try {
+      const api = new FakeApi();
+      const t = new ApiCrdtTransport(api.request, { pollMs: 1_000 });
+      api.bump("d1", bytes(1));
+      await t.store.load("d1");
+      t.pubsub.subscribe("d1", () => undefined);
+      t.setPollMs(60_000);
+      const before = changesAsks(api);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(changesAsks(api) - before).toBe(0);
+      await t.poll();
+      expect(changesAsks(api) - before).toBe(1);
+      t.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

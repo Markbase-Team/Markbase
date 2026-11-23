@@ -129,11 +129,30 @@ export class CrdtChangesFeed {
   private polling = false;
   private failures = 0;
   private closed = false;
+  private pollMsNow: number | null = null;
 
   constructor(
     private readonly request: CrdtRequest,
     private readonly opts: Pick<ApiCrdtTransportOptions, "pollMs" | "onRetry" | "log"> = {}
   ) {}
+
+  /** The wait between asks while nothing is failing: what `setPollMs` set, else the default. */
+  private basePollMs(): number {
+    return this.pollMsNow ?? this.opts.pollMs ?? CRDT_POLL_MS;
+  }
+
+  /**
+   * Ask at a different pace from now on: slowly while something else says when
+   * to ask (a sync nudge), at the usual pace when nothing does. A wait already
+   * under way is restarted at the new pace. Null goes back to the default.
+   */
+  setPollMs(ms: number | null): void {
+    this.pollMsNow = ms;
+    if (this.timer === null) return;
+    clearTimeout(this.timer);
+    this.timer = null;
+    this.schedule(this.basePollMs());
+  }
 
   /** Stop polling for good. */
   close(): void {
@@ -171,7 +190,7 @@ export class CrdtChangesFeed {
   /** Hear of every change from now on; returns the way to stop. */
   listen(listener: ChangesListener): () => void {
     this.listeners.add(listener);
-    this.schedule(this.opts.pollMs ?? CRDT_POLL_MS);
+    this.schedule(this.basePollMs());
     return () => {
       this.listeners.delete(listener);
       if (this.listeners.size === 0 && this.timer !== null) {
@@ -218,7 +237,7 @@ export class CrdtChangesFeed {
       this.polling = false;
     }
     this.failures = ok ? 0 : this.failures + 1;
-    const base = this.opts.pollMs ?? CRDT_POLL_MS;
+    const base = this.basePollMs();
     this.schedule(this.failures === 0 ? base : backoff(base, this.failures));
   }
 }
@@ -244,6 +263,7 @@ export class ApiCrdtTransport {
   private closed = false;
   /** Stops listening to the shared feed; null while not listening. */
   private leaveFeed: (() => void) | null = null;
+  private pollMsNow: number | null = null;
 
   constructor(
     private readonly request: CrdtRequest,
@@ -267,6 +287,28 @@ export class ApiCrdtTransport {
       },
       subscribe: (docId, onUpdate) => this.subscribe(docId, onUpdate),
     };
+  }
+
+  /** The wait between asks while nothing is failing: what `setPollMs` set, else the default. */
+  private basePollMs(): number {
+    return this.pollMsNow ?? this.opts.pollMs ?? CRDT_POLL_MS;
+  }
+
+  /**
+   * Ask at a different pace from now on: slowly while something else says when
+   * to ask (a sync nudge), at the usual pace when nothing does. A wait already
+   * under way is restarted at the new pace. Null goes back to the default.
+   */
+  setPollMs(ms: number | null): void {
+    if (this.opts.feed) {
+      this.opts.feed.setPollMs(ms);
+      return;
+    }
+    this.pollMsNow = ms;
+    if (this.timer === null) return;
+    clearTimeout(this.timer);
+    this.timer = null;
+    this.schedule(this.basePollMs());
   }
 
   /** Stop polling. Subscriptions are forgotten; nothing is written. */
@@ -318,7 +360,7 @@ export class ApiCrdtTransport {
     if (!set) this.subs.set(docId, (set = new Set()));
     set.add(onUpdate);
     if (this.opts.feed) this.leaveFeed ??= this.opts.feed.listen((changes) => this.deliver(changes));
-    else this.schedule(this.opts.pollMs ?? CRDT_POLL_MS);
+    else this.schedule(this.basePollMs());
     return () => {
       const s = this.subs.get(docId);
       if (!s) return;
@@ -394,7 +436,7 @@ export class ApiCrdtTransport {
       this.polling = false;
     }
     this.failures = ok ? 0 : this.failures + 1;
-    const base = this.opts.pollMs ?? CRDT_POLL_MS;
+    const base = this.basePollMs();
     this.schedule(this.failures === 0 ? base : backoff(base, this.failures));
   }
 

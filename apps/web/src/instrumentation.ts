@@ -21,6 +21,8 @@ export async function register() {
   // not. Imported here for the same reason as the invite below.
   const { startUserAnalytics } = await import("@/lib/user-analytics");
   startUserAnalytics();
+  const { startSyncNudges } = await import("@/lib/sync-nudges");
+  startSyncNudges();
   const url = process.env.APP_URL?.replace(/\/+$/, "") ?? `http://localhost:${process.env.PORT ?? 3000}`;
   if (url === DEFAULT_APP_URL) return;
   // Imported here, not at the top: the module brings in the Supabase client,

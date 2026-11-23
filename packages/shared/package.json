@@ -31,6 +31,7 @@
     "./project-docs": "./src/project-docs.ts",
     "./shared-vault": "./src/shared-vault.ts",
     "./skill-files": "./src/skill-files.ts",
+    "./sync-nudges": "./src/sync-nudges.ts",
     "./skills": "./src/skills.ts",
     "./storage": "./src/storage.ts",
     "./tickets": "./src/tickets.ts",

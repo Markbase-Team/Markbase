@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@markbase/shared": "*",
+    "@supabase/supabase-js": "^2.106.2",
     "diff": "^8.0.4"
   },
   "devDependencies": {
