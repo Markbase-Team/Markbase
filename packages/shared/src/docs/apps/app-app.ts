@@ -42,16 +42,49 @@ export const EMBED_TOOLS: readonly AgentTool[] = [
   },
 ];
 
+/** Look of the framed app, for any card that frames it. */
+export const FRAME_APP_CSS = `
+.stage { flex: 1; min-height: 0; position: relative; }
+:root[data-mode="inline"] .stage { height: 640px; flex: none; }
+iframe.app { border: 0; width: 100%; height: 100%; display: block; background: #fff; }
+`;
+
 const CSS = `
 html, body { height: 100%; }
 body { padding: 0; display: flex; flex-direction: column; }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--mb-line); }
 .bar .name { font-weight: 600; }
-.stage { flex: 1; min-height: 0; position: relative; }
-:root[data-mode="inline"] .stage { height: 640px; flex: none; }
 :root[data-mode="fullscreen"] .bar { display: none; }
-iframe.app { border: 0; width: 100%; height: 100%; display: block; background: #fff; }
 .state { padding: 24px; text-align: center; }
+` + FRAME_APP_CSS;
+
+/**
+ * frameApp(stage, docId, onFail): frame the real app in `stage` at docId (or
+ * the documents list) — full page if the host allows, signed in through a
+ * card-only hand-off (me_embedSession), and only if the hand-off is an
+ * address on this instance. Needs CONFIG.instance and CONFIG.sessionTool.
+ */
+export const FRAME_APP_JS = String.raw`
+function frameApp(stage, docId, onFail) {
+  stage.innerHTML = '<p class="state">Opening Markbase…</p>';
+  if (mb.canExpand() && mb.mode() !== "fullscreen") mb.setMode("fullscreen").catch(function () {});
+  mb.callTool(CONFIG.sessionTool, docId ? { doc: docId } : {}).then(function (result) {
+    var url = result.data && result.data.url;
+    if (result.error || typeof url !== "string" || url.indexOf(CONFIG.instance + "/") !== 0) {
+      onFail(result.error || "Markbase could not sign this card in.");
+      return;
+    }
+    var frame = document.createElement("iframe");
+    frame.className = "app";
+    frame.title = "Markbase";
+    frame.setAttribute("allow", "clipboard-read; clipboard-write");
+    frame.src = url;
+    stage.innerHTML = "";
+    stage.appendChild(frame);
+  }, function (err) {
+    onFail((err && err.message) || "The assistant's app would not let this card sign in.");
+  });
+}
 `;
 
 const SCRIPT = String.raw`
@@ -71,27 +104,9 @@ function drawBar() {
 function open(docId) {
   if (framed) return;
   framed = true;
-  show('<p class="state">Opening Markbase…</p>');
-  /* Full page is where the app belongs; a host that will not, or wants a click first, keeps it inline with a button. */
-  if (mb.canExpand()) mb.setMode("fullscreen").then(drawBar, drawBar);
-  mb.callTool(CONFIG.sessionTool, docId ? { doc: docId } : {}).then(function (result) {
-    var url = result.data && result.data.url;
-    if (result.error || typeof url !== "string" || url.indexOf(CONFIG.instance + "/") !== 0) {
-      framed = false;
-      show('<p class="state error">' + escapeHtml(result.error || "Markbase could not sign this card in.") + "</p>");
-      return;
-    }
-    var frame = document.createElement("iframe");
-    frame.className = "app";
-    frame.title = "Markbase";
-    frame.setAttribute("allow", "clipboard-read; clipboard-write");
-    frame.src = url;
-    var stage = document.getElementById("stage");
-    stage.innerHTML = "";
-    stage.appendChild(frame);
-  }, function (err) {
+  frameApp(document.getElementById("stage"), docId, function (message) {
     framed = false;
-    show('<p class="state error">' + escapeHtml((err && err.message) || "The assistant's app would not let this card sign in.") + "</p>");
+    show('<p class="state error">' + escapeHtml(message) + "</p>");
   });
 }
 
@@ -112,7 +127,7 @@ export function appAppHtml(instance: string): string {
     css: CSS,
     body: '<div class="bar" id="bar"></div><div class="stage" id="stage"><p class="state">Loading…</p></div>',
     config: { instance, sessionTool: EMBED_SESSION_TOOL },
-    script: SCRIPT,
+    script: FRAME_APP_JS + SCRIPT,
   });
 }
 

@@ -10,7 +10,8 @@ export function embedEnabled(): boolean {
 /** A document id as it may sit in an address. */
 export const EMBED_DOC_ID = /^[A-Za-z0-9-]{1,64}$/;
 
-/** Where in the app a hand-off may land: a document, or the documents list. */
+/** Where in the app a hand-off lands: a document (or the documents list), in embed mode. */
 export function embedTarget(docId: string | null | undefined): string {
-  return docId && EMBED_DOC_ID.test(docId) ? `/dashboard/documents/${docId}` : "/dashboard/documents";
+  const path = docId && EMBED_DOC_ID.test(docId) ? `/dashboard/documents/${docId}` : "/dashboard/documents";
+  return `${path}?embed=1`;
 }

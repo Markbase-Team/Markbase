@@ -13,6 +13,7 @@ import { ChartColumn, Clock, FileText, MessageSquare, PanelRightClose, X } from 
 import type { Capability } from "@markbase/docs/server";
 import { cn } from "@markbase/ui/utils";
 import { AgentMenu } from "./doc-action-set";
+import { useEmbedMode } from "./embed-mode";
 import { OpenDocTabs } from "./open-doc-tabs";
 import {
   currentEntry,
@@ -255,6 +256,9 @@ export function DocsWorkspace({
     </div>
   ) : null;
 
+  // Embed mode is the document alone: no analytics, comments, history or agent panels.
+  const embed = useEmbedMode();
+
   const tabStrip = (
     <OpenDocTabs
       tabs={tabs.map((t) => ({
@@ -280,7 +284,7 @@ export function DocsWorkspace({
         // The right side of the top strip is the panel's tab bar (split from the
         // doc tabs). Always mounted when a doc is active so it never remounts on a
         // switch. The doc's own actions (Share/Publish/…) moved into the content.
-        activeId ? (
+        activeId && !embed ? (
           <PanelTabBar
             panelTab={panelTab}
             panelOpen={panelOpen}

@@ -6,6 +6,7 @@ import { FEATURE_PROVIDERS } from "@/generated/feature-slots";
 import { PromptDialogMount } from "@/components/prompt-dialog-mount";
 import { NextNavigation } from "@/components/next-navigation";
 import { SidebarInset, SidebarProvider } from "@markbase/ui/sidebar";
+import { inEmbedFrame } from "@/lib/embed-mode";
 
 /**
  * Whatever the shipped features contributed, wrapped outermost-first.
@@ -28,7 +29,7 @@ export default async function AdminDashboardLayout({
   children: React.ReactNode;
 }) {
   // Middleware guarantees a signed-in user here; fall back gracefully.
-  const [user, url] = await Promise.all([getCurrentUser(), instanceUrl()]);
+  const [user, url, embed] = await Promise.all([getCurrentUser(), instanceUrl(), inEmbedFrame()]);
   const email = user?.email ?? "";
 
   // Which features this build shipped, and what they put in the sidebar.
@@ -49,7 +50,9 @@ export default async function AdminDashboardLayout({
         defaultOpen={false}
         style={{ "--app-header-h": "2.75rem" } as React.CSSProperties}
       >
-        <AppSidebar email={email} instanceUrl={url} featureEntries={features} />
+        {/* Inside a card's frame (lib/embed-mode) the app is the documents
+            surface alone: no rail, no account menu, no settings. */}
+        {!embed && <AppSidebar email={email} instanceUrl={url} featureEntries={features} />}
         {/* One layout at every width: the rail beside it shrinks to icons on a
             small screen (AppRail's `mobile="rail"`) and nothing else changes.
             A mobile-only shell used to swap in a back-arrow header and a

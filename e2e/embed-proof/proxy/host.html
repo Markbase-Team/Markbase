@@ -7,7 +7,7 @@
   // tool's answer, runs the tools it calls (to the real API), and grants full
   // page. Query: app (instance), key, doc, sandbox.
   const q = new URLSearchParams(location.search);
-  const APP = q.get("app"), KEY = q.get("key"), DOC = q.get("doc");
+  const APP = q.get("app"), KEY = q.get("key"), DOC = q.get("doc"), CARD = q.get("card") || "app";
   const card = document.getElementById("card");
   card.setAttribute("sandbox", q.get("sandbox") || "allow-scripts allow-same-origin allow-forms allow-popups");
   window.hostLog = [];
@@ -23,7 +23,11 @@
         hostContext: { theme: "light", displayMode: "inline", availableDisplayModes: ["inline", "fullscreen"] } });
     } else if (m.method === "ui/notifications/initialized") {
       post({ jsonrpc: "2.0", method: "ui/notifications/tool-input", params: { arguments: { doc: DOC } } });
-      post({ jsonrpc: "2.0", method: "ui/notifications/tool-result", params: { content: [{ type: "text", text: JSON.stringify({ doc_id: DOC }) }], isError: false } });
+      // The app card is drawn for me_openApp's answer; the document card for docs_readDoc's.
+      const answer = CARD === "doc"
+        ? { doc: { id: DOC, title: "Welcome to Markbase", version: 1, content: "# Welcome to Markbase\n\nThe card's own view." }, capability: "owner" }
+        : { doc_id: DOC };
+      post({ jsonrpc: "2.0", method: "ui/notifications/tool-result", params: { content: [{ type: "text", text: JSON.stringify(answer) }], isError: false } });
     } else if (m.method === "ui/request-display-mode") {
       window.fullscreenRequested = m.params.mode;
       reply({ mode: m.params.mode });
@@ -36,5 +40,5 @@
       reply({ content: [{ type: "text", text: res.ok ? text : "HTTP " + res.status + "\n" + text }], isError: !res.ok });
     } else if (m.id !== undefined && m.method) reply({});
   });
-  fetch("app-card.html").then((r) => r.text()).then((html) => { card.srcdoc = html; });
+  fetch(CARD === "doc" ? "doc-card.html" : "app-card.html").then((r) => r.text()).then((html) => { card.srcdoc = html; });
 </script>

@@ -7,6 +7,7 @@
 // it genuinely renders that piece on its own, as the published-document page
 // and the CRDT route do.
 export { DocsShell } from "./docs-shell";
+export { EmbedModeProvider, useEmbedMode } from "./embed-mode";
 export type { DocsRouting } from "./routing";
 export {
   DocsPortsProvider,

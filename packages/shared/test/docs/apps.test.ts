@@ -228,3 +228,20 @@ describe("the app card (the embed experiment)", () => {
     for (const m of app.html.matchAll(/<script>([\s\S]*?)<\/script>/g)) expect(() => new Function(m[1])).not.toThrow();
   });
 });
+
+describe("the document card's Open full page (the embed experiment)", () => {
+  it("is offered only while the embed is on, and frames only the instance through the card-only hand-off", () => {
+    const off = docApp("https://markbase.so/dashboard/documents/");
+    expect(off.cardOnlyTools).toBeUndefined();
+    expect(off.frameDomains).toBeUndefined();
+    expect(off.html).not.toContain("function frameApp(");
+
+    const on = docApp("https://markbase.so/dashboard/documents/", "https://markbase.so");
+    expect(on.cardOnlyTools).toEqual(["me_embedSession"]);
+    expect(on.frameDomains).toEqual(["https://markbase.so"]);
+    expect(on.html).toContain("function frameApp(");
+    expect(on.html).toContain("Open full page");
+    expect(on.html).toContain('"sessionTool":"me_embedSession"');
+    for (const m of on.html.matchAll(/<script>([\s\S]*?)<\/script>/g)) expect(() => new Function(m[1])).not.toThrow();
+  });
+});

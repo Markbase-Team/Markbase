@@ -117,7 +117,11 @@ export async function POST(req: Request) {
     // In an app that shows cards (Claude), a document and the "where to
     // begin" answer are drawn in the conversation. Everywhere else the same
     // tools answer with the same text.
-    apps: [docApp(docUrlPrefix), startApp({ docUrlPrefix, documentsUrl }), ...(embed ? [appApp(new URL(documentsUrl).origin)] : [])],
+    apps: [
+      docApp(docUrlPrefix, embed ? new URL(documentsUrl).origin : undefined),
+      startApp({ docUrlPrefix, documentsUrl }),
+      ...(embed ? [appApp(new URL(documentsUrl).origin)] : []),
+    ],
     prompts: MCP_PROMPTS,
     // What the client asked of this server itself. A tool call that reaches a
     // tool is recorded by the API that answers it, not here.

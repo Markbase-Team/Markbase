@@ -4,12 +4,25 @@
 
 **Answer so far.** Yes in Chromium and WebKit, against a local stand-in for Claude, through the same card, tools and routes Claude will use. The person can work in it: type, add a to-do and tick it, and the change reaches a normal tab live. One condition on Claude's side can only be confirmed by a test inside Claude (below). Firefox could not be launched on the test machine.
 
+## Scope: the document, in two views
+
+1. **Inline, in the conversation:** the document card as before: the title, the rendered text, "Open in Markbase". No sign-in. With the embed on, it also has **"Open full page"**.
+2. **Full page, in the side panel:** the real web app at that document, in **embed mode**.
+   - Shown: the files list and the document, with its Preview / Markdown views, editable.
+   - Gone: the app rail and account menu, Share / Publish / Download, the Analytics / Comments / History / agent panels, new tabs, and the "Connect an agent" prompt.
+   - Embed mode is on when the request carries the frame's marker cookie, which only the embed frame has. `?embed=1` also turns it on in the browser.
+   - The switch is `EmbedModeProvider` / `useEmbedMode()` in the documents feature (`packages/features/docs/src/ui/embed-mode.tsx`), and `lib/embed-mode.ts` in the web app.
+
+Open questions for the owner:
+- **Comments and history:** hidden in embed mode for now. Each is one condition to bring back.
+- **Editing:** on.
+
 ## How it works
 
-1. The agent calls **`me_openApp`** (`GET /api/v1/me/embed/app?doc=<id>`). Claude draws its card, the **app card** (`ui://markbase/app`, `packages/shared/src/docs/apps/app-app.ts`).
+1. Either the person presses **"Open full page"** on a document card, or the agent calls **`me_openApp`** (`GET /api/v1/me/embed/app?doc=<id>`) and Claude draws the **app card** (`ui://markbase/app`, `packages/shared/src/docs/apps/app-app.ts`). Both frame the app the same way.
 2. The card asks to go full page (`ui/request-display-mode`). In Claude that is the panel beside the conversation.
 3. The card calls **`me_embedSession`** through the host (`POST /api/v1/me/embed/session`), with the connector's key. The tool is listed for the card only (`_meta.ui.visibility: ["app"]`), so its answer never reaches the model. The answer is `https://<instance>/embed?code=…`. The code is a Supabase magic-link token (single use) sealed with the account and the document. It opens for 60 seconds (`sealEmbedCode` in `packages/platform/server/src/mcp-oauth.ts`). Only a connector's key may ask; a browser session is refused.
-4. The card frames that address. **`/embed`** opens the code, turns the token into a session and checks it is the right account, then redirects to the document.
+4. The card frames that address. **`/embed`** opens the code, turns the token into a session and checks it is the right account, then redirects to the document with `?embed=1`.
    - The session cookies are `SameSite=None; Secure; Partitioned` (CHIPS). They live in that frame, under the site that framed it, apart from the person's own markbase.so session.
    - A marker cookie, `mb-embed` (partitioned, httpOnly), tells the server to keep writing cookies that way for requests from that frame (`packages/shared/src/embed-cookies.ts`).
    - The browser client uses the same cookies whenever it is in another site's frame.
@@ -45,12 +58,18 @@ Markbase and local Supabase run behind HTTPS, so cookies behave as they do in pr
 
 ## Results (2026-11-22)
 
-Real card path (`card.mjs`):
+Real card path (`card.mjs`), app card:
 
 | Browser | Hand-off | Full page asked | Signed in | Editor | To-do added | Ticked in frame | Seen ticked in tab | Untick reached frame |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Chromium (Chrome, Edge) | 200 | yes | yes | yes | yes | yes | yes | yes |
 | WebKit (Safari) | 200 | yes | yes | yes | yes | yes | yes | yes |
+
+Document card, "Open full page" pressed: Chromium and WebKit both got the hand-off (200), asked for full page and landed signed in on the document with the editor loaded.
+
+Embed mode, on both cards and in both browsers:
+- **Present:** the files list and the editor.
+- **Gone:** Share, the Analytics / Comments / History buttons, New tab, and the account menu.
 
 Session cookie and marker came back `SameSite=None`, partitioned. The marker is httpOnly.
 

@@ -34,24 +34,51 @@ async function appFrame(page, timeout = 60000) {
   return null;
 }
 
-async function run(name, engine) {
-  const r = { variant: name, steps: {} };
+/** Embed mode: the files list and the editor are there; the rest of the app is not. */
+async function chrome(frame) {
+  const count = (locator) => locator.count();
+  return {
+    filesList: (await count(frame.getByText("First Vault"))) > 0,
+    editor: (await count(frame.locator(".ProseMirror"))) > 0,
+    shareHidden: (await count(frame.getByRole("button", { name: "Share" }))) === 0,
+    panelsHidden: (await count(frame.getByRole("button", { name: /^(Analytics|Comments|History)$/ }))) === 0,
+    newTabHidden: (await count(frame.getByRole("button", { name: "New tab" }))) === 0,
+    accountMenuHidden: (await count(frame.getByText(EMAIL))) === 0,
+  };
+}
+
+async function run(name, engine, card) {
+  const r = { variant: `${card}-card ${name}`, steps: {} };
   const browser = await engine.launch({ headless: true });
   try {
     const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1280, height: 900 } });
     const page = await ctx.newPage();
-    await page.goto(`http://127.0.0.1:8766/card.html?app=${encodeURIComponent(APP)}&key=${encodeURIComponent(KEY)}&doc=${DOC}`);
+    await page.goto(`http://127.0.0.1:8766/card.html?card=${card}&app=${encodeURIComponent(APP)}&key=${encodeURIComponent(KEY)}&doc=${DOC}`);
+    if (card === "doc") {
+      // The document card shows its own view first; the person presses "Open full page".
+      let cardFrame = null;
+      for (let i = 0; i < 80 && !cardFrame; i++) {
+        cardFrame = page.frames().find((f) => f.url() === "about:srcdoc");
+        if (!cardFrame) await page.waitForTimeout(250);
+      }
+      await cardFrame.getByRole("button", { name: "Open full page" }).click({ timeout: 30000 });
+      r.steps.pressedOpenFullPage = true;
+    }
     const frame = await appFrame(page);
     const proxy = page.frames().find((f) => f.url().startsWith("http://127.0.0.1:8767/host.html"));
     r.steps.handOffStatus = proxy ? await proxy.evaluate(() => window.handOffStatus ?? null) : null;
     r.steps.fullscreenRequested = proxy ? await proxy.evaluate(() => window.fullscreenRequested ?? null) : null;
     if (!frame) { r.steps.framed = false; await page.screenshot({ path: `card-${name}.png` }); return r; }
     await page.waitForTimeout(1500);
-    r.steps.landedOn = new URL(frame.url()).pathname;
+    r.steps.landedOn = new URL(frame.url()).pathname + new URL(frame.url()).search;
     r.steps.signedIn = !r.steps.landedOn.startsWith("/login");
     const editor = frame.locator(".ProseMirror").first();
     await editor.waitFor({ timeout: 60000 });
     r.steps.editorLoaded = true;
+    await page.waitForTimeout(1000);
+    r.chrome = await chrome(frame);
+    await page.screenshot({ path: `card-${card}-${name}.png` });
+    if (card === "doc") return r;
     r.cookies = (await ctx.cookies()).filter((c) => c.name.startsWith("sb-") || c.name === "mb-embed").map((c) => ({ name: c.name.replace(/-auth-token.*/, "-auth-token*"), sameSite: c.sameSite, partitioned: Boolean(c.partitionKey), httpOnly: c.httpOnly }));
 
     // The person works in it: a to-do at the end of the document, then ticked.
@@ -94,7 +121,6 @@ async function run(name, engine) {
     for (let i = 0; i < 40 && back !== "false"; i++) { back = await item.getAttribute("data-checked"); if (back !== "false") await page.waitForTimeout(500); }
     r.steps.untickReachedFrame = back === "false";
     await other.close();
-    await page.screenshot({ path: `card-${name}.png` });
     return r;
   } catch (e) {
     r.failure = String(e).split("\n")[0].slice(0, 300);
@@ -106,6 +132,8 @@ async function run(name, engine) {
 }
 
 const only = process.argv[2];
-for (const [name, engine] of [["chromium", chromium], ["webkit", webkit]].filter(([n]) => !only || n === only)) {
-  console.log(JSON.stringify(await run(name, engine)));
+for (const card of ["app", "doc"]) {
+  for (const [name, engine] of [["chromium", chromium], ["webkit", webkit]].filter(([n]) => !only || n === only)) {
+    console.log(JSON.stringify(await run(name, engine, card)));
+  }
 }
