@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { agentTools } from "@markbase/shared/docs/agent-tools";
-import { offersToken } from "@markbase/server/caller";
+import { forwardedCaller, offersToken } from "@markbase/server/caller";
 import { signInChallenge } from "@markbase/server/mcp-oauth";
 import { toolRequest, type Json } from "@markbase/shared/endpoint-tools";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@markbase/shared/mcp-http";
 import { authenticateAgent } from "@/lib/agent-auth";
 import { instanceUrl } from "@/lib/instance-url";
+import { noteMcpEvent } from "@/lib/user-analytics";
 
 export const runtime = "nodejs";
 
@@ -98,6 +99,9 @@ export async function POST(req: Request) {
     name: "markbase-docs",
     version: "1.0.0",
     tools: agentTools,
+    // What the client asked of this server itself. A tool call that reaches a
+    // tool is recorded by the API that answers it, not here.
+    onEvent: (event, asked) => noteMcpEvent(forwardedCaller(caller), clientName, event, asked),
     async call(tool, args: JsonObject) {
       const request = toolRequest(tool, args);
       const headers: { [name: string]: string } = { ...credentials };

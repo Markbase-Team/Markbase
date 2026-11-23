@@ -25,6 +25,7 @@
     "./plans": "./src/plans.ts",
     "./analytics/funnel/events": "./src/analytics/funnel/events.ts",
     "./analytics/funnel/signup-source": "./src/analytics/funnel/signup-source.ts",
+    "./analytics/user-analytics": "./src/analytics/user-analytics.ts",
     "./poll-backoff": "./src/poll-backoff.ts",
     "./project-docs": "./src/project-docs.ts",
     "./shared-vault": "./src/shared-vault.ts",

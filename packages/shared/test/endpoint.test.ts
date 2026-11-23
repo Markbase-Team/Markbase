@@ -1,6 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { CALLER_HEADER, serializeCaller, type Caller } from "../src/auth";
-import { endpointSet, signedIn, type Access, type EndpointDef } from "../src/endpoint";
+import {
+  endpointSet,
+  isDefinedEndpointId,
+  observeEndpointCalls,
+  signedIn,
+  type Access,
+  type EndpointCall,
+  type EndpointDef,
+} from "../src/endpoint";
 import { descriptionModule, routeFiles } from "../src/endpoint-gen";
 import { toolsFrom } from "../src/endpoint-tools";
 
@@ -134,5 +142,81 @@ describe("what is generated from definitions", () => {
     const literal = text.slice(text.indexOf("= ") + 2, text.lastIndexOf(";"));
     expect(JSON.parse(literal)).toEqual(defs);
     expect(text).toContain("export const NOTES: readonly EndpointDef[] =");
+  });
+});
+
+describe("observing endpoint calls", () => {
+  const route = async (set: ReturnType<typeof endpointSet<EndpointDef>>, id: string, params: { [name: string]: string } = {}) =>
+    set.route(id)(req(), { params: Promise.resolve(params) });
+
+  it("tells the observer of every call: which endpoint, the status, the time", async () => {
+    const seen: EndpointCall[] = [];
+    observeEndpointCalls((call) => seen.push(call));
+    const notes = endpointSet<EndpointDef>("observed");
+    notes.define(def({ id: "observed_list" }), allow, async () => Response.json({ ok: true }));
+    notes.define(def({ id: "observed_read", path: "/notes/:id" }), refuse, async () => Response.json({ ok: true }));
+    await route(notes, "observed_list");
+    await route(notes, "observed_read", { id: "n1" });
+    observeEndpointCalls(null);
+    expect(seen.map((c) => [c.def.id, c.status, c.params])).toEqual([
+      ["observed_list", 200, {}],
+      ["observed_read", 403, { id: "n1" }],
+    ]);
+    expect(seen.every((c) => c.durationMs >= 0)).toBe(true);
+  });
+
+  it("hands the observer empty params when the route was given none", async () => {
+    const seen: EndpointCall[] = [];
+    observeEndpointCalls((call) => seen.push(call));
+    const notes = endpointSet<EndpointDef>("bare");
+    notes.define(def({ id: "bare_list" }), allow, async () => Response.json({ ok: true }));
+    // What the framework passes for a path with no dynamic segment.
+    const none = Promise.resolve(undefined) as Promise<undefined> & Promise<{ [name: string]: string }>;
+    await notes.route("bare_list")(req(), { params: none });
+    observeEndpointCalls(null);
+    expect(seen.map((c) => c.params)).toEqual([{}]);
+  });
+
+  it("reports a handler that throws as a 500, and still throws", async () => {
+    const seen: EndpointCall[] = [];
+    observeEndpointCalls((call) => seen.push(call));
+    const notes = endpointSet<EndpointDef>("thrown");
+    notes.define(def({ id: "thrown_boom" }), allow, async () => {
+      throw new Error("boom");
+    });
+    await expect(route(notes, "thrown_boom")).rejects.toThrow("boom");
+    observeEndpointCalls(null);
+    expect(seen.map((c) => [c.def.id, c.status])).toEqual([["thrown_boom", 500]]);
+  });
+
+  it("answers the caller even when the observer throws", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    observeEndpointCalls(() => {
+      throw new Error("observer down");
+    });
+    const notes = endpointSet<EndpointDef>("sturdy");
+    notes.define(def({ id: "sturdy_list" }), allow, async () => Response.json({ ok: true }));
+    const res = await route(notes, "sturdy_list");
+    observeEndpointCalls(null);
+    expect(res.status).toBe(200);
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
+  it("tells nobody once the observer is removed", async () => {
+    const seen: EndpointCall[] = [];
+    observeEndpointCalls((call) => seen.push(call));
+    observeEndpointCalls(null);
+    const notes = endpointSet<EndpointDef>("quiet");
+    notes.define(def({ id: "quiet_list" }), allow, async () => Response.json({ ok: true }));
+    await route(notes, "quiet_list");
+    expect(seen).toEqual([]);
+  });
+
+  it("knows the id of every endpoint that has been defined, in any set", () => {
+    const a = endpointSet<EndpointDef>("alpha");
+    a.define(def({ id: "alpha_list" }), allow, async () => Response.json({}));
+    expect(isDefinedEndpointId("alpha_list")).toBe(true);
+    expect(isDefinedEndpointId("alpha_missing")).toBe(false);
   });
 });
