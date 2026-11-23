@@ -2,27 +2,47 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../src/supabase", () => ({ supabase: {} }));
 
-import { recordProductEvent, type EventWriter, type ProductEventRow } from "../../../src/analytics/funnel/events-store";
+import "@markbase/shared/analytics/funnel/onboarding";
+import { recordFunnelEvent, recordFunnelEventOnce, type EventWriter, type FunnelEventRow } from "../../../src/analytics/funnel/events-store";
 
-describe("recordProductEvent", () => {
-  it("writes the event for the caller", async () => {
-    const rows: ProductEventRow[] = [];
-    const writer: EventWriter = { insert: async (row) => (rows.push(row), { error: null }) };
-    const ok = await recordProductEvent("u1", { name: "connect_agent.shown", props: { surface: "web" } }, writer);
-    expect(ok).toBe(true);
-    expect(rows).toEqual([{ user_id: "u1", name: "connect_agent.shown", props: { surface: "web" } }]);
+function collecting(had = false): { rows: FunnelEventRow[]; writer: EventWriter } {
+  const rows: FunnelEventRow[] = [];
+  return { rows, writer: { insert: async (row) => (rows.push(row), { error: null }), has: async () => had } };
+}
+
+describe("recordFunnelEvent", () => {
+  it("writes the action, its source and its props for the account", async () => {
+    const { rows, writer } = collecting();
+    expect(await recordFunnelEvent("u1", { name: "account.sign_in", source: "cli", props: {} }, writer)).toBe(true);
+    expect(rows).toEqual([{ user_id: "u1", name: "account.sign_in", source: "cli", props: {} }]);
+  });
+
+  it("does not write a name nobody declared", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { rows, writer } = collecting();
+    expect(await recordFunnelEvent("u1", { name: "account.teleport", source: "web", props: {} }, writer)).toBe(false);
+    expect(rows).toEqual([]);
+    warn.mockRestore();
   });
 
   it("reports a failed write without throwing", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const failing: EventWriter = { insert: async () => ({ error: { message: "boom" } }) };
-    const throwing: EventWriter = {
-      insert: async () => {
-        throw new Error("down");
-      },
-    };
-    expect(await recordProductEvent("u1", { name: "connect_agent.shown", props: {} }, failing)).toBe(false);
-    expect(await recordProductEvent("u1", { name: "connect_agent.shown", props: {} }, throwing)).toBe(false);
+    const throwing: EventWriter = { insert: async () => Promise.reject(new Error("down")) };
+    const event = { name: "account.sign_in", source: "web" as const, props: {} };
+    expect(await recordFunnelEvent("u1", event, failing)).toBe(false);
+    expect(await recordFunnelEvent("u1", event, throwing)).toBe(false);
     warn.mockRestore();
+  });
+});
+
+describe("recordFunnelEventOnce", () => {
+  it("writes an event an account has not had, and not one it has", async () => {
+    const fresh = collecting(false);
+    expect(await recordFunnelEventOnce("u1", { name: "account.sign_up", source: "web", props: {} }, fresh.writer)).toBe(true);
+    expect(fresh.rows).toHaveLength(1);
+    const again = collecting(true);
+    expect(await recordFunnelEventOnce("u1", { name: "account.sign_up", source: "web", props: {} }, again.writer)).toBe(false);
+    expect(again.rows).toEqual([]);
   });
 });

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Bot } from "lucide-react";
-import { trackEvent } from "@markbase/shared/analytics/funnel/events";
+import { docsFunnel } from "../funnels";
 import { Button } from "@markbase/ui/button";
 import { ConnectAgents } from "@markbase/ui/connect-agents";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@markbase/ui/dialog";
@@ -38,11 +38,11 @@ export function ConnectAgentDialog({
     }
     if (reportedOpen.current) return;
     reportedOpen.current = true;
-    trackEvent("connect_agent.shown", { surface });
+    docsFunnel.track("connect_modal.show", surface);
   }, [open, surface]);
 
   function close(via: "not_now" | "closed") {
-    trackEvent("connect_agent.dismissed", { surface, via });
+    docsFunnel.track("connect_modal.dismiss", surface, { via });
     onOpenChange(false);
   }
 
@@ -64,7 +64,7 @@ export function ConnectAgentDialog({
           <ConnectAgents
             mcpUrl={`${window.location.origin}/mcp`}
             appLinks={!isDesktop}
-            onAction={(agent) => trackEvent("connect_agent.clicked", { surface, agent })}
+            onAction={(agent) => docsFunnel.track("connect_modal.click", surface, { agent })}
           />
         )}
         <div className="flex justify-end">

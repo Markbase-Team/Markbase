@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "gen:docs": "tsx scripts/gen-docs.ts",
+    "funnel": "tsx --env-file-if-exists=.env.local scripts/funnel-report.ts",
     "pretest": "npm run gen:docs"
   },
   "dependencies": {

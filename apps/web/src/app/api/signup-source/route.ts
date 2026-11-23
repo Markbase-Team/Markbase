@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { SIGNUP_SOURCE_COOKIE } from "@markbase/shared/analytics/funnel/signup-source";
 import { recordSignupSource } from "@markbase/server/analytics/funnel/signup-source-store";
+import { recordSignUp } from "@markbase/server/analytics/funnel/signup";
+import { signupSource } from "@/lib/funnels";
 
 export const runtime = "nodejs";
 
@@ -14,11 +16,13 @@ export const runtime = "nodejs";
 // source is the mb_source cookie; the account is the session cookie's. The
 // cookie is cleared once read, recorded or not: a browser that later signs up
 // a second account has a new first visit to report.
-export async function POST() {
+export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   const jar = await cookies();
   const outcome = await recordSignupSource(user, jar.get(SIGNUP_SOURCE_COOKIE)?.value);
+  // Where the person was headed says whether this account is for a connector.
+  await recordSignUp(user, signupSource(new URL(req.url).searchParams.get("next")));
   jar.delete(SIGNUP_SOURCE_COOKIE);
   return NextResponse.json({ outcome });
 }

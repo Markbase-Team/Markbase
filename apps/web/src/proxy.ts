@@ -95,8 +95,8 @@ const GUARDED: ReadonlyArray<{ prefix: string; identity: Identity }> = [
   { prefix: "/api/v1/projects", identity: "required" },
   { prefix: "/api/v1/worker", identity: "required" },
   { prefix: "/api/v1/me/plan", identity: "required" },
-  // What the app reports about itself: a modal shown, a button pressed.
-  { prefix: "/api/v1/events", identity: "required" },
+  // Funnel events the app reports about itself: a modal shown, a button pressed.
+  { prefix: "/api/v1/funnel-events", identity: "required" },
   { prefix: "/api/admin/projects", identity: "required" },
   { prefix: "/api/admin/secrets", identity: "required" },
   // A worker's Claude Code session reports a ticket's commits and PR here,

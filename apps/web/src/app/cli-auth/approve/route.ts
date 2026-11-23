@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { DESKTOP_KEY_NAME, createApiKey } from "@markbase/server/api-keys";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { recordFunnelEvent } from "@markbase/server/analytics/funnel/events-store";
+import "@/lib/funnels";
 import { pickedCapability } from "@/lib/capabilities";
 import { isLoopbackCallback } from "../page";
 
@@ -59,6 +61,8 @@ export async function POST(req: Request) {
     claudeVersion,
     requiresConfirmation,
   });
+
+  await recordFunnelEvent(user.id, { name: "account.sign_in", source: desktop ? "desktop" : "cli", props: {} });
 
   const url = new URL(callback);
   url.searchParams.set("key", token);

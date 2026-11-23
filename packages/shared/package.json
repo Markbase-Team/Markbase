@@ -25,6 +25,8 @@
     "./jobs": "./src/jobs.ts",
     "./plans": "./src/plans.ts",
     "./analytics/funnel/events": "./src/analytics/funnel/events.ts",
+    "./analytics/funnel/funnels": "./src/analytics/funnel/funnels.ts",
+    "./analytics/funnel/onboarding": "./src/analytics/funnel/onboarding.ts",
     "./analytics/funnel/signup-source": "./src/analytics/funnel/signup-source.ts",
     "./analytics/hook-events": "./src/analytics/hook-events.ts",
     "./analytics/user-analytics": "./src/analytics/user-analytics.ts",

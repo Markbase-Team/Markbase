@@ -9,6 +9,7 @@ import { Button } from "@markbase/ui/button";
 import { Input } from "@markbase/ui/input";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { reportSignupSource } from "@/components/signup-source-capture";
+import { appFunnel } from "@/lib/funnels";
 
 type Mode = "login" | "signup";
 
@@ -117,7 +118,8 @@ export function AuthForm({
       }
       // Signed in right here, without the /auth/callback round trip — so tell
       // the server where this sign-up came from ourselves.
-      reportSignupSource();
+      reportSignupSource(next);
+      appFunnel.track("account.sign_in", "web", { method: "email" });
       router.push(next);
       router.refresh();
       return;
@@ -133,6 +135,7 @@ export function AuthForm({
       return;
     }
     // Same as signup above: this path never touches /auth/callback.
+    appFunnel.track("account.sign_in", "web", { method: "email" });
     router.push(next);
     router.refresh();
   }
