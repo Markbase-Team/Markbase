@@ -1,0 +1,91 @@
+import { describe, expect, it } from "vitest";
+import {
+  USER_ANALYTICS_DEFAULT_LIMIT,
+  USER_ANALYTICS_MAX_LIMIT,
+  actorOf,
+  clampUserAnalyticsLimit,
+  isUserAnalyticsAction,
+  isUserAnalyticsChannel,
+  isUserAnalyticsOutcome,
+  outcomeOfStatus,
+} from "../../src/analytics/user-analytics";
+import type { Caller } from "../../src/auth";
+
+// Who acted, and how many rows a reader may ask for.
+
+const person: Caller = { via: "session", ownerId: "u1", email: "a@example.test" };
+const agent: Caller = {
+  via: "api_key",
+  ownerId: "u1",
+  key: { id: "k1", provider: "claude_code", capability: null },
+};
+
+describe("actorOf", () => {
+  it("names a signed-in person as a person", () => {
+    expect(actorOf(person)).toEqual({ kind: "person" });
+  });
+
+  it("names a key's holder as an agent, with the key and its tool", () => {
+    expect(actorOf(agent)).toEqual({ kind: "agent", keyId: "k1", provider: "claude_code", client: null });
+  });
+
+  it("keeps the MCP client's name, trimmed and clipped", () => {
+    expect(actorOf(agent, "  claude-ai  ")).toMatchObject({ client: "claude-ai" });
+    expect(actorOf(agent, "   ")).toMatchObject({ client: null });
+    const long = actorOf(agent, "x".repeat(200));
+    expect(long.kind === "agent" && long.client?.length).toBe(80);
+  });
+
+  it("ignores a client name for a person", () => {
+    expect(actorOf(person, "claude-ai")).toEqual({ kind: "person" });
+  });
+});
+
+describe("clampUserAnalyticsLimit", () => {
+  it("falls back to the default for nothing or nonsense", () => {
+    expect(clampUserAnalyticsLimit(undefined)).toBe(USER_ANALYTICS_DEFAULT_LIMIT);
+    expect(clampUserAnalyticsLimit(null)).toBe(USER_ANALYTICS_DEFAULT_LIMIT);
+    expect(clampUserAnalyticsLimit(Number.NaN)).toBe(USER_ANALYTICS_DEFAULT_LIMIT);
+  });
+
+  it("keeps a page size within bounds", () => {
+    expect(clampUserAnalyticsLimit(0)).toBe(1);
+    expect(clampUserAnalyticsLimit(-5)).toBe(1);
+    expect(clampUserAnalyticsLimit(25.9)).toBe(25);
+    expect(clampUserAnalyticsLimit(10_000)).toBe(USER_ANALYTICS_MAX_LIMIT);
+  });
+});
+
+describe("isUserAnalyticsChannel", () => {
+  it("knows the four doors and nothing else", () => {
+    for (const c of ["mcp", "api", "hook", "app"]) expect(isUserAnalyticsChannel(c)).toBe(true);
+    for (const c of ["web", "", null, undefined]) expect(isUserAnalyticsChannel(c)).toBe(false);
+  });
+});
+
+describe("outcomeOfStatus", () => {
+  it("reads a refusal as denied, other failures as error, the rest as success", () => {
+    expect([200, 201, 204, 304].map(outcomeOfStatus)).toEqual(["success", "success", "success", "success"]);
+    expect([401, 403].map(outcomeOfStatus)).toEqual(["denied", "denied"]);
+    expect([400, 404, 409, 500, 503].map(outcomeOfStatus)).toEqual(["error", "error", "error", "error", "error"]);
+  });
+
+  it("knows the three outcomes and nothing else", () => {
+    for (const o of ["success", "denied", "error"]) expect(isUserAnalyticsOutcome(o)).toBe(true);
+    for (const o of ["ok", "", null, undefined]) expect(isUserAnalyticsOutcome(o)).toBe(false);
+  });
+});
+
+describe("isUserAnalyticsAction", () => {
+  it("accepts a registered endpoint id and the MCP and hook events", () => {
+    for (const a of ["docs_readDoc", "docs_createDoc", "me_whoami", "mcp.initialize", "mcp.unknown_tool", "hook.read", "hook.write"]) {
+      expect(isUserAnalyticsAction(a), a).toBe(true);
+    }
+  });
+
+  it("refuses anything else", () => {
+    for (const a of ["docs_readdoc", "readDoc", "mcp.launch", "", null, undefined]) {
+      expect(isUserAnalyticsAction(a), String(a)).toBe(false);
+    }
+  });
+});
