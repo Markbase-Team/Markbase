@@ -273,12 +273,31 @@ export const readDocEndpoint = endpoint({
         }),
   ]);
 
+  // An agent gets the document as text. doc_json is the editor's copy — what
+  // the browser paints first — and is many times the size of the markdown:
+  // an agent reading a 7 KB document received well over 50 KB, its app cut
+  // the answer short, and the card drawn from it could not be read. The
+  // stored row's own doc_json (a stale mirror) goes too.
+  if (viaMcp(req)) {
+    const { doc_json: _stale, ...row } = auth.doc;
+    return json({ doc: { ...row, content: derived.content }, capability: auth.capability, tabs });
+  }
   return json({
     doc: { ...auth.doc, content: derived.content, doc_json: derived.doc_json },
     capability: auth.capability,
     tabs,
   });
 });
+
+/**
+ * Is this request an MCP tool call? Both MCP servers say so: the hosted /mcp
+ * marks every call (X-Markbase-Via), and both forward the client's name
+ * (X-MCP-Client) when it gave one. The browser, the desktop app and the sync
+ * daemon send neither.
+ */
+function viaMcp(req: Request): boolean {
+  return req.headers.get("x-markbase-via") === "mcp" || req.headers.has("x-mcp-client");
+}
 
 // PATCH — rename (editors+).
 export const renameDocEndpoint = endpoint({

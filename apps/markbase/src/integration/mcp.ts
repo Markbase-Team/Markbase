@@ -221,6 +221,7 @@ export async function runMcp(streams: McpStreams = { input: process.stdin, outpu
       // token goes too, so doc actions attribute to that agent session.
       const r = await auth.call((apiKey) =>
         callEndpoint(tool, args, {
+          viaMcp: true,
           clientName,
           sessionToken: process.env.MARKBASE_SESSION_TOKEN,
           apiKey,

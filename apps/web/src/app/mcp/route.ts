@@ -137,6 +137,9 @@ export async function POST(req: Request) {
       const request = toolRequest(tool, args);
       const headers: { [name: string]: string } = { ...credentials };
       if (clientName) headers["X-MCP-Client"] = clientName;
+      // Every call through this server, named client or not: the API answers
+      // an agent leaner than the editor (see docs_readDoc).
+      headers["X-Markbase-Via"] = "mcp";
       if (request.body !== undefined) headers["content-type"] = "application/json";
       const res = await fetch(`${origin}/api/v1${request.path}`, {
         method: request.method,
