@@ -12,7 +12,7 @@
 // acted, through which door, the NAME of what was asked (an endpoint or tool
 // id) and how it ended. No argument values and no document content.
 
-import type { Provider } from "../agent-sessions";
+import { providerFromClient, type Provider } from "../agent-sessions";
 import type { Caller } from "../auth";
 import { ALL_ENDPOINTS } from "../docs/endpoints";
 import { isDefinedEndpointId } from "../endpoint";
@@ -83,11 +83,13 @@ export function outcomeOfStatus(status: number): UserAnalyticsOutcome {
 
 /**
  * Who acted. A person is the account itself; an agent is named by the key it
- * used, the tool that holds the key and, over MCP, the client's own name.
+ * used, the tool that holds the key and, over MCP, the client's own name. An
+ * agent whose file hook reported it has no key of its own: `keyId` is the
+ * sync daemon's, or null, and `client` is the name the hook gave.
  */
 export type UserAnalyticsActor =
   | { kind: "person" }
-  | { kind: "agent"; keyId: string; provider: Provider; client: string | null };
+  | { kind: "agent"; keyId: string | null; provider: Provider; client: string | null };
 
 /** One action, as the server hands it to the store. */
 export interface UserAnalyticsEvent {
@@ -112,6 +114,8 @@ export interface UserAnalyticsEvent {
   /** The HTTP status, when there was one. */
   status?: number | null;
   durationMs?: number | null;
+  /** When it happened, ISO, for an action reported after the fact (a hook's). Now when absent. */
+  at?: string;
 }
 
 /** One action, as it is read back. */
@@ -127,6 +131,17 @@ export interface UserAnalyticsRecord {
   outcome: UserAnalyticsOutcome;
   status: number | null;
   durationMs: number | null;
+}
+
+/** How often one account's tool read a document, as worked out from the rows. */
+export interface DocReadSummary {
+  ownerId: string;
+  provider: Provider;
+  /** The name an agent's hook gave it; null for reads made through the API. */
+  client: string | null;
+  count: number;
+  /** ISO time of the last read. */
+  lastAt: string;
 }
 
 /**
@@ -191,10 +206,13 @@ export function clampUserAnalyticsLimit(limit: number | null | undefined): numbe
 export function actorOf(caller: Caller, client: string | null = null): UserAnalyticsActor {
   if (caller.via === "session") return { kind: "person" };
   const name = client?.trim() ?? "";
+  const said = providerFromClient(name);
   return {
     kind: "agent",
     keyId: caller.key.id,
-    provider: caller.key.provider,
+    // The tool is what this request says it is, else what the key was stamped
+    // with: one key is often shared by several tools.
+    provider: said === "unknown" ? caller.key.provider : said,
     client: name ? name.slice(0, USER_ANALYTICS_CLIENT_MAX) : null,
   };
 }

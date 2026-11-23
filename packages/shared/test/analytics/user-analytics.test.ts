@@ -38,6 +38,12 @@ describe("actorOf", () => {
     expect(long.kind === "agent" && long.client?.length).toBe(80);
   });
 
+  it("names the tool the request says it is, over the one the key was stamped with", () => {
+    expect(actorOf(agent, "claude-ai")).toMatchObject({ provider: "claude_desktop", client: "claude-ai" });
+    expect(actorOf(agent, "codex-cli")).toMatchObject({ provider: "codex" });
+    expect(actorOf(agent, "some-other-client")).toMatchObject({ provider: "claude_code" });
+  });
+
   it("ignores a client name for a person", () => {
     expect(actorOf(person, "claude-ai")).toEqual({ kind: "person" });
   });

@@ -6,6 +6,7 @@ import {
   isUserAnalyticsChannel,
   isUserAnalyticsOutcome,
   userAnalyticsDetail,
+  type DocReadSummary,
   type UserAnalyticsActor,
   type UserAnalyticsEvent,
   type UserAnalyticsQuery,
@@ -34,12 +35,27 @@ export interface UserAnalyticsRow {
   outcome: string;
   status: number | null;
   duration_ms: number | null;
+  /** Set only for an action reported after the fact; the database says now otherwise. */
+  created_at?: string;
 }
 
 /** A row read back: the stored columns plus what the database added. */
 export interface StoredUserAnalyticsRow extends UserAnalyticsRow {
   id: number;
   created_at: string;
+}
+
+/** One line of `user_analytics_doc_reads`, as the database returns it. */
+export interface DocReadsRow {
+  owner_id: string;
+  provider: string | null;
+  client: string | null;
+  reads: number;
+  last_at: string;
+}
+
+export interface DocReadsReader {
+  reads(docId: string): Promise<{ data: DocReadsRow[] | null; error: StoreError | null }>;
 }
 
 interface StoreError {
@@ -82,15 +98,31 @@ const tableReader: UserAnalyticsReader = {
   },
 };
 
+const readsFunction: DocReadsReader = {
+  reads: async (docId) => {
+    const { data, error } = await supabase.rpc("user_analytics_doc_reads", { doc: docId });
+    return { data: Array.isArray(data) ? (data as DocReadsRow[]) : null, error };
+  },
+};
+
 /** A whole number or null: a status or a duration is never a fraction, never negative. */
 function wholeOrNull(value: number | null | undefined): number | null {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return null;
   return Math.round(value);
 }
 
+/** A reported time, if it is a real one that is not in the future; else null (now). */
+function pastTime(at: string | undefined): string | null {
+  if (!at) return null;
+  const ms = Date.parse(at);
+  if (!Number.isFinite(ms) || ms > Date.now()) return null;
+  return new Date(ms).toISOString();
+}
+
 /** The row for an event. */
 export function toUserAnalyticsRow(event: UserAnalyticsEvent): UserAnalyticsRow {
   const agent = event.actor.kind === "agent" ? event.actor : null;
+  const at = pastTime(event.at);
   return {
     owner_id: event.ownerId,
     actor_kind: event.actor.kind,
@@ -105,11 +137,12 @@ export function toUserAnalyticsRow(event: UserAnalyticsEvent): UserAnalyticsRow 
     outcome: event.outcome,
     status: wholeOrNull(event.status),
     duration_ms: wholeOrNull(event.durationMs),
+    ...(at === null ? {} : { created_at: at }),
   };
 }
 
 function actorOfRow(row: StoredUserAnalyticsRow): UserAnalyticsActor {
-  if (row.actor_kind !== "agent" || !row.key_id) return { kind: "person" };
+  if (row.actor_kind !== "agent") return { kind: "person" };
   return {
     kind: "agent",
     keyId: row.key_id,
@@ -178,4 +211,24 @@ export async function listUserAnalytics(
     const record = toUserAnalyticsRecord(row);
     return record ? [record] : [];
   });
+}
+
+/**
+ * How often each account's tool read a document, worked out from the rows
+ * (see the `user_analytics_doc_reads` function for what counts as a read).
+ * Throws when the read fails, like `listUserAnalytics`.
+ */
+export async function summarizeDocReads(
+  docId: string,
+  reader: DocReadsReader = readsFunction
+): Promise<DocReadSummary[]> {
+  const { data, error } = await reader.reads(docId);
+  if (error) throw new Error(`document reads could not be read: ${error.message}`);
+  return (data ?? []).map((row) => ({
+    ownerId: row.owner_id,
+    provider: isProvider(row.provider) ? row.provider : "unknown",
+    client: row.client,
+    count: Number(row.reads),
+    lastAt: row.last_at,
+  }));
 }

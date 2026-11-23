@@ -156,8 +156,7 @@ export {
 } from "./versions";
 export {
   addAgentReads,
-  addApiRead,
-  API_READ_WINDOW_MS,
+  mergeAgentReads,
   listAgentReads,
   watchAgentReads,
   lineCredit,

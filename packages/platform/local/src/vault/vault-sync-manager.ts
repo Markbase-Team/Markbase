@@ -14,7 +14,9 @@
 
 import { filesUnder, normalizePath } from "@markbase/shared/folders";
 import type { VaultSyncFs } from "@markbase/shared/storage";
-import type { AgentCredit, AgentReads, OpenSyncedFile, SyncedFile } from "./synced-file";
+import { HOOK_EVENTS_MAX, HOOK_EVENTS_MAX_DOCS, type HookEvent } from "@markbase/shared/analytics/hook-events";
+import type { AgentCredit, OpenSyncedFile, SyncedFile } from "./synced-file";
+import { tallyReads, type FileHookEvent } from "./agent-audit";
 
 // VaultDocRef is a document's identity, so it belongs to @markbase/shared rather
 // than to the sync engine. Re-exported here because every existing caller
@@ -62,11 +64,20 @@ export interface VaultSyncOptions {
    */
   agentCredit?: (path: () => string) => AgentCredit;
   /**
-   * The reads agents made of this vault's files since last asked, by path —
-   * taken from the agent audit, so asking consumes them. Omitted, no reads
-   * are recorded.
+   * What agents' hooks saw of this vault's files since last asked — reads and
+   * writes, one event each — taken from the agent audit, so asking consumes
+   * them. Omitted, nothing is passed on.
    */
-  agentReads?: () => Map<string, AgentReads[]>;
+  hookEvents?: () => FileHookEvent[];
+  /**
+   * Report events to the server, which keeps the record of them (user
+   * analytics). Resolves to whether each was recorded, in order, or null when
+   * the report did not get an answer. A read the server did not record is
+   * kept in its document instead, as reads were before there was a record; a
+   * write has nowhere else to go, and is not recorded. Omitted, reads go in
+   * the document and writes nowhere.
+   */
+  reportHookEvents?: (events: HookEvent[]) => Promise<boolean[] | null>;
 }
 
 export class VaultSyncManager {
@@ -431,21 +442,61 @@ export class VaultSyncManager {
   }
 
   /**
-   * Hand each document the reads agents made of its file since the last
-   * sweep. Returns how many reads were recorded; a read of a file this
-   * manager holds no document for is dropped.
+   * Pass on what agents' hooks saw since the last sweep: to the server when
+   * there is a way to report it, and the reads it did not take into their
+   * documents. Returns how many events were passed on; one about a file this
+   * manager holds no document for is dropped. The report is not waited for.
    */
-  recordAgentReads(): number {
-    const reads = this.opts.agentReads?.();
-    if (!reads) return 0;
-    let recorded = 0;
-    for (const [path, tallies] of reads) {
-      const vs = this.byPath.get(path);
+  passOnHookEvents(): number {
+    const events = this.opts.hookEvents?.();
+    if (!events || events.length === 0) return 0;
+    const report = this.opts.reportHookEvents;
+    const toReport: { event: HookEvent; file: FileHookEvent; vs: SyncedFile }[] = [];
+    const keep = new Map<SyncedFile, FileHookEvent[]>();
+    let passed = 0;
+    for (const file of events) {
+      const vs = this.byPath.get(file.path);
       if (!vs) continue;
-      vs.recordAgentReads(tallies);
-      for (const tally of tallies) recorded += tally.count;
+      passed++;
+      // A read-only replica's document goes nowhere, and what this machine's
+      // agents did to someone else's file is not theirs to keep.
+      if (!report || vs.readOnly) {
+        keep.set(vs, [...(keep.get(vs) ?? []), file]);
+        continue;
+      }
+      toReport.push({ event: { kind: file.kind, agent: file.agent, docId: vs.docId, at: file.at }, file, vs });
     }
-    return recorded;
+    this.keepReads(keep);
+    if (report && toReport.length > 0) void this.report(report, toReport);
+    return passed;
+  }
+
+  /** Send events in reports of at most HOOK_EVENTS_MAX; keep the reads each did not record. */
+  private async report(
+    report: (events: HookEvent[]) => Promise<boolean[] | null>,
+    items: { event: HookEvent; file: FileHookEvent; vs: SyncedFile }[]
+  ): Promise<void> {
+    for (const batch of reportBatches(items)) {
+      const recorded = await report(batch.map((item) => item.event)).catch(() => null);
+      const missed = new Map<SyncedFile, FileHookEvent[]>();
+      batch.forEach((item, i) => {
+        if (recorded?.[i] === true) return;
+        missed.set(item.vs, [...(missed.get(item.vs) ?? []), item.file]);
+      });
+      this.keepReads(missed);
+    }
+  }
+
+  /**
+   * Add reads to their documents' own tallies. A document closed meanwhile has
+   * no tally left to add to, and its reads are dropped.
+   */
+  private keepReads(events: Map<SyncedFile, FileHookEvent[]>): void {
+    const open = new Set(this.byPath.values());
+    for (const [vs, files] of events) {
+      const reads = tallyReads(files, this.opts.author ?? null);
+      if (reads.length > 0 && open.has(vs)) vs.recordAgentReads(reads);
+    }
   }
 
   checkpointDue(now: number = Date.now()): number {
@@ -464,4 +515,26 @@ export class VaultSyncManager {
     for (const vs of this.byPath.values()) vs.close();
     this.byPath.clear();
   }
+}
+
+/**
+ * Reports a server will take: at most HOOK_EVENTS_MAX events and
+ * HOOK_EVENTS_MAX_DOCS documents each, in the order the events happened.
+ */
+export function reportBatches<T extends { event: HookEvent }>(items: T[]): T[][] {
+  const batches: T[][] = [];
+  let batch: T[] = [];
+  let docs = new Set<string>();
+  for (const item of items) {
+    const newDoc = !docs.has(item.event.docId);
+    if (batch.length === HOOK_EVENTS_MAX || (newDoc && docs.size === HOOK_EVENTS_MAX_DOCS)) {
+      batches.push(batch);
+      batch = [];
+      docs = new Set();
+    }
+    batch.push(item);
+    docs.add(item.event.docId);
+  }
+  if (batch.length > 0) batches.push(batch);
+  return batches;
 }

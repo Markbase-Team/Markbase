@@ -7,16 +7,21 @@ import { agentLabel, listVersions, versionContents, type VersionMeta } from "./v
 // behalf; and, line by line, who wrote what is in it now — a person, or an
 // agent, and whose agent.
 //
-// Both live in the document's own Y.Doc, beside its content and its versions,
-// so there is no table of their own: whoever holds the Y.Doc can work them out.
-// The server does, for GET /docs/:id/analytics (`docAnalytics` below), which is
-// what the web app, the desktop app and an agent's MCP tool all ask:
+//   - reads are recorded by the server, in user_analytics_events: an agent
+//     reading through the API is recorded as it reads, and the sync daemon
+//     reports what agents' hooks saw of the files (`markbase read-audit`). The
+//     server works the tally out from those rows and hands it to
+//     `docAnalytics` below, which is what the web app, the desktop app and an
+//     agent's MCP tool all ask (GET /docs/:id/analytics).
 //
-//   - reads are a tally added to from two places: the sync daemon, from what
-//     agents' hooks reported of the files (`markbase read-audit`), and the
-//     server, when an agent reads the document through the API (an MCP tool;
-//     `addApiRead`, at most once a minute per agent). Both name the reader
-//     the same way, so one agent has one row;
+//     The document's own Y.Doc also holds a tally (`agentReads`), which is
+//     where reads used to be kept. Nothing the server runs adds to it any
+//     more. It is still read and still added to in one case: a sync daemon
+//     that cannot reach a server which takes reports (offline, or an older
+//     self-hosted instance) keeps its reads there, as it always did, so they
+//     are not lost. `docAnalytics` adds the two together; a read is in one or
+//     the other, never both.
+//
 //   - line credit is not stored at all. It is worked out from the versions,
 //     each of which already says who wrote it (versions.ts): a line belongs
 //     to the version that last changed it.
@@ -67,33 +72,33 @@ export function addAgentReads(doc: Y.Doc, reads: AgentReadTally[]): void {
   });
 }
 
-/**
- * How close together one agent's reads through the API count as one. An agent
- * reading a document over MCP often reads it, edits, and reads it again within
- * seconds; that is one look at the document, and each counted read is a write
- * to the CRDT.
- */
-export const API_READ_WINDOW_MS = 60_000;
+/** Most reads first; among equals, the most recent. */
+function byReads(a: AgentReadTally, b: AgentReadTally): number {
+  return b.count - a.count || b.lastAt - a.lastAt;
+}
 
 /**
- * Add one read made through the API, unless the same agent for the same
- * person already read it within `windowMs`. True when the tally changed.
+ * Several tallies as one: an agent working for one person has one row, its
+ * counts added and its last read the latest of them.
  */
-export function addApiRead(
-  doc: Y.Doc,
-  read: { agent: string; owner: string | null },
-  now: number,
-  windowMs: number = API_READ_WINDOW_MS
-): boolean {
-  const had = readsMap(doc).get(tallyKey(read.agent, read.owner));
-  if (had && now - had.lastAt < windowMs) return false;
-  addAgentReads(doc, [{ agent: read.agent, owner: read.owner, count: 1, lastAt: now }]);
-  return true;
+export function mergeAgentReads(...tallies: AgentReadTally[][]): AgentReadTally[] {
+  const merged = new Map<string, AgentReadTally>();
+  for (const read of tallies.flat()) {
+    const key = tallyKey(read.agent, read.owner);
+    const had = merged.get(key);
+    merged.set(key, {
+      agent: read.agent,
+      owner: read.owner,
+      count: (had?.count ?? 0) + read.count,
+      lastAt: Math.max(had?.lastAt ?? 0, read.lastAt),
+    });
+  }
+  return [...merged.values()].sort(byReads);
 }
 
 /** Every agent's reads of the document, most first. */
 export function listAgentReads(doc: Y.Doc): AgentReadTally[] {
-  return [...readsMap(doc).values()].sort((a, b) => b.count - a.count || b.lastAt - a.lastAt);
+  return [...readsMap(doc).values()].sort(byReads);
 }
 
 /** Call `onChange` whenever the read tally changes; returns the way to stop. */
@@ -304,9 +309,15 @@ export function readerText(read: AgentReadTally): string {
   return read.owner ? `${read.owner}'s ${agent}` : agent;
 }
 
-/** The document's analytics: `listAgentReads` and `lineCredit`, worded. */
-export function docAnalytics(doc: Y.Doc): DocAnalyticsReport {
-  const reads = listAgentReads(doc).map((read) => ({ ...read, text: readerText(read) }));
+/**
+ * The document's analytics: its reads and `lineCredit`, worded. `recorded` is
+ * the tally the server worked out from user_analytics_events; what the
+ * document itself still holds is added to it. With nothing recorded (a loose
+ * file with no server, a panel that cannot reach one) the document's own is
+ * all there is.
+ */
+export function docAnalytics(doc: Y.Doc, recorded: AgentReadTally[] = []): DocAnalyticsReport {
+  const reads = mergeAgentReads(recorded, listAgentReads(doc)).map((read) => ({ ...read, text: readerText(read) }));
   let credit: LineCredit;
   try {
     credit = lineCredit(doc);

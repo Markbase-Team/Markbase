@@ -13,7 +13,8 @@ import {
   recordWrites,
   shellReads,
   snapshotWrites,
-  takeAgentReads,
+  tallyReads,
+  takeHookEvents,
   undoEdits,
   writesLedgerPath,
 } from "../../src/vault/agent-audit";
@@ -243,39 +244,65 @@ describe("agentCredit", () => {
   });
 });
 
-describe("takeAgentReads", () => {
+describe("takeHookEvents", () => {
   let plan: string;
 
   beforeEach(() => {
     plan = join(dir, "notes", "plan.md");
     writeFileSync(plan, "x");
-    // takeAgentReads finds the vault through the registry, as the sync does.
+    // takeHookEvents finds the vault through the registry, as the sync does.
     mkdirSync(home, { recursive: true });
     writeFileSync(join(home, "config.json"), JSON.stringify({ vaults }));
   });
 
-  it("hands the sync each read once, tallied by path and agent, with whose agents they are", () => {
+  it("hands the sync each read and write once, one event each, oldest first", () => {
     recordReads(call("claude", { reads: [plan] }), vaults, new Date(1_000));
+    writeFileSync(plan, "y");
+    recordWrites(call("cursor", { writes: [{ file: plan, edits: null, before: "x" }] }), vaults, new Date(1_500));
     recordReads(call("claude", { reads: [plan] }), vaults, new Date(2_000));
-    recordReads(call("codex", { reads: [plan] }), vaults, new Date(3_000));
 
-    const first = takeAgentReads(dir, "Jessie");
-    expect(first.get("notes/plan.md")).toEqual([
-      { agent: "claude", owner: "Jessie", count: 2, lastAt: 2_000 },
-      { agent: "codex", owner: "Jessie", count: 1, lastAt: 3_000 },
+    expect(takeHookEvents(dir)).toEqual([
+      { kind: "read", agent: "claude", path: "notes/plan.md", at: 1_000 },
+      { kind: "write", agent: "cursor", path: "notes/plan.md", at: 1_500 },
+      { kind: "read", agent: "claude", path: "notes/plan.md", at: 2_000 },
     ]);
     // Taken: asking again hands over nothing, until there is something new.
-    expect(takeAgentReads(dir, "Jessie").size).toBe(0);
-    recordReads(call("cursor", { reads: [plan] }), vaults, new Date(4_000));
-    expect(takeAgentReads(dir, "Jessie").get("notes/plan.md")).toEqual([
-      { agent: "cursor", owner: "Jessie", count: 1, lastAt: 4_000 },
-    ]);
+    expect(takeHookEvents(dir)).toEqual([]);
+    recordReads(call("codex", { reads: [plan] }), vaults, new Date(4_000));
+    expect(takeHookEvents(dir)).toEqual([{ kind: "read", agent: "codex", path: "notes/plan.md", at: 4_000 }]);
   });
 
-  it("leaves another vault's reads alone", () => {
+  it("leaves another vault's events alone", () => {
     recordReads(call("claude", { reads: [plan] }), vaults);
-    expect(takeAgentReads(join(dir, "..", "elsewhere"), "Jessie").size).toBe(0);
+    expect(takeHookEvents(join(dir, "..", "elsewhere"))).toEqual([]);
     // …and they are still there for the vault they belong to.
-    expect(takeAgentReads(dir, "Jessie").size).toBe(1);
+    expect(takeHookEvents(dir)).toHaveLength(1);
+  });
+
+  it("does not take away the writes a version is credited from", () => {
+    const before = "x";
+    writeFileSync(plan, "y");
+    recordWrites(call("claude", { writes: [{ file: plan, edits: null, before }] }), vaults);
+    expect(takeHookEvents(dir)).toHaveLength(1);
+    expect(agentCredit(dir, () => "notes/plan.md")("y").agent).toBe("claude");
+  });
+});
+
+describe("tallyReads", () => {
+  it("adds up reads per agent for a document's own tally, and leaves writes out", () => {
+    expect(
+      tallyReads(
+        [
+          { kind: "read", agent: "claude", path: "a.md", at: 1_000 },
+          { kind: "write", agent: "claude", path: "a.md", at: 1_500 },
+          { kind: "read", agent: "claude", path: "a.md", at: 2_000 },
+          { kind: "read", agent: "codex", path: "a.md", at: 500 },
+        ],
+        "Jessie"
+      )
+    ).toEqual([
+      { agent: "claude", owner: "Jessie", count: 2, lastAt: 2_000 },
+      { agent: "codex", owner: "Jessie", count: 1, lastAt: 500 },
+    ]);
   });
 });
