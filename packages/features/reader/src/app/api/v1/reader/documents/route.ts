@@ -1,4 +1,4 @@
-import { authorizedByGate } from "@markbase/protocol/caller";
+import { authorizedByGate } from "@markbase/shared/caller";
 import { readerDocumentsHandler } from "../../../../../handlers";
 
 // Authentication and CORS happen in the shell's proxy — /api/v1/reader is a

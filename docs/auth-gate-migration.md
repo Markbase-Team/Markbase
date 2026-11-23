@@ -44,7 +44,7 @@ It **may** read who the caller is, from the one header the gate attaches:
 
 `ownerId` is whose data this request may reach, on both channels; the rest is
 what a feature needs to attribute an action. Read it with `callerFromHeaders`
-from `@markbase/protocol/auth` — never `request.headers.get` directly. That
+from `@markbase/shared/auth` — never `request.headers.get` directly. That
 name and shape have one definition, in that module, and one writer, the proxy,
 which strips the whole `x-markbase-*` namespace from every incoming request
 before it writes.
@@ -60,7 +60,7 @@ returning null is how its handlers learn that is the case they are in. The
 header strip, CORS and the cross-site rule apply in both modes.
 
 **`ui/` may not call `fetch`.** It goes through `api` from
-`@markbase/protocol/api-client`, which the shell has already told how to
+`@markbase/shared/api-client`, which the shell has already told how to
 produce a credential. A `fetch("/api/…")` in a feature package works in exactly
 one place: a browser tab, same origin, cookie attached for it. The desktop app
 renders the same components from a local page against the live site with a key.
@@ -101,7 +101,7 @@ the proxy's matcher.
 What did not change is the inside of the handlers. reader, diary, email,
 attention and projects still take an injected `Authorize` / `HandlerHost`;
 the package's route modules now hand them `authorizedByGate` from
-`@markbase/protocol/caller` (or projects' in-package `gateHost`), which reads
+`@markbase/shared/caller` (or projects' in-package `gateHost`), which reads
 the caller off the gate's header and ignores `need` — the gate decided it
 from the method. Step 1 of "Doing one feature" below (deleting the parameter)
 is therefore still open for those five, and `/api/admin/*` is still a second
@@ -249,7 +249,7 @@ which is the only implementation and the only thing the gate calls.
    injection with it. Handlers become plain objects of `Request -> Response`.
 2. Move the routes to `/api/v1/<feature>/…` and delete the `/api/admin` copies.
    Route files become the URL and nothing else — five or six lines.
-3. Point the feature's `ui/` at `api` from `@markbase/protocol/api-client` and
+3. Point the feature's `ui/` at `api` from `@markbase/shared/api-client` and
    remove every `fetch`.
 4. Add the prefix to `GUARDED`.
 5. Update `markbase.json` `routes`, the `/api/v1` discovery manifest, and any

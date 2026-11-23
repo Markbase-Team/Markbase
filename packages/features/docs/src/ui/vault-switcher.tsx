@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { useState } from "react";
 import { usePrompt } from "@markbase/ui/prompt-dialog";
 import {

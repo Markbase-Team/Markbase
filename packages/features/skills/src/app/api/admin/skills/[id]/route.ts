@@ -1,10 +1,6 @@
-import {
-  deleteSkill,
-  getSkillById,
-  updateSkill,
-  SKILL_NAME_RE,
-} from "@markbase/protocol/skills";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { SKILL_NAME_RE } from "@markbase/shared/skills";
+import { deleteSkill, getSkillById, updateSkill } from "@markbase/server/db/skills";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // GET /api/admin/skills/:id — one skill (for the editor workspace).
 export async function GET(

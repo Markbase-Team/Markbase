@@ -1,5 +1,5 @@
 import type { FeaturePageProps } from "@markbase/ui/page-host";
-import { getProjectBySlug, listProjectTickets } from "@markbase/protocol/tickets";
+import { getProjectBySlug, listProjectTickets } from "@markbase/server/db/tickets";
 import { ProjectClient } from "../../../ui";
 
 // Public requester view of a project — scoped to the project in the URL (no

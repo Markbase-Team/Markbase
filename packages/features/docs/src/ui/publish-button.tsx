@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, ChevronDown, Copy, Globe, Loader2 } from "lucide-react";

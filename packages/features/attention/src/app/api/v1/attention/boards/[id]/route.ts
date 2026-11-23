@@ -1,5 +1,5 @@
 import { attentionBoardHandler } from "../../../../../../handlers";
-import { authorizedByGate } from "@markbase/protocol/caller";
+import { authorizedByGate } from "@markbase/shared/caller";
 
 const handler = attentionBoardHandler(authorizedByGate);
 

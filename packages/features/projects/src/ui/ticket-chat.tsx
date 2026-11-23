@@ -25,7 +25,7 @@ import { InlineSelect } from "./inline-select";
 import { AttachmentThumb } from "./attachment-thumb";
 import { STATUS_STYLES } from "./status-badge";
 import { Switch } from "@markbase/ui/switch";
-import { uploadImages } from "@markbase/protocol/upload";
+import { uploadImages } from "@markbase/shared/upload";
 import { cn } from "@markbase/ui/utils";
 import { MarkdownEditor } from "@markbase/ui/markdown-editor";
 import { PropertyValueEditor } from "./ticket-properties";
@@ -35,7 +35,7 @@ import {
   type OwnerKind,
   type ProjectProperty,
   type Ticket,
-} from "@markbase/protocol/types";
+} from "@markbase/shared/types";
 import { useAgentSessions } from "@markbase/ui/use-agent-sessions";
 import { AssigneePicker } from "./assignee-picker";
 import { submitKeys } from "@markbase/ui/keys";

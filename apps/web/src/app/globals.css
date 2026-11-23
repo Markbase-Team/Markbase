@@ -20,5 +20,5 @@
  * as a path that no longer exists — which is the trap this comment is about.
  * (Nor can that pattern be written literally above: the star-slash inside a
  * CSS comment ends the comment.) */
-@source "../../../../packages/core/ui/src";
+@source "../../../../packages/platform/ui/src";
 @source "../../../../packages/features";

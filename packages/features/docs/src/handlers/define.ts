@@ -3,8 +3,8 @@ import {
   type Access,
   type Endpoint as DefinedEndpoint,
   type RouteParams,
-} from "@markbase/protocol/endpoint";
-import type { DocEndpoint } from "../logic/endpoints";
+} from "@markbase/shared/endpoint";
+import type { DocEndpoint } from "@markbase/shared/docs/endpoints";
 import type { Capability, DocAuth, SignedInActor } from "../server";
 import { accountActor, requireDocCapability } from "./actor";
 import { json } from "./respond";
@@ -12,7 +12,7 @@ import { json } from "./respond";
 // The documents feature's endpoints.
 //
 // An endpoint is written once — what it is, who may call it, and its code —
-// with the machinery every feature shares (@markbase/protocol/endpoint). What
+// with the machinery every feature shares (@markbase/shared/endpoint). What
 // is the documents feature's own is here: the two ways a caller is checked.
 //
 //   - `capability` is a role: the caller must hold it on the document the

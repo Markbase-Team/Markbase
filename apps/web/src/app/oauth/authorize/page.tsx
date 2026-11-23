@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { OAUTH_AUTHORIZE_PATH, checkAuthorize, type AuthorizeParams } from "@markbase/node/mcp-oauth";
+import { OAUTH_AUTHORIZE_PATH, checkAuthorize, type AuthorizeParams } from "@markbase/server/mcp-oauth";
 import { CapabilitySelect } from "@/components/capability-select";
 import { DEFAULT_CAPABILITY } from "@/lib/capabilities";
 import { oauthSecret } from "@/lib/mcp-oauth";

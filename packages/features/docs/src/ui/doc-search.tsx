@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
-import { intentFromClick, type OpenIntent } from "@markbase/docs/workspace-tabs";
+import { api } from "@markbase/shared/api-client";
+import { intentFromClick, type OpenIntent } from "@markbase/shared/docs/workspace-tabs";
 
 import { useEffect, useState } from "react";
 import { FileText } from "lucide-react";

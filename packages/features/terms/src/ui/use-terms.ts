@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 
 // Every call goes through the shared client, so this hook works unchanged in a
 // browser tab (cookie) and in the desktop app's local page (bearer key). It

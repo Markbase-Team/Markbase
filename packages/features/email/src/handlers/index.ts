@@ -1,4 +1,4 @@
-export type { Authorize } from "@markbase/protocol/caller";
+export type { Authorize } from "@markbase/shared/caller";
 export {
   inboxAccountsHandler,
   inboxListHandler,

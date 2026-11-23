@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
+import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 
 // From the caller header to an author, and from an author to a capability on
 // one document. Nothing here authenticates — the gate did — so what is under
@@ -26,8 +26,8 @@ vi.mock("../src/server/owner-name", () => ({
   ownerDisplayName: async (userId: string, email: string | null = null) =>
     email ? `name-of(${email})` : `name-of(${userId})`,
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: (input: { token: string }) => claimAgentSession(input),
 }));
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 
 export const runtime = "nodejs";
 

@@ -1,4 +1,4 @@
-import type { Authorize } from "@markbase/protocol/caller";
+import type { Authorize } from "@markbase/shared/caller";
 import { listEmailAccounts, getEmailAccount } from "../server/accounts";
 import { listInbox, getMessage, markMessageRead } from "../server/gmail";
 

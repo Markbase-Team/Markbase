@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Bot, ChevronDown, Download, Globe, MoreHorizontal, Share2 } from "lucide-react";
-import { docJsonToMarkdown, combineTabMarkdown, docFileSlug, getMarkdown } from "@markbase/docs";
+import { docJsonToMarkdown, combineTabMarkdown, docFileSlug, getMarkdown } from "@markbase/shared/docs";
 import {
   DropdownMenu,
   DropdownMenuContent,

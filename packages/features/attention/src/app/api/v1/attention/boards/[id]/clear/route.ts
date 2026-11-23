@@ -1,4 +1,4 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 import { getEmailAccount, markMessageRead } from "@markbase/email/server";
 import { clearBoard, isManualItem } from "../../../../../../../server";
 

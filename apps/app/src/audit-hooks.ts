@@ -1,11 +1,11 @@
-import { auditBin, hookApprovals, installAuditHooks, withToolPath, type AuditHookOptions, type AuditHookResult } from "@markbase/node";
+import { auditBin, hookApprovals, installAuditHooks, withToolPath, type AuditHookOptions, type AuditHookResult } from "@markbase/local";
 
 // The audit hooks at launch. An agent that edits a mounted vault's files
 // directly (Claude Code, Codex, Cursor) looks, to the sync, exactly like the
 // person typing; its read-audit and write-audit hooks are the only thing that
 // tells the two apart. The CLI adds them with `markbase mcp install`; a machine
 // that only has the app would otherwise never get them. So the app runs the
-// same installer (@markbase/node) for the agents it finds on this machine.
+// same installer (@markbase/local) for the agents it finds on this machine.
 //
 // Idempotent and quiet: a launch that changes nothing logs nothing. A config
 // file that is read-only or cannot be parsed is left exactly as it was, and

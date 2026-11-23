@@ -1,0 +1,33 @@
+{
+  "name": "@markbase/local",
+  "version": "0.8.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./audit-hooks": "./src/audit-hooks.ts",
+    "./claude-code": "./src/claude-code.ts",
+    "./detect-claude": "./src/detect-claude.ts",
+    "./device-auth": "./src/device-auth.ts",
+    "./json": "./src/json.ts",
+    "./mcp-install": "./src/mcp-install.ts",
+    "./flows": "./src/flows/index.ts",
+    "./flows/*": "./src/flows/*.ts",
+    "./runner": "./src/runner/index.ts",
+    "./runner/*": "./src/runner/*.ts",
+    "./vault": "./src/vault/index.ts",
+    "./vault/*": "./src/vault/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markbase/shared": "*",
+    "diff": "^8.0.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

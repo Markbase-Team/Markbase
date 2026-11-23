@@ -1,4 +1,4 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 import { classifyUnreadEmails } from "../../../../../server";
 
 // POST — classify every unread email across all connected accounts and link the

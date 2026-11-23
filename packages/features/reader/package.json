@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@markbase/llm": "*",
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
+    "@markbase/server": "*",
     "@markbase/ui": "*",
     "lucide-react": "^1.17.0",
     "pdfjs-dist": "^5.4.296",

@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@markbase/protocol/api-client";
+import { api } from "@markbase/shared/api-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readLocal, readLocalJson, writeLocal, writeLocalJson } from "./local-store";
 import { useClientValue } from "./client-value";
@@ -22,7 +22,7 @@ import {
   type DocTabAction,
   type DocTabsState,
   type OpenIntent,
-} from "@markbase/docs/workspace-tabs";
+} from "@markbase/shared/docs/workspace-tabs";
 import { DocsSidebar } from "./docs-sidebar";
 import { setActiveDoc } from "./active-doc";
 import { NewVaultModal, type VaultMeta } from "./new-vault-modal";

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { markdownToHtml, excerpt } from "../src/logic/html";
+import { markdownToHtml, excerpt } from "@markbase/shared/docs/html";
 import { publicSlug } from "../src/server/publish";
 
 // The publish-to-web layer renders a doc to a public, SEO/GEO-friendly page:

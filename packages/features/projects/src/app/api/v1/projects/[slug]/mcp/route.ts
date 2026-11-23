@@ -1,5 +1,5 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
-import { getProject } from "@markbase/protocol/tickets";
+import { callerFromHeaders } from "@markbase/shared/auth";
+import { getProject } from "@markbase/server/db/tickets";
 import { revealProjectSecrets } from "../../../../../../server";
 
 // GET /api/v1/projects/:slug/mcp — the worker fetches a project's MCP setup at

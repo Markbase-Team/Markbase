@@ -1,9 +1,6 @@
-import {
-  isSafeSkillPath,
-  listSkillFiles,
-  upsertSkillFile,
-} from "@markbase/protocol/skill-files";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { isSafeSkillPath } from "@markbase/shared/skill-files";
+import { listSkillFiles, upsertSkillFile } from "@markbase/server/db/skill-files";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // GET /api/admin/skills/:id/files — the skill's bundled files (with content).
 export async function GET(

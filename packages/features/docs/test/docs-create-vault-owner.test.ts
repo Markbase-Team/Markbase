@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
+import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 
 // POST /docs puts a document into a vault, and the vault has to be the
 // caller's. The row's owner_id comes from the caller; its vault_id comes from
@@ -43,8 +43,8 @@ vi.mock("../src/server/links", () => ({ getLinkByToken: async () => null }));
 vi.mock("../src/server/owner-name", () => ({
   ownerDisplayName: async (userId: string) => `name-of(${userId})`,
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

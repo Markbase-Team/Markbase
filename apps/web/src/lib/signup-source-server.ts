@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import { isFreshAccount, parseSource } from "./signup-source";
 
 // Where a sign-up came from — the server half. Copies the browser's source

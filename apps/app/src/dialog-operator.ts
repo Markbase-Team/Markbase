@@ -1,8 +1,8 @@
-import type { Operator } from "@markbase/flows";
+import type { Operator } from "@markbase/local/flows";
 
 // The desktop's operator: the same questions, asked with dialogs.
 //
-// It lives here rather than in @markbase/flows because it needs electron, and
+// It lives here rather than in @markbase/local/flows because it needs electron, and
 // that package is imported by the CLI and (for its types) the browser. The two
 // dialog functions arrive as arguments rather than as imports, so this stays
 // glue — and so it can be driven by a fake the day apps/app gains a test runner.

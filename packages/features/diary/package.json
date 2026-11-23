@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@markbase/protocol": "*",
+    "@markbase/shared": "*",
     "@markbase/ui": "*",
     "lucide-react": "^1.17.0",
     "sonner": "^2.0.7"

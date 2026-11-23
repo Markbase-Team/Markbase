@@ -1,4 +1,4 @@
-import { runTicketWorker } from "@markbase/runner";
+import { runTicketWorker } from "@markbase/local/runner";
 import { loadConfig } from "./config";
 import { myMounts, startVaultSyncDaemons } from "./vault-sync-run";
 import pkg from "../package.json";

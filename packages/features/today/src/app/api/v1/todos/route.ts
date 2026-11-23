@@ -1,5 +1,6 @@
-import { createTodo, isDay, listTodos } from "@markbase/protocol/todos";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { isDay } from "@markbase/shared/todos";
+import { createTodo, listTodos } from "@markbase/server/db/todos";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // Authentication happens in the shell's proxy — /api/v1/todos is a `required`
 // prefix there, so a request that reaches this file carries a caller. The

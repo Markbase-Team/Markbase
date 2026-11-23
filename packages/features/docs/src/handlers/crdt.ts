@@ -1,4 +1,4 @@
-import { base64ToBytes, bytesToBase64 } from "../logic";
+import { base64ToBytes, bytesToBase64 } from "@markbase/shared/docs";
 import {
   broadcastCrdt,
   listCrdtChanges,

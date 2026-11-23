@@ -2,7 +2,7 @@ import {
   deleteTicket,
   getProjectTicket,
   updateTicket,
-} from "@markbase/protocol/tickets";
+} from "@markbase/server/db/tickets";
 
 // Public requester path: scoped to the project in the URL. getProjectTicket
 // returns the ticket only if it belongs to this project; we thread its own

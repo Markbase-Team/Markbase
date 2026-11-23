@@ -1,21 +1,23 @@
-import { listAgentSessions } from "@markbase/protocol";
+import { listAgentSessions } from "@markbase/server/db/agent-sessions";
+import {
+  isPropertyId,
+  ticketCcPatchFrom,
+  type TicketCcPatchBody,
+} from "@markbase/shared/tickets";
 import {
   addMessage,
   deleteTicket,
   getProjectProperty,
   getTicket,
-  isPropertyId,
   listMessages,
   listProjectProperties,
   listTickets,
   setTicketProperty,
-  ticketCcPatchFrom,
   updateTicket,
   updateTicketCc,
-  type TicketCcPatchBody,
-} from "@markbase/protocol/tickets";
-import { isOwnerKind, isStatus } from "@markbase/protocol/types";
-import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/node/features";
+} from "@markbase/server/db/tickets";
+import { isOwnerKind, isStatus } from "@markbase/shared/types";
+import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 import { owner, type HandlerHost } from "./host";
 
 export function ticketsHandler(host: HandlerHost) {

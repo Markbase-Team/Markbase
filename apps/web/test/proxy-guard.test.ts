@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { CALLER_HEADER, parseCaller } from "@markbase/protocol/auth";
+import { CALLER_HEADER, parseCaller } from "@markbase/shared/auth";
 
 // The gate. Two channels reach one API, and everything behind /api/v1/terms
 // trusts that a request which got there was already authenticated — so the
@@ -9,16 +9,16 @@ import { CALLER_HEADER, parseCaller } from "@markbase/protocol/auth";
 // caller.
 //
 // `resolveCaller` is mocked: which credential wins is tested at its own level
-// (packages/core/node/test/caller.test.ts). What is under test here is what the
+// (packages/platform/server/test/caller.test.ts). What is under test here is what the
 // proxy does with the answer. `offersToken` and `forwardedCaller` are the real
 // ones: whether a token was offered is read off the request, and what a key is
 // reduced to on the header is part of what is being proved here.
 
 const resolveCaller = vi.fn();
-vi.mock("@markbase/node/caller", async () => {
+vi.mock("@markbase/server/caller", async () => {
   const real =
-    await vi.importActual<typeof import("@markbase/node/caller")>(
-      "@markbase/node/caller"
+    await vi.importActual<typeof import("@markbase/server/caller")>(
+      "@markbase/server/caller"
     );
   return {
     forwardedCaller: real.forwardedCaller,

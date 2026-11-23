@@ -1,11 +1,13 @@
-import type { Author } from "../logic/types";
+import type { Author } from "@markbase/shared/docs/types";
 
 // Capability model. Authorization is per-doc and capability-based, NOT a global
 // role — a "normal user" who can edit simply holds an `editor` grant. Pure
 // resolution lives here (no DB) so it's trivially testable; the DB lookups that
 // feed it live in members.ts / links.ts.
 
-export type Capability = "owner" | "editor" | "commenter" | "viewer";
+import type { Capability } from "@markbase/shared/docs/capability";
+
+export type { Capability };
 
 const RANK: Record<Capability, number> = {
   viewer: 1,

@@ -37,7 +37,7 @@ MARKBASE_SMOKE_API_KEY=jsk_… node scripts/sync-smoke.mjs
 ```
 
 Add `--keep` to leave the temp directories and the vault for a look. The
-engine's own scenario tests live in `packages/core/vault/test`; this is the
+engine's own scenario tests live in `packages/platform/local/test/vault`; this is the
 one check that the app hosting it works end to end.
 
 ## How it works / next steps

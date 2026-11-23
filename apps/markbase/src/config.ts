@@ -1,15 +1,15 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { markbaseHome } from "@markbase/vault";
+import { markbaseHome } from "@markbase/local/vault";
 import { dirname, join } from "node:path";
 import {
   readMountedVaults,
   saveInstance as writeInstance,
   type MountedVault,
   type SavedInstance,
-} from "@markbase/vault";
-import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
-import { usableApiKey } from "@markbase/node";
+} from "@markbase/local/vault";
+import { DEFAULT_APP_URL } from "@markbase/shared/instance";
+import { usableApiKey } from "@markbase/local";
 
 // Where the per-user config lives. Holds the API key, so it's written 0600.
 export const CONFIG_DIR = markbaseHome();
@@ -29,7 +29,7 @@ export interface MarkbaseConfig {
 }
 
 // The mounted-vault list is shared with the desktop app — one registry per
-// machine, in this same file. See packages/core/src/vault-registry.ts.
+// machine, in this same file. See packages/platform/local/src/vault/vault-registry.ts.
 export type { MountedVault };
 
 /** The default place the mirror lives, when the user doesn't name one. */

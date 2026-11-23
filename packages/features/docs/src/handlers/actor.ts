@@ -1,4 +1,4 @@
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { callerFromHeaders } from "@markbase/shared/auth";
 import {
   requireDocCapability as requireDocCapabilityFor,
   resolveActor,
@@ -15,7 +15,7 @@ import { json } from "./respond";
 // session token and, for a share-link guest, a share token and a name. Those
 // headers are read here, once, into a `Credentials` value, and the
 // server layer — the database's, which knows no HTTP — is handed that. The
-// caller header is read through @markbase/protocol/auth, never as a raw
+// caller header is read through @markbase/shared/auth, never as a raw
 // string: the names have one definition and one writer, and a feature
 // reaching for the raw header is a feature that can be handed a forged one.
 

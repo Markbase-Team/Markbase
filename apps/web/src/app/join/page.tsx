@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { AppWindow } from "lucide-react";
 import { DownloadButton } from "@markbase/ui/download-button";
-import { connectLink, DEFAULT_APP_URL } from "@markbase/protocol/instance";
-import { MAC_FIRST_OPEN_NOTE } from "@markbase/protocol/downloads";
+import { connectLink, DEFAULT_APP_URL } from "@markbase/shared/instance";
+import { MAC_FIRST_OPEN_NOTE } from "@markbase/shared/downloads";
 import { InstanceSwitcher } from "@/components/instance-switcher";
 import { inDesktopApp } from "@/lib/desktop";
 import { latestMacVersion } from "@/lib/latest-release";
@@ -13,7 +13,7 @@ import { instanceKnownEmpty, verifyInviteCodeForPage } from "@/lib/invite";
 // The join page: the one link a member shares with a teammate.
 //
 // Its job is to point the desktop app at this instance. The button is a
-// markbase://connect link (see @markbase/protocol/instance) carrying the
+// markbase://connect link (see @markbase/shared/instance) carrying the
 // instance's address and, on a team instance, the invite code the link came
 // with: the app registers the scheme with the OS, so clicking it opens the
 // app, which confirms, restarts on this instance and — with the code — opens

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { uploadImages, uploadPdf } from "@markbase/protocol/upload";
+import { uploadImages, uploadPdf } from "@markbase/shared/upload";
 
 export type QA = { id: string; q: string; a: string };
 

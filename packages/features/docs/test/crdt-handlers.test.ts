@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
-import { bytesToBase64 } from "../src/logic/crdt-supabase";
-import { createDoc } from "../src/logic/crdt";
-import { snapshot } from "../src/logic/sync";
+import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
+import { bytesToBase64 } from "@markbase/shared/docs/crdt-supabase";
+import { createDoc } from "@markbase/shared/docs/crdt";
+import { snapshot } from "@markbase/shared/docs/sync";
 
 // The CRDT endpoints enforce exactly what the rest of the document API does:
 // viewer to read, editor to write, a key's ceiling applied, a share-link guest
@@ -32,8 +32,8 @@ vi.mock("../src/server/crdt-store", () => ({
   broadcastCrdt: (id: string, u: Uint8Array) => broadcastCrdt(id, u),
   listCrdtChanges: (u: string, s: string | null, v?: string) => listCrdtChanges(u, s, v),
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

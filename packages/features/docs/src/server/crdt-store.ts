@@ -1,4 +1,4 @@
-import { supabase } from "@markbase/protocol/supabase";
+import { supabase } from "@markbase/server/supabase";
 import {
   SupabaseDocPubSub,
   base64ToBytes,
@@ -6,7 +6,7 @@ import {
   mergeSnapshot,
   retryingDb,
   type DbResult,
-} from "@markbase/docs";
+} from "@markbase/shared/docs";
 
 // The server's side of docs.doc_crdt (security lockdown stage 2).
 //

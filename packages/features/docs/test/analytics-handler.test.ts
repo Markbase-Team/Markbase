@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as Y from "yjs";
-import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/protocol/auth";
-import { createDoc, setMarkdown } from "../src/logic/crdt";
-import { snapshot } from "../src/logic/sync";
-import { appendVersion } from "../src/logic/versions";
-import { addAgentReads, docAnalytics, type DocAnalyticsReport } from "../src/logic/analytics";
+import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
+import { createDoc, setMarkdown } from "@markbase/shared/docs/crdt";
+import { snapshot } from "@markbase/shared/docs/sync";
+import { appendVersion } from "@markbase/shared/docs/versions";
+import { addAgentReads, docAnalytics, type DocAnalyticsReport } from "@markbase/shared/docs/analytics";
 
 // GET /docs/:id/analytics is the one place a document's analytics are asked
 // for — the Analytics panel and an agent's `docs_analytics` tool both call it.
@@ -28,8 +28,8 @@ vi.mock("../src/server/owner-name", () => ({
 vi.mock("../src/server/crdt-store", () => ({
   loadCrdtSnapshot: (id: string) => loadCrdtSnapshot(id),
 }));
-vi.mock("@markbase/protocol", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@markbase/protocol")>()),
+vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
   claimAgentSession: async () => null,
 }));
 

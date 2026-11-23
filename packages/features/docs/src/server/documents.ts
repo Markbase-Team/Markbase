@@ -1,7 +1,7 @@
-import { supabase } from "@markbase/protocol/supabase";
-import { emptyDoc } from "../logic/markdown";
-import { collapseToPrimary } from "../logic/tab-group";
-import type { DocJSON } from "../logic/types";
+import { supabase } from "@markbase/server/supabase";
+import { emptyDoc } from "@markbase/shared/docs/markdown";
+import { collapseToPrimary } from "@markbase/shared/docs/tab-group";
+import type { DocJSON } from "@markbase/shared/docs/types";
 import type { Actor, Capability } from "./auth";
 import { editDocCrdt } from "./doc-crdt";
 import { listMembershipsForUser } from "./members";
@@ -156,7 +156,7 @@ export async function listTabs(tabGroupId: string): Promise<TabRow[]> {
 
 /** Add a new (empty) tab to the same group as `sourceDocId`, placed after the
  *  existing ones. Never before: listings represent a group by its primary tab
- *  (see logic/tab-group), and a new empty tab must not become the document. */
+ *  (see @markbase/shared/docs/tab-group), and a new empty tab must not become the document. */
 export async function createTab(sourceDocId: string): Promise<DocumentRow> {
   const source = await getDocument(sourceDocId);
   if (!source) throw new Error("Document not found");

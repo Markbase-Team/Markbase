@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { CLI_PACKAGE, fetchLatestCliVersion, isVersionBehind } from "@markbase/protocol";
+import { CLI_PACKAGE, fetchLatestCliVersion, isVersionBehind } from "@markbase/shared";
 import { DESKTOP_APP_NOTE, detectDesktopApp } from "./desktop-app";
 import { serviceInstalled } from "./service";
 

@@ -1,4 +1,4 @@
-import { authorizedByGate } from "@markbase/protocol/caller";
+import { authorizedByGate } from "@markbase/shared/caller";
 import { readerSelectionsHandler } from "../../../../../handlers";
 
 export const POST = readerSelectionsHandler(authorizedByGate).POST;

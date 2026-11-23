@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getAttentionDb } from "./supabase";
-import { chatJson } from "@markbase/llm";
+import { chatJson } from "@markbase/server/llm";
 
 // Attention boards = a kanban of "things that need your attention". Emails are
 // filed onto a board by dragging them from the Inbox onto the Attention sidebar

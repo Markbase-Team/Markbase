@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import Script from "next/script";
 import { connection } from "next/server";
-import { instanceConfigScript } from "@markbase/protocol/instance-config";
+import { instanceConfigScript } from "@markbase/shared/instance-config";
 import { Toaster } from "@markbase/ui/sonner";
 import { SignupSourceCapture } from "@/components/signup-source-capture";
 import { serverInstanceConfig } from "@/lib/instance-info";
@@ -54,7 +54,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         {/* Which Supabase project this server runs on, for the browser code
             that signs in and joins live channels (instancePublicConfig() in
-            @markbase/protocol). beforeInteractive: the server queues it in the
+            @markbase/shared). beforeInteractive: the server queues it in the
             page and Next's bootstrap runs the queue before it hydrates anything
             (next/dist/client/app-bootstrap.js), so it is there whenever the
             first client is created. (A raw <script> would run even earlier, at

@@ -1,6 +1,7 @@
-import { buildSkillMd, getSkillByName } from "@markbase/protocol/skills";
-import { listSkillFiles } from "@markbase/protocol/skill-files";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { buildSkillMd } from "@markbase/shared/skills";
+import { getSkillByName } from "@markbase/server/db/skills";
+import { listSkillFiles } from "@markbase/server/db/skill-files";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // GET /api/v1/skills/:name — the skill as JSON, or the raw SKILL.md when
 // `?format=raw` (or Accept: text/markdown) so an agent can write it straight to

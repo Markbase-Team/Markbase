@@ -1,4 +1,4 @@
-import { RELEASES_REPO } from "@markbase/protocol/downloads";
+import { RELEASES_REPO } from "@markbase/shared/downloads";
 
 // The version the Download for Mac buttons offer.
 //

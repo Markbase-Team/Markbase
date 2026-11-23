@@ -1,6 +1,6 @@
 import { createSecret, isSecretsConfigured, listSecrets } from "../../../../server";
-import { getProject } from "@markbase/protocol/tickets";
-import { callerFromHeaders } from "@markbase/protocol/auth";
+import { getProject } from "@markbase/server/db/tickets";
+import { callerFromHeaders } from "@markbase/shared/auth";
 
 // GET /api/admin/secrets?project=slug — list secret *metadata* (never values).
 export async function GET(req: Request) {

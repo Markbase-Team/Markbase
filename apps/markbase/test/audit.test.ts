@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parseAuditArgs } from "../src/audit";
 
-// The ledger and the hook parsing are tested with @markbase/vault; this pins
+// The ledger and the hook parsing are tested with @markbase/local/vault; this pins
 // the commands' own flags.
 
 describe("parseAuditArgs", () => {

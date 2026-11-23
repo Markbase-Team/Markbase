@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Project } from "@markbase/protocol/types";
+import type { Project } from "@markbase/shared/types";
 import { ProjectsProvider } from "./projects-context";
 
 /**

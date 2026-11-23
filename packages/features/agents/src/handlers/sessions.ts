@@ -1,19 +1,19 @@
+import { isProvider } from "@markbase/shared";
 import {
   createAgentSession,
   createAgentSpawnRequest,
   endAgentSession,
-  getProject,
-  isProvider,
   listAgentSessions,
   renameAgentSession,
-} from "@markbase/protocol";
-import { endpointSet, signedIn, type EndpointDef } from "@markbase/protocol/endpoint";
-import { listApiKeys } from "@markbase/node/api-keys";
-import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/node/features";
+} from "@markbase/server/db/agent-sessions";
+import { getProject } from "@markbase/server/db/tickets";
+import { endpointSet, signedIn, type EndpointDef } from "@markbase/shared/endpoint";
+import { listApiKeys } from "@markbase/server/api-keys";
+import { CLAUDE_CODE_REQUIRED, featureEnabled } from "@markbase/server/features";
 
 // The agents feature's endpoints: the named agent sessions a person hands work
 // to. Each is written once — what it is, who may call it, its code — with the
-// machinery every feature shares (@markbase/protocol/endpoint); the route files
+// machinery every feature shares (@markbase/shared/endpoint); the route files
 // under src/app/api are generated from these (scripts/gen-endpoints.ts).
 //
 // Authentication happens in the shell's proxy — /api/v1/agent-sessions is a

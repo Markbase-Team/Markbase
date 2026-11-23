@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Pencil, Plus } from "lucide-react";
-import { createSupabaseBrowserClient } from "@markbase/protocol/browser";
+import { createSupabaseBrowserClient } from "@markbase/shared/browser";
 import { useNavigation } from "@markbase/ui/navigation";
 import type {} from "./routes";
 import type { SidebarSlotProps } from "@markbase/ui/sidebar-slot";
@@ -15,6 +15,7 @@ import {
   SidebarMenuSubItem,
 } from "@markbase/ui/sidebar";
 import { useProjects } from "./projects-context";
+import { onTicketChanges } from "./ticket-changes";
 
 /**
  * The projects entry in the shell's sidebar.
@@ -47,17 +48,10 @@ export default function ProjectsSidebar({ entry, Icon }: SidebarSlotProps) {
       );
     }
     loadRunning();
-    const channel = supabase
-      .channel("sidebar-running")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tickets" },
-        () => loadRunning()
-      )
-      .subscribe();
+    const stop = onTicketChanges("sidebar-running", () => void loadRunning());
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      stop();
     };
   }, []);
 

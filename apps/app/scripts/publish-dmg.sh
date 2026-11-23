@@ -32,7 +32,7 @@
 # --unnotarised publishes a build that is signed but not notarised, for when
 # Apple's notary is holding a submission. macOS then asks people to allow the
 # app once in System Settings, which the site says next to every download
-# (MAC_FIRST_OPEN_NOTE in @markbase/protocol/downloads).
+# (MAC_FIRST_OPEN_NOTE in @markbase/shared/downloads).
 #
 # Supabase storage was the first attempt and is not viable: a project-wide upload
 # limit caps every bucket, is not exposed in the database or the storage API, and

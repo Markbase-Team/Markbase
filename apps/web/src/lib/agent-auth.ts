@@ -3,12 +3,12 @@ import {
   resolveCaller,
   type Caller,
   type ApiScope,
-} from "@markbase/node/caller";
+} from "@markbase/server/caller";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 // This shell's half of the auth seam.
 //
-// Resolving a caller is shared logic and lives in @markbase/node/caller; what
+// Resolving a caller is shared logic and lives in @markbase/server/caller; what
 // stays here is the part only a Next app can do — reading the cookie session
 // through `next/headers`, and writing a NextResponse. Another shell supplies
 // its own session reader and reuses everything else.

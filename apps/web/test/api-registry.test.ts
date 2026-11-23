@@ -7,8 +7,8 @@ import {
   AGENT_ENDPOINTS,
   DOC_ENDPOINTS,
   type DocEndpoint,
-} from "@markbase/docs/endpoints";
-import { agentTools } from "@markbase/docs/agent-tools";
+} from "@markbase/shared/docs/endpoints";
+import { agentTools } from "@markbase/shared/docs/agent-tools";
 
 // Every action the backend serves is in the endpoint registry, and the registry
 // says for each one whether an agent may call it — and if not, why.
@@ -93,7 +93,7 @@ describe("the API and the endpoint registry", () => {
       expect(
         registry.has(key(method, path)),
         `${method} ${path} is served but not registered. Add it to DOC_ENDPOINTS or ACCOUNT_ENDPOINTS ` +
-          "(packages/features/docs/src/logic/endpoints.ts): agents get it as a tool unless you mark it " +
+          "(packages/shared/src/docs/endpoints.ts): agents get it as a tool unless you mark it " +
           "humanOnly and say why."
       ).toBe(true);
     }

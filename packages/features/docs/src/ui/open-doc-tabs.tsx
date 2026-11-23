@@ -12,7 +12,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { layoutTabs, tabCapacity } from "@markbase/docs/workspace-tabs";
+import { layoutTabs, tabCapacity } from "@markbase/shared/docs/workspace-tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { DEFAULT_APP_URL } from "@markbase/protocol/instance";
+import { DEFAULT_APP_URL } from "@markbase/shared/instance";
 import { Markdown } from "@markbase/ui/markdown";
 import { ConnectAgents } from "@markbase/ui/connect-agents";
 import { DocsBody } from "@/components/docs/docs-body";

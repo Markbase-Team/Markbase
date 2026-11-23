@@ -1,6 +1,6 @@
 // The desktop implementation of the API client's transport.
 //
-// `api` (packages/core/protocol) is the one client every feature's UI calls,
+// `api` (packages/shared) is the one client every feature's UI calls,
 // and it carries a request with whatever transport the shell installed — by
 // default, the page's own `fetch`. These pages do not get that: they are served
 // from markbase://app, a different origin from the API, and they are not
@@ -13,7 +13,7 @@
 // depend on is described as an interface, and the shell hands in the one that
 // fits where it runs.
 
-import type { ApiTransport, ApiTransportRequest } from "@markbase/protocol/api-client";
+import type { ApiTransport, ApiTransportRequest } from "@markbase/shared/api-client";
 import type { DesktopApiFormField, DesktopApiRequest } from "../api-bridge";
 import type { ApiBridge } from "../preload";
 

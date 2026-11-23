@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeftRight, Globe, Settings } from "lucide-react";
-import { connectLink, DEFAULT_APP_URL, normalizeInstanceUrl } from "@markbase/protocol/instance";
+import { connectLink, DEFAULT_APP_URL, normalizeInstanceUrl } from "@markbase/shared/instance";
 import { Button } from "@markbase/ui/button";
 import {
   Dialog,
