@@ -31,7 +31,6 @@ import { CommentsPanel } from "./comments-panel";
 import { DocAnalytics } from "./doc-analytics";
 import { AgentChatDock } from "./agent-chat-dock";
 import { DocActionSet } from "./doc-action-set";
-import { useEmbedMode } from "./embed-mode";
 import { LocalForkBanner } from "./local-fork-banner";
 import { invalidateDocLists } from "./doc-list-fetch";
 import { DEFAULT_PANEL_WIDTH, savedPanelWidth, startPanelDrag } from "./panel-width";
@@ -370,9 +369,7 @@ export function DocView({
   // The right-hand column. In the workspace the Claude tab isn't in it: the
   // workspace draws that panel beside every document, so the document gives up
   // its column rather than showing an empty one.
-  // Embed mode is the document alone (./embed-mode): no side panel, and no Share / Publish / Download.
-  const embed = useEmbedMode();
-  const showAside = !embed && panelOpen && !(agentHosted && panelTab === "claude");
+  const showAside = panelOpen && !(agentHosted && panelTab === "claude");
 
   return (
     <main ref={rootRef} className="relative flex h-full w-full min-w-0">
@@ -498,7 +495,6 @@ export function DocView({
                   onMarkdown={() => setViewMode("markdown")}
                 />
                 <div className="flex flex-1 justify-end">
-                  {!embed && (
                   <DocActionSet
                     key={docId}
                     isOwner={capability === "owner"}
@@ -511,7 +507,6 @@ export function DocView({
                     isDesktop={isDesktop}
                     publish={publish}
                   />
-                  )}
                 </div>
               </div>
             )}

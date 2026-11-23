@@ -7,15 +7,11 @@
 ## Scope: the document, in two views
 
 1. **Inline, in the conversation:** the document card as before: the title, the rendered text, "Open in Markbase". No sign-in. With the embed on, it also has **"Open full page"**.
-2. **Full page, in the side panel:** the real web app at that document, in **embed mode**.
-   - Shown: the files list and the document, with its Preview / Markdown views, editable.
-   - Gone: the app rail and account menu, Share / Publish / Download, the Analytics / Comments / History / agent panels, new tabs, and the "Connect an agent" prompt.
+2. **Full page, in the side panel:** the real web app at that document, in **embed mode**. The documents surface is all there, with editing on: the files list (the vault's tree), the editor, comments, history, Share and Publish.
+   - Hidden: what is outside the documents surface. That is the app's nav rail (other features, settings), the account menu, the desktop app's download prompts, and the "Connect an agent" dialog (the person is in their agent already).
+   - Also hidden: **Download**. A framed page cannot be relied on to save a file (see below), so the owner chose to drop it.
    - Embed mode is on when the request carries the frame's marker cookie, which only the embed frame has. `?embed=1` also turns it on in the browser.
    - The switch is `EmbedModeProvider` / `useEmbedMode()` in the documents feature (`packages/features/docs/src/ui/embed-mode.tsx`), and `lib/embed-mode.ts` in the web app.
-
-Open questions for the owner:
-- **Comments and history:** hidden in embed mode for now. Each is one condition to bring back.
-- **Editing:** on.
 
 ## How it works
 
@@ -68,10 +64,17 @@ Real card path (`card.mjs`), app card:
 Document card, "Open full page" pressed: Chromium and WebKit both got the hand-off (200), asked for full page and landed signed in on the document with the editor loaded.
 
 Embed mode, on both cards and in both browsers:
-- **Present:** the files list and the editor.
-- **Gone:** Share, the Analytics / Comments / History buttons, New tab, and the account menu.
+- **Present:** the files list, the editor, Share, Comments and History.
+- **Gone:** Download, the app's nav rail and the account menu.
 
-Session cookie and marker came back `SameSite=None`, partitioned. The marker is httpOnly.
+**Download inside the frame** (tested before it was removed):
+
+| Browser | Card sandbox without `allow-downloads` | With `allow-downloads` | Same app, not framed |
+| --- | --- | --- | --- |
+| WebKit (Safari) | blocked ("Not allowed to download due to sandboxing") | the `.md` file arrives | — |
+| Chromium (Chrome, Edge) | no file, no message | no file, no message | the `.md` file arrives |
+
+So Download would work inside Claude only in Safari, and only if Claude's card sandbox includes `allow-downloads`. In Chrome it does not work framed. Embed mode therefore leaves Download out. Bringing it back would need a way that does not depend on the frame, for example a short-lived download link opened in a new tab.
 
 Lower-level proof (`run.mjs`):
 

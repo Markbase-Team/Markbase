@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@markbase/ui/dropdown-menu";
 import { cn } from "@markbase/ui/utils";
-import { useEmbedMode } from "./embed-mode";
 
 /** One tab as the strip draws it. */
 export type StripTab = { tabId: string; title: string; pinned: boolean };
@@ -85,8 +84,6 @@ export function OpenDocTabs({
    *  workspace portals its buttons in here — this is just the mount point. */
   rightSlot?: React.ReactNode;
 }) {
-  // Embed mode opens documents from the files list only (./embed-mode).
-  const embed = useEmbedMode();
   // Which tab's right-click menu is open.
   const [menuFor, setMenuFor] = useState<string | null>(null);
   // The strip doesn't scroll. Tabs shrink to a readable minimum, and the ones
@@ -308,7 +305,6 @@ export function OpenDocTabs({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-        {!embed && (
         <button
           type="button"
           onClick={onNewTab}
@@ -321,7 +317,6 @@ export function OpenDocTabs({
         >
           <Plus className="size-4" />
         </button>
-        )}
       </div>
       {/* Right header: the panel's tab bar, pinned outside the scroll area so it
           never scrolls away with the tabs. pr-4 matches the doc grid's px-4 so an

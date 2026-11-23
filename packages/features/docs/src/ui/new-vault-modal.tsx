@@ -17,6 +17,7 @@ import { Button } from "@markbase/ui/button";
 import { Input } from "@markbase/ui/input";
 import { Label } from "@markbase/ui/label";
 import { useDocsPorts } from "./ports";
+import { useEmbedMode } from "./embed-mode";
 import { sanitizePathSegment } from "@markbase/shared/shared-vault";
 
 export type VaultMeta = { id: string; name: string };
@@ -58,6 +59,8 @@ export function NewVaultModal({
   // Only a host with a vaults port can give the vault a folder — so "is this
   // the desktop" is "is there a vaults port". A browser creates the vault and
   // leaves the folder to the desktop app.
+  // Inside an AI app's card (./embed-mode): no desktop download prompts.
+  const embed = useEmbedMode();
   const { vaults } = useDocsPorts();
   const isDesktop = vaults !== null;
   // The first vault arrives named, so the folder row can show where it goes
@@ -143,13 +146,20 @@ export function NewVaultModal({
         // seen. A toast does, and it carries the one thing worth saying after
         // Create here: the folder is the desktop app's step, with the link —
         // secondary, after the vault exists, not before it.
-        toast.success(`"${data.vault.name}" is ready`, {
-          description: "It syncs to a folder on your Mac through the desktop app.",
-          action: {
-            label: "Download for Mac",
-            onClick: () => window.open(MAC_DOWNLOAD_URL, "_blank", "noopener"),
-          },
-        });
+        // Inside an AI app's card (./embed-mode) the vault is announced without
+        // the desktop download: that is the app's business, not the card's.
+        toast.success(
+          `"${data.vault.name}" is ready`,
+          embed
+            ? undefined
+            : {
+                description: "It syncs to a folder on your Mac through the desktop app.",
+                action: {
+                  label: "Download for Mac",
+                  onClick: () => window.open(MAC_DOWNLOAD_URL, "_blank", "noopener"),
+                },
+              }
+        );
       }
       onOpenChange(false);
     } catch {
@@ -250,7 +260,7 @@ export function NewVaultModal({
                 <span className="min-w-0 flex-1">
                   Added later, on your Mac: the desktop app syncs this vault to a
                   folder of your choice.
-                  <DownloadButton size="sm" className="mt-2 flex w-fit" />
+                  {!embed && <DownloadButton size="sm" className="mt-2 flex w-fit" />}
                 </span>
               </p>
             )}

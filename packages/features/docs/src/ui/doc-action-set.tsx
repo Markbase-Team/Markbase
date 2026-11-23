@@ -13,6 +13,7 @@ import {
 import { cn } from "@markbase/ui/utils";
 import { ComingSoonBadge } from "@markbase/ui/coming-soon";
 import { DownloadDocButton, downloadMarkdown } from "./download-doc";
+import { useEmbedMode } from "./embed-mode";
 import { AGENTS, useAgentLauncher } from "./agent-launcher";
 import { hasUnpublishedChanges, PublishButton, PublishDialog, usePublish } from "./publish-button";
 import { useDocFetch } from "./doc-client";
@@ -70,7 +71,10 @@ export function DocActionSet({
   const collect = useWholeDocMarkdown(tabDocs);
   const filename = docFileSlug(title);
   const hint = editable ? null : canComment ? "Review" : "Read-only";
-  const showDownload = !isDesktop;
+  // Not inside an AI app's card (./embed-mode): a framed page cannot be relied
+  // on to save a file (Chrome refuses it whatever the card's sandbox allows).
+  const embed = useEmbedMode();
+  const showDownload = !isDesktop && !embed;
   const anything = isOwner || showDownload || hint !== null;
 
   return (
