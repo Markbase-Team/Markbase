@@ -13,6 +13,8 @@ const ROW = {
   tab_group_id: "doc_1",
   version: 3,
   content: "# stale row copy",
+  content_head: "# stale row copy",
+  base_doc: { type: "doc", content: [{ type: "paragraph" }] },
   doc_json: { type: "doc", content: [{ type: "paragraph" }] },
 };
 
@@ -47,11 +49,13 @@ beforeEach(() => vi.clearAllMocks());
 
 describe("docs_readDoc for an agent", () => {
   it("answers an MCP call with the text and no editor copy", async () => {
-    const headers: Record<string, string>[] = [{ "X-Markbase-Via": "mcp" }, { "X-MCP-Client": "claude-ai" }];
+    const headers: Record<string, string>[] = [{ "X-MCP-Request": "1" }, { "X-MCP-Client": "claude-ai" }];
     for (const header of headers) {
       const body = await (await read(AGENT, header)).json();
       expect(body.doc.content).toBe("# Hand-off\n\nThe text.");
       expect(body.doc).not.toHaveProperty("doc_json");
+      expect(body.doc).not.toHaveProperty("base_doc");
+      expect(body.doc).not.toHaveProperty("content_head");
       expect(body.doc.title).toBe("Hand-off");
       expect(body.capability).toBe("owner");
       expect(body.tabs).toHaveLength(1);
