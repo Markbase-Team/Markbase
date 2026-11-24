@@ -25,9 +25,40 @@ export interface BlogPost {
   date: string;
   /** One or two sentences, shown in the list and as the page description. */
   summary: string;
+  /** A video shown under the lead, and its poster, which also becomes the share image. */
+  video?: BlogVideo;
+}
+
+/** A post's video: files under public/, served from these paths. */
+export interface BlogVideo {
+  mp4: string;
+  webm?: string;
+  /** A still of the video (JPEG), shown before it plays. */
+  poster: string;
+  width: number;
+  height: number;
+  /** What the video shows, for anyone who can't watch it. */
+  label: string;
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: "markbase-in-claude",
+    kind: "Update",
+    title: "Your Markbase documents, right in the Claude chat",
+    date: "2026-11-23",
+    summary:
+      "Ask Claude for a Markbase document and it now shows up in the conversation as it reads, not as raw text. Press Open full page to read the whole thing beside the chat.",
+    video: {
+      mp4: "/blog/markbase-in-claude.mp4",
+      webm: "/blog/markbase-in-claude.webm",
+      poster: "/blog/markbase-in-claude.jpg",
+      width: 1920,
+      height: 1080,
+      label:
+        "Claude is asked for a Markbase document. It appears as a card in the chat, and Open full page shows the whole document beside the conversation.",
+    },
+  },
   {
     slug: "hosted-mcp-server",
     kind: "Update",
@@ -186,7 +217,7 @@ export function blogPostingData(post: BlogPost) {
     "@type": "BlogPosting",
     headline: post.title,
     description: post.summary,
-    image: [`${base}${BLOG_IMAGE.path}`],
+    image: [`${base}${post.video?.poster ?? BLOG_IMAGE.path}`],
     datePublished: `${post.date}T00:00:00Z`,
     dateModified: `${post.date}T00:00:00Z`,
     articleSection: post.kind,
