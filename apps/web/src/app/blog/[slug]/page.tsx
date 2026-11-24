@@ -53,9 +53,16 @@ export async function generateMetadata({
       siteName: "Markbase",
       publishedTime: `${post.date}T00:00:00Z`,
       section: post.kind,
-      images: [{ url: BLOG_IMAGE.path, width: BLOG_IMAGE.width, height: BLOG_IMAGE.height, alt: "Markbase" }],
+      images: [
+        post.video
+          ? { url: post.video.poster, width: post.video.width, height: post.video.height, alt: post.video.label }
+          : { url: BLOG_IMAGE.path, width: BLOG_IMAGE.width, height: BLOG_IMAGE.height, alt: "Markbase" },
+      ],
+      ...(post.video
+        ? { videos: [{ url: `${siteUrl()}${post.video.mp4}`, width: post.video.width, height: post.video.height, type: "video/mp4" }] }
+        : {}),
     },
-    twitter: { card: "summary", title: post.title, description: post.summary },
+    twitter: { card: post.video ? "summary_large_image" : "summary", title: post.title, description: post.summary },
   };
 }
 
@@ -146,6 +153,24 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <h1 className="mt-5 text-4xl leading-[1.05] font-bold tracking-tight sm:text-6xl">{post.title}</h1>
             {lead && <Markdown content={lead} className={`mt-6 ${SITE_PROSE} ${LEAD}`} />}
           </header>
+
+          {post.video && (
+            <figure>
+              <video
+                className="w-full rounded-[28px] bg-zinc-100"
+                width={post.video.width}
+                height={post.video.height}
+                poster={post.video.poster}
+                aria-label={post.video.label}
+                controls
+                playsInline
+                preload="metadata"
+              >
+                {post.video.webm && <source src={post.video.webm} type="video/webm" />}
+                <source src={post.video.mp4} type="video/mp4" />
+              </video>
+            </figure>
+          )}
 
           {sections.map((section) =>
             section.steps ? (
