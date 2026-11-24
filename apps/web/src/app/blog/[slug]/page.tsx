@@ -103,12 +103,13 @@ const SECTION = [
 /** The text beside a steps block's heading, on the dark ground. */
 const STEPS_INTRO = "prose-p:my-0 prose-p:text-base prose-p:leading-relaxed prose-p:text-zinc-300";
 
-/** The steps themselves: no markers, each numbered in a lime circle. */
+/** The steps themselves: no markers, each numbered in a lime circle; links white, underlined in lime. */
 const STEPS = [
   "prose-base text-white prose-strong:text-white",
   "prose-ol:my-0 prose-ol:list-none prose-ol:p-0 [&_ol>li+li]:mt-4 prose-ol:[counter-reset:step]",
   "prose-li:relative prose-li:my-0 prose-li:min-h-7 prose-li:pl-11 prose-li:leading-7 prose-li:text-[17px] prose-li:text-white prose-li:[counter-increment:step]",
   "[&_li]:before:absolute [&_li]:before:top-0 [&_li]:before:left-0 [&_li]:before:flex [&_li]:before:size-7 [&_li]:before:items-center [&_li]:before:justify-center [&_li]:before:rounded-full [&_li]:before:bg-[#e5ff6e] [&_li]:before:text-sm [&_li]:before:font-bold [&_li]:before:text-zinc-900 [&_li]:before:content-[counter(step)]",
+  "prose-a:font-medium prose-a:text-white prose-a:underline prose-a:decoration-[#e5ff6e] prose-a:decoration-2 prose-a:underline-offset-4",
   "prose-code:rounded prose-code:bg-white/15 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-medium prose-code:text-white",
 ].join(" ");
 

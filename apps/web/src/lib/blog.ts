@@ -43,6 +43,23 @@ export interface BlogVideo {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "connect-claude-connector",
+    kind: "Update",
+    title: "Connect Markbase to Claude in a minute",
+    date: "2026-11-24",
+    summary:
+      "Find Markbase in Claude's connectors, sign in or sign up on the way, and choose what Claude may do. Then ask Claude to get you started, write up a chat, comment on a document and share it.",
+    video: {
+      mp4: "/blog/connect-claude-connector.mp4",
+      webm: "/blog/connect-claude-connector.webm",
+      poster: "/blog/connect-claude-connector.jpg",
+      width: 1920,
+      height: 1080,
+      label:
+        "Markbase is connected from Claude's connectors: a new account is made during sign-in and Claude is given Owner access. Claude then shows a getting-started card, writes the chat up as a document, comments on another and makes a share link.",
+    },
+  },
+  {
     slug: "markbase-in-claude",
     kind: "Update",
     title: "Your Markbase documents, right in the Claude chat",
