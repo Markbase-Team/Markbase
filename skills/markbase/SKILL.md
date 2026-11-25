@@ -103,6 +103,8 @@ Each endpoint lists the **minimum role** it needs. Roles are ranked `owner > edi
 | `POST   $BASE/vaults/convert` | signed-in | Make a folder inside a vault a vault of its own |
 | `GET    $BASE/docs/start` | signed-in | Where to begin: your vaults, newest documents and things to try |
 | `GET    $BASE/assets` | signed-in | List the images and files in a vault, or the ones a document links to |
+| `GET    $BASE/docs/:id/status` | viewer | Status (core fields, warnings, trust, whether a review is due) |
+| `POST   $BASE/docs/:id/verify` | editor | Confirm the current text is right, as you |
 | `GET    $BASE/me` | signed-in | Whose key this is: the owner's id and name, and the connection |
 | `GET    $BASE/me/profile` | signed-in | The account's display name and sign-in name |
 
@@ -228,6 +230,26 @@ curl -s -H "$AUTH" -H "$CLIENT" "$BASE/vaults" | jq '.vaults'
 
 ```bash
 curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/start" | jq '.suggestions'
+```
+
+### Status (core fields, warnings, trust, whether a review is due)
+`GET /docs/:id/status` · role: **viewer** · scope: read
+
+- **When:** To know how far to trust a document before relying on it: whether anyone confirmed its current text (a person or an agent), whether it is deprecated, and whether a review is due.
+- **Output:** { fields: { type, status, superseded_by, owner, audience, covers, review_by }, warnings: [{ field, message }], last_meaningful_change, trust: unverified | agent_confirmed | human_confirmed, current_confirmations: [{ by, at, name }], needs_review }
+
+```bash
+curl -s -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/status" | jq '{trust, needs_review}'
+```
+
+### Confirm the current text is right, as you
+`POST /docs/:id/verify` · role: **editor** · scope: write
+
+- **When:** Only after checking the document against its source (the code, the system, the person who knows) and finding it right. Recorded in your name; the next meaningful edit ends it. You can't confirm a change you made.
+- **Output:** { verified: { by, at }, trust }  ·  409 if you made the last change
+
+```bash
+curl -s -X POST -H "$AUTH" -H "$CLIENT" "$BASE/docs/$ID/verify"
 ```
 
 ## Capabilities

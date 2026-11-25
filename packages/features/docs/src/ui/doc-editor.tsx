@@ -588,7 +588,7 @@ export const DocEditor = forwardRef<
           )}
         </BubbleMenu>
       )}
-      {editor && <PropertiesPanel editor={editor} editable={editable} />}
+      {editor && <PropertiesPanel editor={editor} editable={editable} docId={docId} />}
       {editor && editable && (
         <DragHandle
           editor={editor}

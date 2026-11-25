@@ -683,5 +683,33 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
     "summary": "Which of your documents' snapshots changed since a cursor",
     "humanOnly": true,
     "why": "The editor's and the sync daemon's transport. An agent edits through /edits, which lands in the same state."
+  },
+  {
+    "id": "docs_docStatus",
+    "method": "GET",
+    "path": "/docs/:id/status",
+    "capability": "viewer",
+    "scope": "read",
+    "summary": "Status (core fields, warnings, trust, whether a review is due)",
+    "skill": {
+      "whenToUse": "To know how far to trust a document before relying on it: whether anyone confirmed its current text (a person or an agent), whether it is deprecated, and whether a review is due.",
+      "input": "",
+      "output": "{ fields: { type, status, superseded_by, owner, audience, covers, review_by }, warnings: [{ field, message }], last_meaningful_change, trust: unverified | agent_confirmed | human_confirmed, current_confirmations: [{ by, at, name }], needs_review }",
+      "example": "curl -s -H \"$AUTH\" -H \"$CLIENT\" \"$BASE/docs/$ID/status\" | jq '{trust, needs_review}'"
+    }
+  },
+  {
+    "id": "docs_verifyDoc",
+    "method": "POST",
+    "path": "/docs/:id/verify",
+    "capability": "editor",
+    "scope": "write",
+    "summary": "Confirm the current text is right, as you",
+    "skill": {
+      "whenToUse": "Only after checking the document against its source (the code, the system, the person who knows) and finding it right. Recorded in your name; the next meaningful edit ends it. You can't confirm a change you made.",
+      "input": "",
+      "output": "{ verified: { by, at }, trust }  ·  409 if you made the last change",
+      "example": "curl -s -X POST -H \"$AUTH\" -H \"$CLIENT\" \"$BASE/docs/$ID/verify\""
+    }
   }
 ];

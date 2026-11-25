@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { type Editor, useEditorState } from "@tiptap/react";
 import { submitKeys } from "@markbase/ui/keys";
+import { useDocStatus } from "./use-doc-status";
 import {
+  AlertTriangle,
   Calendar,
+  Check,
   ChevronDown,
   ChevronRight,
   List,
@@ -52,9 +55,12 @@ function fieldType(value: FMValue): "tags" | "date" | "text" {
 export function PropertiesPanel({
   editor,
   editable,
+  docId,
 }: {
   editor: Editor;
   editable: boolean;
+  /** The document's id, for its status. Without one, no status is shown. */
+  docId?: string;
 }) {
   const dataJson = useEditorState({
     editor,
@@ -94,6 +100,8 @@ export function PropertiesPanel({
         {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
         Properties
       </button>
+
+      {docId && <DocStatusBar docId={docId} editor={editor} editable={editable} />}
 
       {open && (
         <div className="mt-2 space-y-1.5 text-sm">
@@ -220,4 +228,75 @@ function TagsField({
       )}
     </div>
   );
+}
+
+// What Markbase works out about the document (doc types, layer 1): read-only
+// badges, never stored in its front matter, and the Confirm button that feeds
+// them.
+export function DocStatusBar({ docId, editor, editable }: { docId: string; editor: Editor; editable: boolean }) {
+  const { available, status, confirm, confirming, error } = useDocStatus(docId, editor);
+  if (!available || !status) return null;
+
+  const people = status.current_confirmations.filter((c) => c.by.startsWith("human:"));
+  const latest = (people.length ? people : status.current_confirmations).at(-1);
+  const trustText =
+    status.trust === "human_confirmed"
+      ? `Confirmed by ${latest?.name ?? "a person"} · ${shortDate(latest?.at)}`
+      : status.trust === "agent_confirmed"
+        ? `Confirmed by ${latest?.name ?? "an agent"} (agent) · ${shortDate(latest?.at)}`
+        : "Not confirmed since the last change";
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+      <Badge tone={status.trust === "human_confirmed" ? "good" : status.trust === "agent_confirmed" ? "info" : "muted"}>
+        {trustText}
+      </Badge>
+      {status.fields.status === "draft" && <Badge tone="warn">Draft</Badge>}
+      {status.fields.status === "deprecated" && (
+        <Badge tone="bad">
+          Deprecated{status.fields.superseded_by ? ` · see ${status.fields.superseded_by}` : ""}
+        </Badge>
+      )}
+      {status.needs_review && <Badge tone="warn">Review due</Badge>}
+      {status.warnings.length > 0 && (
+        <span title={status.warnings.map((w) => w.message).join("\n")}>
+          <Badge tone="warn">
+            <AlertTriangle className="size-3" />
+            {status.warnings.length} property {status.warnings.length === 1 ? "warning" : "warnings"}
+          </Badge>
+        </span>
+      )}
+      {editable && (
+        <button
+          type="button"
+          onClick={() => void confirm()}
+          disabled={confirming}
+          title="Confirm the current text is right. The next meaningful edit ends it."
+          className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-muted-foreground hover:text-foreground disabled:opacity-50"
+        >
+          <Check className="size-3" />
+          {confirming ? "Confirming…" : "Confirm"}
+        </button>
+      )}
+      {error && <span className="text-destructive">{error}</span>}
+    </div>
+  );
+}
+
+const TONES = {
+  good: "bg-green-500/10 text-green-700 dark:text-green-400",
+  info: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  warn: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  bad: "bg-red-500/10 text-red-700 dark:text-red-400",
+  muted: "bg-muted text-muted-foreground",
+} as const;
+
+function Badge({ tone, children }: { tone: keyof typeof TONES; children: React.ReactNode }) {
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${TONES[tone]}`}>{children}</span>;
+}
+
+function shortDate(iso: string | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

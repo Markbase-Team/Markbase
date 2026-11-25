@@ -149,3 +149,4 @@ export {
 export type { Revived } from "./revive-doc";
 export { reviveForFile } from "./revive-doc";
 export { dispatchMentions } from "./dispatch-mentions";
+export { addConfirmation, listConfirmations } from "./confirmations";

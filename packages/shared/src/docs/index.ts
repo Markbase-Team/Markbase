@@ -187,3 +187,27 @@ export {
 } from "./media";
 export { chooseRevival, type RevivalCandidate, type Revival } from "./revive";
 export { pinnedVersion, pinVersion, publishedMarkdown, behindPublished } from "./publish-pin";
+export {
+  CORE_FIELDS,
+  DOC_STATUSES,
+  AUDIENCES,
+  docStatus,
+  readCoreFields,
+  lastMeaningfulChange,
+  meaningOf,
+  trustOf,
+  timestampMs,
+  confirmsOwnChange,
+  type CoreField,
+  type CoreFields,
+  type DocStatus,
+  type Audience,
+  type ActorRef,
+  type Confirmation,
+  type FieldWarning,
+  type Trust,
+  type DocStatusReport,
+  type VersionText,
+  type VersionWriter,
+  type MeaningfulChange,
+} from "./doc-status";
