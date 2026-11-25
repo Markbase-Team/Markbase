@@ -30,6 +30,7 @@ import {
   setMemberPath,
   editDocCrdt,
   userOwnsVault,
+  type DocumentRow,
   type SharedDocumentListRow,
 } from "../server";
 import { normalizePath } from "@markbase/shared/folders";
@@ -219,7 +220,9 @@ export const createDocEndpoint = endpoint({
     // Every document must live in a vault or it syncs to no folder at all.
     vault_id: body.vault_id ?? (await ensureDefaultVault(a.actor.userId)).id,
   });
-  return json({ doc: created }, 201);
+  // An agent's app cuts a long answer short (see forAgent): the text is what
+  // it created, and the editor's copies are not worth losing the card over.
+  return json({ doc: viaMcp(req) ? forAgent(created) : created }, 201);
 });
 
 // GET — the document (canonical doc_json + markdown export + the caller's
@@ -273,17 +276,8 @@ export const readDocEndpoint = endpoint({
         }),
   ]);
 
-  // An agent gets the document as text and its facts. The editor's copies —
-  // doc_json, what the browser paints first, and base_doc, the merge base —
-  // are each several times the size of the markdown: an agent reading a 7 KB
-  // document received 130 KB, its app cut the answer short, and the card
-  // drawn from it could not be read. content_head (the list's preview) goes
-  // too: the whole text is right there.
   if (viaMcp(req)) {
-    // content_head is a column the row type does not name; the row read with it.
-    const stored: typeof auth.doc & { content_head?: string } = auth.doc;
-    const { doc_json: _json, base_doc: _base, content_head: _head, ...row } = stored;
-    return json({ doc: { ...row, content: derived.content }, capability: auth.capability, tabs });
+    return json({ doc: forAgent({ ...auth.doc, content: derived.content }), capability: auth.capability, tabs });
   }
   return json({
     doc: { ...auth.doc, content: derived.content, doc_json: derived.doc_json },
@@ -301,6 +295,22 @@ export const readDocEndpoint = endpoint({
  */
 function viaMcp(req: Request): boolean {
   return req.headers.get("x-mcp-request") === "1" || req.headers.has("x-mcp-client");
+}
+
+/**
+ * A document as an agent gets it: its text and its facts. The editor's copies
+ * — doc_json, what the browser paints first, and base_doc, the merge base —
+ * are each several times the size of the markdown: an agent reading a 7 KB
+ * document received 130 KB, its app cut the answer short, and the card drawn
+ * from it could not be read. The same card draws a document just created, so
+ * create answers the same way. content_head (the list's preview) goes too:
+ * the whole text is right there.
+ */
+function forAgent(doc: DocumentRow): Omit<DocumentRow, "doc_json" | "base_doc"> {
+  // content_head is a column the row type does not name; the row read with it.
+  const stored: DocumentRow & { content_head?: string } = doc;
+  const { doc_json: _json, base_doc: _base, content_head: _head, ...row } = stored;
+  return row;
 }
 
 // PATCH — rename (editors+).
