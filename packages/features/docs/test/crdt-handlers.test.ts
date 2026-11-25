@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CALLER_HEADER, serializeCaller, type Caller } from "@markbase/shared/auth";
 import { bytesToBase64 } from "@markbase/shared/docs/crdt-supabase";
-import { createDoc } from "@markbase/shared/docs/crdt";
-import { snapshot } from "@markbase/shared/docs/sync";
+import { createDoc, getMarkdown } from "@markbase/shared/docs/crdt";
+import { restore, snapshot } from "@markbase/shared/docs/sync";
 
 // The CRDT endpoints enforce exactly what the rest of the document API does:
 // viewer to read, editor to write, a key's ceiling applied, a share-link guest
@@ -17,8 +17,12 @@ const loadCrdtSnapshot = vi.fn();
 const saveCrdtSnapshot = vi.fn();
 const broadcastCrdt = vi.fn();
 const listCrdtChanges = vi.fn();
+const mirrorDocMarkdown = vi.fn();
 
-vi.mock("../src/server/documents", () => ({ getDocument: (id: string) => getDocument(id) }));
+vi.mock("../src/server/documents", () => ({
+  getDocument: (id: string) => getDocument(id),
+  mirrorDocMarkdown: (id: string, content: string) => mirrorDocMarkdown(id, content),
+}));
 vi.mock("../src/server/links", () => ({ getLinkByToken: (t: string) => getLinkByToken(t) }));
 vi.mock("../src/server/members", () => ({
   getMemberCapability: (d: string, u: string) => getMemberCapability(d, u),
@@ -89,6 +93,7 @@ beforeEach(() => {
   }));
   broadcastCrdt.mockReset().mockResolvedValue(undefined);
   listCrdtChanges.mockReset().mockResolvedValue({ cursor: "c1", changes: [] });
+  mirrorDocMarkdown.mockReset().mockResolvedValue(undefined);
 });
 
 describe("GET /docs/:id/crdt", () => {
@@ -186,6 +191,48 @@ describe("POST /docs/:id/crdt", () => {
     const res = await docCrdtHandler.POST(req(OWNER, { method: "POST", body: junk }), "doc_1");
     expect(res.status).toBe(400);
     expect(broadcastCrdt).not.toHaveBeenCalled();
+  });
+
+  describe("the row's searchable copy of the text", () => {
+    const markdownOf = (state: Uint8Array) => {
+      const doc = restore(state);
+      try {
+        return getMarkdown(doc);
+      } finally {
+        doc.destroy();
+      }
+    };
+
+    it("refreshes `content` from the merged state, so search and content_head follow an editor save", async () => {
+      const res = await docCrdtHandler.POST(req(OWNER, { method: "POST", body }), "doc_1");
+      expect(res.status).toBe(200);
+      expect(mirrorDocMarkdown).toHaveBeenCalledTimes(1);
+      expect(mirrorDocMarkdown).toHaveBeenCalledWith("doc_1", markdownOf(incoming));
+      expect(markdownOf(incoming)).toContain("incoming");
+    });
+
+    it("writes nothing when the merged markdown is what the row already holds", async () => {
+      getDocument.mockResolvedValue({ ...DOC, content: markdownOf(incoming) });
+      const res = await docCrdtHandler.POST(req(OWNER, { method: "POST", body }), "doc_1");
+      expect(res.status).toBe(200);
+      expect(mirrorDocMarkdown).not.toHaveBeenCalled();
+    });
+
+    it("writes nothing for a save that changed nothing", async () => {
+      saveCrdtSnapshot.mockResolvedValue({ version: 4, changed: false, delta: null, state: STATE });
+      await docCrdtHandler.POST(req(OWNER, { method: "POST", body }), "doc_1");
+      expect(mirrorDocMarkdown).not.toHaveBeenCalled();
+    });
+
+    it("does not fail the save when the row cannot be updated — the snapshot is the truth", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      mirrorDocMarkdown.mockRejectedValue(new Error("connection reset"));
+      const res = await docCrdtHandler.POST(req(OWNER, { method: "POST", body }), "doc_1");
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ version: 5 });
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("connection reset"));
+      warn.mockRestore();
+    });
   });
 
   it("answers 503 when the cloud is the problem, so the daemon retries", async () => {

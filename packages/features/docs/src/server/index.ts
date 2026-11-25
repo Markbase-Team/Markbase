@@ -22,6 +22,7 @@ export {
   setDocumentPath,
   pathFollowingTitle,
   mirrorDocContent,
+  mirrorDocMarkdown,
   deleteDocument,
   restoreDocument,
   listTrashedInVault,

@@ -1,8 +1,9 @@
-import { base64ToBytes, bytesToBase64 } from "@markbase/shared/docs";
+import { base64ToBytes, bytesToBase64, getMarkdown, restore } from "@markbase/shared/docs";
 import {
   broadcastCrdt,
   listCrdtChanges,
   loadCrdtSnapshot,
+  mirrorDocMarkdown,
   saveCrdtSnapshot,
 } from "../server";
 import { endpoint } from "./define";
@@ -59,7 +60,7 @@ export const writeCrdtEndpoint = endpoint({
   summary: "Merge a CRDT snapshot into the document",
   humanOnly: true,
   why: "The editor's and the sync daemon's transport. An agent edits through /edits, which lands in the same state.",
-}, async (req, { id }) => {
+}, async (req, { id }, a) => {
   let body: { state?: string } = {};
   try {
     body = await req.json();
@@ -91,8 +92,50 @@ export const writeCrdtEndpoint = endpoint({
     return json({ error: `state is not a Yjs update: ${message}` }, 400);
   }
   if (saved.changed && saved.delta) await broadcastCrdt(id, saved.delta);
+  if (saved.changed) {
+    // The editor and the sync daemon save here, not through editDocCrdt, so
+    // this is where their text reaches the row's copies of it. One restore
+    // serves every copy derived from the merged markdown.
+    const markdown = markdownOf(id, saved.state);
+    if (markdown !== null) await mirrorMarkdownQuietly(id, markdown, a.doc.content);
+  }
   return json({ version: saved.version });
 });
+
+/** The merged state's markdown, or null (logged) if it cannot be derived. */
+function markdownOf(id: string, state: Uint8Array): string | null {
+  try {
+    const doc = restore(state);
+    try {
+      return getMarkdown(doc);
+    } finally {
+      doc.destroy();
+    }
+  } catch (err) {
+    console.warn(`[crdt] deriving markdown for ${id}: ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  }
+}
+
+/**
+ * Bring the row's searchable copy of the markdown (`docs.documents.content`,
+ * and with it `content_head`) up to the merged state, for search and the
+ * sidebar preview.
+ *
+ * `stored` is the row's content as the access check loaded it, before this
+ * save: when the merged markdown equals it (a save that only touched
+ * comments, or re-sent what was already there) nothing is written. A failure
+ * is logged, not thrown: the snapshot is saved and is the truth; the row is a
+ * copy the next save refreshes.
+ */
+async function mirrorMarkdownQuietly(id: string, markdown: string, stored: string | null): Promise<void> {
+  if (markdown === stored) return;
+  try {
+    await mirrorDocMarkdown(id, markdown);
+  } catch (err) {
+    console.warn(`[crdt] mirroring content for ${id}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
 
 // GET ?since=<cursor>&vault=<id> | &scope=shared — which of the caller's
 // documents have a newer snapshot. `vault` is one of their own vaults;

@@ -462,6 +462,27 @@ export async function mirrorDocContent(
 }
 
 /**
+ * Refresh only the row's searchable copy of the markdown, after a snapshot
+ * saved through docs_writeCrdt (the editor and the vault daemon). Unlike
+ * mirrorDocContent it leaves `doc_json` alone: deriving it costs a full
+ * document walk and a large write on every save while someone types, and the
+ * editor paints from the CRDT, never from the row. `content_head` follows
+ * `content` on its own (a generated column).
+ *
+ * Bumps `updated_at`: it is the "edited" time the sidebar sorts by and shows,
+ * and the change feed (`listCrdtChanges`) reads doc_crdt's own `updated_at`,
+ * not this one. Callers skip the write when the markdown is unchanged, so a
+ * save that changed nothing in the text does not move the document up the list.
+ */
+export async function mirrorDocMarkdown(docId: string, content: string): Promise<void> {
+  const { error } = await db()
+    .from("documents")
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq("id", docId);
+  if (error) throw error;
+}
+
+/**
  * Move a document to trash. Reversible — see restoreDocument.
  *
  * NOT a row delete: doc_crdt references documents ON DELETE CASCADE, so removing
