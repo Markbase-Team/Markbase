@@ -7,6 +7,7 @@ import { PromptDialogMount } from "@/components/prompt-dialog-mount";
 import { NextNavigation } from "@/components/next-navigation";
 import { SidebarInset, SidebarProvider } from "@markbase/ui/sidebar";
 import { inEmbedFrame } from "@/lib/embed-mode";
+import { ReportAppOpen } from "@markbase/ui/report-app-open";
 
 /**
  * Whatever the shipped features contributed, wrapped outermost-first.
@@ -58,6 +59,8 @@ export default async function AdminDashboardLayout({
             A mobile-only shell used to swap in a back-arrow header and a
             launcher menu here, from when the rail was hidden on phones. */}
         <SidebarInset className="min-w-0">{children}</SidebarInset>
+        {/* Once a day per place: browser, desktop app, or a card inside an AI app. */}
+        <ReportAppOpen embedded={embed} />
       </SidebarProvider>
     </PromptDialogMount>
       </NextNavigation>

@@ -3,6 +3,7 @@ import {
   cleanFunnelProps,
   declaredFunnelEvents,
   defineFunnelEvents,
+  isDailyFunnelEvent,
   isFunnelEventName,
   isFunnelSource,
   parseFunnelEvent,
@@ -23,7 +24,7 @@ describe("declaring funnel events", () => {
 
   it("knows the app's own events", () => {
     for (const name of appFunnel.names) expect(isFunnelEventName(name)).toBe(true);
-    expect(appFunnel.names).toEqual(["account.sign_up", "account.sign_in", "agent.connect", "vault.provision"]);
+    expect(appFunnel.names).toEqual(["account.sign_up", "account.sign_in", "agent.connect", "vault.provision", "app.open"]);
   });
 
   it("refuses a name declared by two owners, and a name that is not thing.action", () => {
@@ -72,5 +73,16 @@ describe("signupSource", () => {
     expect(signupSource("/oauth/authorize?client_id=x")).toBe("mcp");
     expect(signupSource("/dashboard")).toBe("web");
     expect(signupSource(null)).toBe("web");
+  });
+});
+
+describe("events kept once a day", () => {
+  it("knows app.open is kept once a day, and the others are not", () => {
+    expect(isDailyFunnelEvent("app.open")).toBe(true);
+    expect(isDailyFunnelEvent("account.sign_in")).toBe(false);
+  });
+
+  it("refuses a daily name that is not among the declared ones", () => {
+    expect(() => defineFunnelEvents("dailytest", ["daily.one"], { daily: ["daily.other" as "daily.one"] })).toThrow(/not declared/);
   });
 });

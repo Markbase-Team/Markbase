@@ -3,7 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("../../../src/supabase", () => ({ supabase: {} }));
 
 import "@markbase/shared/analytics/funnel/onboarding";
-import { recordFunnelEvent, recordFunnelEventOnce, type EventWriter, type FunnelEventRow } from "../../../src/analytics/funnel/events-store";
+import {
+  recordFunnelEvent,
+  recordFunnelEventDaily,
+  recordFunnelEventOnce,
+  type EventWriter,
+  type FunnelEventRow,
+} from "../../../src/analytics/funnel/events-store";
 
 function collecting(had = false): { rows: FunnelEventRow[]; writer: EventWriter } {
   const rows: FunnelEventRow[] = [];
@@ -44,5 +50,28 @@ describe("recordFunnelEventOnce", () => {
     const again = collecting(true);
     expect(await recordFunnelEventOnce("u1", { name: "account.sign_up", source: "web", props: {} }, again.writer)).toBe(false);
     expect(again.rows).toEqual([]);
+  });
+});
+
+describe("recordFunnelEventDaily", () => {
+  const NOW = new Date("2026-11-25T15:30:00Z");
+
+  it("asks whether today's is already there, from the same source, and writes it when not", async () => {
+    const asked: { since?: string; source?: string }[] = [];
+    const rows: FunnelEventRow[] = [];
+    const writer: EventWriter = {
+      insert: async (row) => (rows.push(row), { error: null }),
+      has: async (_user, _name, within) => (asked.push(within ?? {}), false),
+    };
+    expect(await recordFunnelEventDaily("u1", { name: "app.open", source: "desktop", props: {} }, writer, NOW)).toBe(true);
+    expect(asked).toEqual([{ since: "2026-11-25T00:00:00.000Z", source: "desktop" }]);
+    expect(rows).toHaveLength(1);
+  });
+
+  it("writes nothing when today's is already there", async () => {
+    const rows: FunnelEventRow[] = [];
+    const writer: EventWriter = { insert: async (row) => (rows.push(row), { error: null }), has: async () => true };
+    expect(await recordFunnelEventDaily("u1", { name: "app.open", source: "web", props: {} }, writer, NOW)).toBe(false);
+    expect(rows).toEqual([]);
   });
 });
