@@ -211,3 +211,23 @@ export {
   type VersionWriter,
   type MeaningfulChange,
 } from "./doc-status";
+export { withFrontmatterField } from "./frontmatter-edit";
+export {
+  BUILTIN_VIEWS,
+  dayIn,
+  dayOf,
+  fieldValue,
+  matches,
+  parseViewSpec,
+  requiredProperties,
+  resolveValue,
+  runView,
+  type Condition,
+  type Op,
+  type Scalar,
+  type ViewContext,
+  type ViewDoc,
+  type ViewResult,
+  type ViewRow,
+  type ViewSpec,
+} from "./views";

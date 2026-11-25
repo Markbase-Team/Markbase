@@ -9,3 +9,4 @@ export * from "./assets";
 export * from "./crdt";
 export { definedEndpoints, endpointRoute, type Endpoint, type RouteParams } from "./define";
 export * from "./status";
+export * from "./views";

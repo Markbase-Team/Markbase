@@ -711,5 +711,64 @@ export const GENERATED_DOC_ENDPOINTS: readonly DocEndpoint[] = [
       "output": "{ verified: { by, at }, trust }  ·  409 if you made the last change",
       "example": "curl -s -X POST -H \"$AUTH\" -H \"$CLIENT\" \"$BASE/docs/$ID/verify\""
     }
+  },
+  {
+    "id": "docs_queryView",
+    "method": "GET",
+    "path": "/docs/views",
+    "capability": null,
+    "scope": "read",
+    "params": [
+      {
+        "name": "view",
+        "type": "string",
+        "description": "A built-in view by name: today. \"today\" is your open tasks (documents of type: task) by when they are due."
+      },
+      {
+        "name": "spec",
+        "type": "json",
+        "description": "Or a view of your own: { filter, sort, group_by, columns, limit }. A filter is { field, op, value } (op: eq ne in exists missing lt lte gt gte), or { all | any: [...] } or { not }. Values may be $me, $today, $today+7d. Fields are front matter, plus $title $path $updated_at."
+      },
+      {
+        "name": "tz",
+        "type": "string",
+        "description": "The time zone days are counted in, e.g. America/Los_Angeles (default UTC)."
+      }
+    ],
+    "summary": "Query a view: documents filtered, sorted and grouped by their properties",
+    "skill": {
+      "whenToUse": "To find documents by their front matter rather than their words: what is on someone's plate (view=today), or any filter, sort and grouping of your own over the documents you can open.",
+      "input": "?view=today&tz=America/Los_Angeles · ?spec={\"filter\":{\"field\":\"type\",\"op\":\"eq\",\"value\":\"incident\"}}",
+      "output": "{ name, title, today, time_zone, rows: [{ id, title, path, vault_id, updated_at, fields }], groups?: [{ key, rows }], truncated }",
+      "example": "curl -s -H \"$AUTH\" -H \"$CLIENT\" \"$BASE/docs/views?view=today&tz=America/Los_Angeles\" | jq '.groups'"
+    }
+  },
+  {
+    "id": "docs_setProperty",
+    "method": "POST",
+    "path": "/docs/:id/properties",
+    "capability": "editor",
+    "scope": "write",
+    "params": [
+      {
+        "name": "key",
+        "type": "string",
+        "required": true,
+        "description": "The front matter field, e.g. done, due, assignee, status."
+      },
+      {
+        "name": "value",
+        "type": "json",
+        "required": true,
+        "description": "Its new value: text, a number, true/false, null, or a list."
+      }
+    ],
+    "summary": "Set one property (front matter field) of a document",
+    "skill": {
+      "whenToUse": "To change one field of a document's front matter without touching the rest: mark a task done (done: true), move a due date, reassign it (assignee: human:<id> or agent:<name>), deprecate a doc (status: deprecated).",
+      "input": "{ key: string, value: JSON }",
+      "output": "{ key, value }",
+      "example": "curl -s -X POST -H \"$AUTH\" -H \"$CLIENT\" -H 'content-type: application/json' -d '{\"key\":\"done\",\"value\":true}' \"$BASE/docs/$ID/properties\""
+    }
   }
 ];

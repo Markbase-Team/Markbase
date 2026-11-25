@@ -151,3 +151,4 @@ export { reviveForFile } from "./revive-doc";
 export { dispatchMentions } from "./dispatch-mentions";
 export { addConfirmation, listConfirmations } from "./confirmations";
 export { indexDocProperties } from "./properties";
+export { queryDocuments } from "./query-documents";
