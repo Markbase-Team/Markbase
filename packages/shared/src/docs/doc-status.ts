@@ -32,6 +32,10 @@ export const CORE_FIELDS = [
   "covers",
   "review_by",
   "verified",
+  // A task is a document of `type: task`; Today reads these three.
+  "assignee",
+  "due",
+  "done",
 ] as const;
 export type CoreField = (typeof CORE_FIELDS)[number];
 
@@ -67,6 +71,15 @@ export interface CoreFields {
   covers: string[];
   /** ISO 8601, as written. */
   review_by: string | null;
+  /**
+   * Who a task is for: `human:<id>` or `agent:<name>`. Null: nobody named, so
+   * the document's owner.
+   */
+  assignee: ActorRef | null;
+  /** When a task is due: ISO 8601, as written. */
+  due: string | null;
+  /** Whether a task is done. Absent: false. */
+  done: boolean;
 }
 
 export interface FieldWarning {
@@ -184,6 +197,21 @@ export function readCoreFields(frontmatter: Record<string, JSONValue> | null): {
     if (review_by === null) warn("review_by", "`review_by` should be a date like 2026-12-31.");
   }
 
+  const assignee = text("assignee");
+  if (assignee !== null && !/^(human|agent):\S+$/.test(assignee)) {
+    warn("assignee", `\`assignee: ${assignee}\` should name someone as human:<id> or agent:<name>; read as nobody, so the owner.`);
+  }
+
+  let due: string | null = null;
+  if (!empty(fm.due)) {
+    due = asTimestamp(fm.due);
+    if (due === null) warn("due", "`due` should be a date like 2026-11-28.");
+  }
+
+  let done = false;
+  if (typeof fm.done === "boolean") done = fm.done;
+  else if (!empty(fm.done)) warn("done", "`done` should be true or false; read as false.");
+
   if (!empty(fm.verified)) {
     warn("verified", "`verified` in front matter isn't counted. Confirm the document in Markbase instead.");
   }
@@ -197,6 +225,9 @@ export function readCoreFields(frontmatter: Record<string, JSONValue> | null): {
       audience: oneOf("audience", AUDIENCES, "both"),
       covers,
       review_by,
+      assignee: assignee !== null && /^(human|agent):\S+$/.test(assignee) ? assignee : null,
+      due,
+      done,
     },
     warnings,
   };

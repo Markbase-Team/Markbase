@@ -27,7 +27,7 @@ const text = (editable = true): string =>
 
 function answer(over: Partial<DocStatusAnswer> = {}, fields: Partial<DocStatusAnswer["fields"]> = {}): DocStatusAnswer {
   return {
-    fields: { type: "doc", status: "stable", superseded_by: null, owner: null, audience: "both", covers: [], review_by: null, ...fields },
+    fields: { type: "doc", status: "stable", superseded_by: null, owner: null, audience: "both", covers: [], review_by: null, assignee: null, due: null, done: false, ...fields },
     warnings: [],
     last_meaningful_change: "2026-11-20T00:00:00.000Z",
     trust: "unverified",

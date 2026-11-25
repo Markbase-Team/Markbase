@@ -21,8 +21,30 @@ describe("readCoreFields", () => {
       audience: "both",
       covers: [],
       review_by: null,
+      assignee: null,
+      due: null,
+      done: false,
     });
     expect(warnings).toEqual([]);
+  });
+
+  it("reads a task's assignee, due date and whether it is done", () => {
+    const { frontmatter } = splitFrontmatter("---\ntype: task\nassignee: human:u1\ndue: 2026-11-28\ndone: true\n---\n\nUpdate the runbook.");
+    const { fields, warnings } = readCoreFields(frontmatter);
+    expect(warnings).toEqual([]);
+    expect(fields.type).toBe("task");
+    expect(fields.assignee).toBe("human:u1");
+    expect(T(fields.due!)).toBe(T("2026-11-28T00:00:00Z"));
+    expect(fields.done).toBe(true);
+    expect(readCoreFields({ assignee: "agent:claude" }).fields.assignee).toBe("agent:claude");
+  });
+
+  it("reads an assignee it can't place as nobody (so the owner), and a bad due or done with a warning", () => {
+    const { fields, warnings } = readCoreFields({ assignee: "jessie", due: "tomorrow", done: "yes" });
+    expect(fields.assignee).toBeNull();
+    expect(fields.due).toBeNull();
+    expect(fields.done).toBe(false);
+    expect(warnings.map((w) => w.field).sort()).toEqual(["assignee", "done", "due"]);
   });
 
   it("reads every core field", () => {
