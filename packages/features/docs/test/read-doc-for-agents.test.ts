@@ -21,6 +21,7 @@ const ROW = {
 vi.mock("../src/server/documents", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/server/documents")>()),
   getDocument: async (id: string) => (id === "doc_1" ? ROW : null),
+  createDocument: async () => ({ ...ROW, content: "# Hand-off\n\nThe text." }),
   listTabs: async () => [{ id: "doc_1", title: "Hand-off", position: 0 }],
 }));
 vi.mock("../src/server/doc-crdt", async (importOriginal) => ({
@@ -28,6 +29,12 @@ vi.mock("../src/server/doc-crdt", async (importOriginal) => ({
   readDocCrdt: async () => ({ content: "# Hand-off\n\nThe text.", doc_json: { type: "doc", content: [{ type: "heading" }] } }),
 }));
 vi.mock("../src/server/members", () => ({ getMemberCapability: async () => null, setMemberPath: async () => true, removeMember: async () => true }));
+vi.mock("../src/server/vaults", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/server/vaults")>()),
+  userOwnsVault: async () => true,
+  ensureDefaultVault: async () => ({ id: "vault_1" }),
+}));
+vi.mock("../src/server/properties", () => ({ indexDocProperties: async () => true }));
 vi.mock("../src/server/links", () => ({ getLinkByToken: async () => null }));
 vi.mock("../src/server/owner-name", () => ({ ownerDisplayName: async (u: string) => u }));
 vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
@@ -35,7 +42,7 @@ vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
   claimAgentSession: async () => null,
 }));
 
-const { readDocEndpoint } = await import("../src/handlers/documents");
+const { readDocEndpoint, createDocEndpoint } = await import("../src/handlers/documents");
 
 const AGENT: Caller = { via: "api_key", ownerId: "owner_1", key: { id: "key_1", provider: "claude_desktop", capability: null } };
 const PERSON: Caller = { via: "session", ownerId: "owner_1", email: "o@example.com" };
@@ -67,5 +74,32 @@ describe("docs_readDoc for an agent", () => {
       const body = await (await read(caller)).json();
       expect(body.doc.doc_json).toEqual({ type: "doc", content: [{ type: "heading" }] });
     }
+  });
+});
+
+function create(caller: Caller, extra: Record<string, string> = {}): Promise<Response> {
+  const req = new Request("https://markbase.so/api/v1/docs", {
+    method: "POST",
+    headers: { [CALLER_HEADER]: serializeCaller(caller), "content-type": "application/json", ...extra },
+    body: JSON.stringify({ title: "Hand-off", content: "# Hand-off\n\nThe text." }),
+  });
+  return createDocEndpoint.handle(req, {});
+}
+
+describe("docs_createDoc for an agent", () => {
+  it("answers an MCP call with the text and no editor copy", async () => {
+    const res = await create(AGENT, { "X-MCP-Request": "1" });
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.doc.id).toBe("doc_1");
+    expect(body.doc.content).toBe("# Hand-off\n\nThe text.");
+    expect(body.doc).not.toHaveProperty("doc_json");
+    expect(body.doc).not.toHaveProperty("base_doc");
+    expect(body.doc).not.toHaveProperty("content_head");
+  });
+
+  it("still gives the browser the editor copy", async () => {
+    const body = await (await create(PERSON)).json();
+    expect(body.doc.doc_json).toEqual(ROW.doc_json);
   });
 });

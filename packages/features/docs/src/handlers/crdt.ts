@@ -1,6 +1,7 @@
-import { base64ToBytes, bytesToBase64 } from "@markbase/shared/docs";
+import { base64ToBytes, bytesToBase64, getMarkdown, restore } from "@markbase/shared/docs";
 import {
   broadcastCrdt,
+  indexPropertiesQuietly,
   listCrdtChanges,
   loadCrdtSnapshot,
   saveCrdtSnapshot,
@@ -91,6 +92,17 @@ export const writeCrdtEndpoint = endpoint({
     return json({ error: `state is not a Yjs update: ${message}` }, 400);
   }
   if (saved.changed && saved.delta) await broadcastCrdt(id, saved.delta);
+  // The editor and the sync daemon save here, not through editDocCrdt, so this
+  // is where their front matter reaches the property index. Unchanged front
+  // matter (nearly every save while someone types) costs one comparison.
+  if (saved.changed) {
+    const doc = restore(saved.state);
+    try {
+      await indexPropertiesQuietly(id, getMarkdown(doc));
+    } finally {
+      doc.destroy();
+    }
+  }
   return json({ version: saved.version });
 });
 

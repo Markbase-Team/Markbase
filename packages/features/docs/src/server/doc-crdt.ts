@@ -12,6 +12,7 @@ import {
 } from "@markbase/shared/docs";
 import type { Actor } from "./auth";
 import { mirrorDocContent } from "./documents";
+import { indexDocProperties } from "./properties";
 import { broadcastCrdt, loadCrdtSnapshot, saveCrdtSnapshot } from "./crdt-store";
 
 // The external agent HTTP API edits the SAME CRDT Y.Doc the browser editor and
@@ -113,8 +114,22 @@ export async function editDocCrdt<T>(
     // Keep the Postgres row in step so full-text search + the doc list reflect
     // the edit (the CRDT is the truth; this is a searchable mirror).
     await mirrorDocContent(docId, markdown, docJson);
+    await indexPropertiesQuietly(docId, markdown);
     return { result, markdown, docJson };
   } finally {
     doc.destroy();
+  }
+}
+
+/**
+ * Index a document's properties after its text was saved. A failure here is
+ * logged, not thrown: the edit itself is already saved, and the index is a
+ * copy the next save (or the backfill) puts right.
+ */
+export async function indexPropertiesQuietly(docId: string, markdown: string): Promise<void> {
+  try {
+    await indexDocProperties(docId, markdown);
+  } catch (e) {
+    console.error(`[properties] ${docId}:`, e instanceof Error ? e.message : e);
   }
 }

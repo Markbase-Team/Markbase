@@ -1,7 +1,7 @@
 {
   "id": "today",
   "pkg": "@markbase/today",
-  "summary": "Today!: what needs you before the day starts.",
+  "summary": "Today!: the tasks that need you, by when they are due.",
   "sidebar": [
     {
       "id": "today",
@@ -16,8 +16,12 @@
   ],
   "centre": [],
   "contributes": {
+    "routes": "./ui/routes",
     "app": [
-      { "path": "dashboard/today/page", "title": "Today!" },
+      {
+        "path": "dashboard/today/page",
+        "title": "Today!"
+      },
       "api/v1/todos/route",
       "api/v1/todos/[id]/route",
       "api/v1/todos/reorder/route"

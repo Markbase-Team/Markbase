@@ -5,11 +5,13 @@
   "type": "module",
   "exports": {
     "./ui": "./src/ui/index.ts",
+    "./ui/routes": "./src/ui/routes.ts",
     "./app/*/route": "./src/app/*/route.ts",
     "./app/*/page": "./src/app/*/page.tsx",
     "./app/*/layout": "./src/app/*/layout.tsx"
   },
   "scripts": {
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

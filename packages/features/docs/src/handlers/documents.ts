@@ -16,6 +16,7 @@ import {
   deleteDocumentGroup,
   fileWriterOf,
   ensureDefaultVault,
+  indexPropertiesQuietly,
   getDocument,
   listDocumentsForUser,
   listSharedDocumentsForUser,
@@ -196,7 +197,7 @@ export const createDocEndpoint = endpoint({
       path: body.path,
       content: body.content ?? "",
     });
-    if (revived) return json({ doc: revived.doc, revived: revived.by }, 200);
+    if (revived) return json({ doc: viaMcp(req) ? withoutEditorCopies(revived.doc) : revived.doc, revived: revived.by }, 200);
   }
 
   const doc = body.content?.trim() ? markdownToDoc(body.content) : emptyDoc();
@@ -219,7 +220,12 @@ export const createDocEndpoint = endpoint({
     // Every document must live in a vault or it syncs to no folder at all.
     vault_id: body.vault_id ?? (await ensureDefaultVault(a.actor.userId)).id,
   });
-  return json({ doc: created }, 201);
+  // A document can be born with front matter; its properties are indexed from
+  // the first version, not the first edit.
+  await indexPropertiesQuietly(created.id, created.content);
+  // An agent gets back what it wrote as text, not the editor's copies: the
+  // same answer docs_readDoc gives it (a 7 KB document came back as 230 KB).
+  return json({ doc: viaMcp(req) ? withoutEditorCopies(created) : created }, 201);
 });
 
 // GET — the document (canonical doc_json + markdown export + the caller's
@@ -280,10 +286,7 @@ export const readDocEndpoint = endpoint({
   // drawn from it could not be read. content_head (the list's preview) goes
   // too: the whole text is right there.
   if (viaMcp(req)) {
-    // content_head is a column the row type does not name; the row read with it.
-    const stored: typeof auth.doc & { content_head?: string } = auth.doc;
-    const { doc_json: _json, base_doc: _base, content_head: _head, ...row } = stored;
-    return json({ doc: { ...row, content: derived.content }, capability: auth.capability, tabs });
+    return json({ doc: { ...withoutEditorCopies(auth.doc), content: derived.content }, capability: auth.capability, tabs });
   }
   return json({
     doc: { ...auth.doc, content: derived.content, doc_json: derived.doc_json },
@@ -291,6 +294,22 @@ export const readDocEndpoint = endpoint({
     tabs,
   });
 });
+
+/**
+ * A document row as an agent gets it: without the editor's copies — doc_json,
+ * what the browser paints first, and base_doc, the merge base — or
+ * content_head, the list's preview. Each is several times the markdown's size
+ * and the text itself is in `content`. (content_head is a column the row type
+ * does not name; rows read with it carry it.)
+ */
+function withoutEditorCopies<T extends object>(row: T): Omit<T, "doc_json" | "base_doc" | "content_head"> {
+  const { doc_json: _json, base_doc: _base, content_head: _head, ...rest } = row as T & {
+    doc_json?: unknown;
+    base_doc?: unknown;
+    content_head?: unknown;
+  };
+  return rest;
+}
 
 /**
  * Is this request an MCP tool call? Both MCP servers say so: they mark every

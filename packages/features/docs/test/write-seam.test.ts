@@ -40,6 +40,7 @@ const saveCrdtSnapshot = vi.fn(async (id: string, state: Uint8Array) => {
   snapshots.set(id, state);
   return { changed: true, state, version: 2 };
 });
+vi.mock("../src/server/properties", () => ({ indexDocProperties: async () => true }));
 vi.mock("../src/server/crdt-store", () => ({
   loadCrdtSnapshot: (id: string) => loadCrdtSnapshot(id),
   saveCrdtSnapshot: (id: string, s: Uint8Array) => saveCrdtSnapshot(id, s),

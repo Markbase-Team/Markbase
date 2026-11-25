@@ -32,6 +32,7 @@ const SHELL_ROUTES = {
   skills: (): string => "/dashboard/skills",
   skill: (id: string): string => `/dashboard/skills/${encodeURIComponent(id)}`,
   apiKeys: (): string => "/dashboard/api-keys",
+  document: (id: string): string => `/dashboard/documents/${encodeURIComponent(id)}`,
 };
 
 export const shellRoutes: ShellRoutes = SHELL_ROUTES;
