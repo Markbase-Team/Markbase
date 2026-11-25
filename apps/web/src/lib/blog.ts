@@ -43,6 +43,14 @@ export interface BlogVideo {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "institutional-memory-for-ai-agents",
+    kind: "Note",
+    title: "Institutional memory for AI agents is not memory",
+    date: "2026-11-25",
+    summary:
+      "Agent memory tools record your transcripts and search them later. Institutional memory is the written record of what your team decided and why, maintained so the next agent reads the conclusion instead of the argument.",
+  },
+  {
     slug: "connect-claude-connector",
     kind: "Update",
     title: "Connect Markbase to Claude in a minute",
