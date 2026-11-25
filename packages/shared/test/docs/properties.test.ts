@@ -6,14 +6,14 @@ describe("indexProperties", () => {
     expect(indexProperties("# Title\n\nBody.")).toEqual({ properties: {}, rows: [] });
   });
 
-  it("keeps front matter as written, with YAML dates as the dates they were", () => {
+  it("keeps front matter as written, dates included", () => {
     const { properties } = indexProperties(
       "---\nseverity: sev1\nlast_drill: 2026-09-01\nstarted_at: 2026-11-20T10:30:00Z\ntags: [db, oncall]\n---\n\nBody.",
     );
     expect(properties).toEqual({
       severity: "sev1",
       last_drill: "2026-09-01",
-      started_at: "2026-11-20T10:30:00.000Z",
+      started_at: "2026-11-20T10:30:00Z",
       tags: ["db", "oncall"],
     });
     expect(JSON.parse(JSON.stringify(properties))).toEqual(properties);

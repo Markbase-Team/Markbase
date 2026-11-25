@@ -1,4 +1,4 @@
-import { dump as yamlDump } from "js-yaml";
+import { dump as yamlDump, CORE_SCHEMA } from "js-yaml";
 import type { JSONValue } from "./types";
 
 // Setting one front matter field in a document's markdown, leaving every other
@@ -11,7 +11,8 @@ const BLOCK_RE = /^(---\r?\n)([\s\S]*?)(\r?\n---(?:\r?\n|$))/;
 
 /** `key: value` as YAML, on as many lines as the value needs. */
 function yamlLines(key: string, value: JSONValue): string {
-  return yamlDump({ [key]: value }).trimEnd();
+  // The core schema, as front matter is read (markdown.ts): a date is text.
+  return yamlDump({ [key]: value }, { schema: CORE_SCHEMA }).trimEnd();
 }
 
 /**

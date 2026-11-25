@@ -1,5 +1,11 @@
 import { Node, Fragment } from "@tiptap/pm/model";
-import { load as yamlLoad, dump as yamlDump } from "js-yaml";
+import { load as yamlLoad, dump as yamlDump, CORE_SCHEMA } from "js-yaml";
+
+// Front matter is read and written with YAML's core schema: no timestamp type,
+// so `due: 2026-11-28` stays the text 2026-11-28 both ways. The default schema
+// read it as a Date and wrote it back as 2026-11-28T00:00:00.000Z, which
+// changed what people wrote and, west of UTC, the day it meant.
+const YAML_OPTIONS = { schema: CORE_SCHEMA } as const;
 import MarkdownIt from "markdown-it";
 import markdownItMark from "markdown-it-mark";
 import {
@@ -404,7 +410,7 @@ export function docToMarkdown(doc: Node): string {
     });
     const body = serializer.serialize(docSchema.node("doc", null, bodyChildren), SERIALIZE_OPTIONS);
     if (Object.keys(data).length === 0) return body;
-    return `---\n${yamlDump(data).trimEnd()}\n---\n\n${body}`;
+    return `---\n${yamlDump(data, YAML_OPTIONS).trimEnd()}\n---\n\n${body}`;
   }
   return serializer.serialize(doc, SERIALIZE_OPTIONS);
 }
@@ -514,7 +520,7 @@ export function splitFrontmatter(markdown: string): {
   const match = markdown.match(FRONTMATTER_RE);
   if (!match) return { frontmatter: null, body: markdown };
   try {
-    const parsed = yamlLoad(match[1]);
+    const parsed = yamlLoad(match[1], YAML_OPTIONS);
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       return {
         frontmatter: parsed as Record<string, JSONValue>,

@@ -41,11 +41,11 @@ export function Today() {
     <div className="flex h-svh w-full min-w-0 flex-col">
       <AppHeader title="Today!" />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <main className="px-4 py-6 sm:px-6">
+        <div className="px-4 py-6 sm:px-6">
           <div className="max-w-3xl">
             <TodayBody view={view} error={error} loading={loading} onFinish={onFinish} />
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
