@@ -61,10 +61,14 @@ const OTHER_KEY: Caller = {
   key: { id: "key_2", provider: "claude_code", capability: null },
 };
 
-function post(caller: Caller, body: Record<string, string | boolean | undefined>): Request {
+function post(
+  caller: Caller,
+  body: Record<string, string | boolean | undefined>,
+  extra: Record<string, string> = {}
+): Request {
   return new Request("https://markbase.so/api/v1/docs", {
     method: "POST",
-    headers: { [CALLER_HEADER]: serializeCaller(caller), "content-type": "application/json" },
+    headers: { [CALLER_HEADER]: serializeCaller(caller), "content-type": "application/json", ...extra },
     body: JSON.stringify(body),
   });
 }
@@ -124,6 +128,34 @@ describe("POST /docs by the vault's owner", () => {
     const { by } = createDocument.mock.calls[0][0] as { by: { kind: string; agent?: { owner: string; tool: string | null } } };
     expect(by.kind).toBe("agent");
     expect(by.agent).toEqual({ owner: "name-of(user_2)", tool: "claude" });
+  });
+
+  it("answers an MCP tool call with the text, not the editor's copies", async () => {
+    // The card that draws a created document is the one that draws a read
+    // one, and Claude cuts a long answer short before the card parses it: a
+    // created document of any length came back as "The answer could not be
+    // read". The row's doc_json and base_doc are each several times the text.
+    createDocument.mockImplementation(async (input) => ({
+      id: "doc_new",
+      ...input,
+      base_doc: input.doc_json,
+      content_head: input.content,
+      version: 0,
+    }));
+    const markers: Record<string, string>[] = [{ "X-MCP-Request": "1" }, { "X-MCP-Client": "claude-ai" }];
+    for (const extra of markers) {
+      const res = await docsHandler.POST(post(OWNER, { title: "Notes", content: "# Notes\n\nthe text\n" }, extra));
+      expect(res.status).toBe(201);
+      const { doc } = (await res.json()) as { doc: Record<string, string | number | null | undefined> };
+      expect(doc.id).toBe("doc_new");
+      expect(doc.content).toBe("# Notes\n\nthe text");
+      expect(doc).not.toHaveProperty("doc_json");
+      expect(doc).not.toHaveProperty("base_doc");
+      expect(doc).not.toHaveProperty("content_head");
+    }
+    // The browser and the daemon still get the whole row.
+    const res = await docsHandler.POST(post(OWNER, { title: "Notes", content: "# Notes\n" }));
+    expect((await res.json()).doc).toHaveProperty("doc_json");
   });
 
   it("still tries to revive a returning file on the adopt path", async () => {
