@@ -17,6 +17,7 @@ const loadCrdtSnapshot = vi.fn();
 const saveCrdtSnapshot = vi.fn();
 const broadcastCrdt = vi.fn();
 const listCrdtChanges = vi.fn();
+const indexDocProperties = vi.fn();
 
 vi.mock("../src/server/documents", () => ({ getDocument: (id: string) => getDocument(id) }));
 vi.mock("../src/server/links", () => ({ getLinkByToken: (t: string) => getLinkByToken(t) }));
@@ -31,6 +32,9 @@ vi.mock("../src/server/crdt-store", () => ({
   saveCrdtSnapshot: (id: string, bytes: Uint8Array) => saveCrdtSnapshot(id, bytes),
   broadcastCrdt: (id: string, u: Uint8Array) => broadcastCrdt(id, u),
   listCrdtChanges: (u: string, s: string | null, v?: string) => listCrdtChanges(u, s, v),
+}));
+vi.mock("../src/server/properties", () => ({
+  indexDocProperties: (id: string, md: string) => indexDocProperties(id, md),
 }));
 vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@markbase/server/db/agent-sessions")>()),
@@ -89,6 +93,7 @@ beforeEach(() => {
   }));
   broadcastCrdt.mockReset().mockResolvedValue(undefined);
   listCrdtChanges.mockReset().mockResolvedValue({ cursor: "c1", changes: [] });
+  indexDocProperties.mockReset().mockResolvedValue(false);
 });
 
 describe("GET /docs/:id/crdt", () => {
@@ -170,11 +175,28 @@ describe("POST /docs/:id/crdt", () => {
     expect(res.status).toBe(200);
   });
 
+  it("indexes the properties of what an editor or the daemon saved", async () => {
+    const withFrontMatter = snapshot(createDoc("---\nseverity: sev1\n---\n\n# Incident\n"));
+    saveCrdtSnapshot.mockResolvedValue({ version: 6, changed: true, delta: withFrontMatter, state: withFrontMatter });
+    const res = await docCrdtHandler.POST(req(OWNER, { method: "POST", body }), "doc_1");
+    expect(res.status).toBe(200);
+    expect(indexDocProperties).toHaveBeenCalledWith("doc_1", expect.stringContaining("severity: sev1"));
+  });
+
+  it("still answers the save when indexing fails: the index is a copy, the save is not", async () => {
+    indexDocProperties.mockRejectedValue(new Error("db down"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await docCrdtHandler.POST(req(OWNER, { method: "POST", body }), "doc_1");
+    expect(res.status).toBe(200);
+    spy.mockRestore();
+  });
+
   it("does not broadcast a save that changed nothing", async () => {
     saveCrdtSnapshot.mockResolvedValue({ version: 4, changed: false, delta: null, state: STATE });
     const res = await docCrdtHandler.POST(req(OWNER, { method: "POST", body }), "doc_1");
     expect(await res.json()).toEqual({ version: 4 });
     expect(broadcastCrdt).not.toHaveBeenCalled();
+    expect(indexDocProperties).not.toHaveBeenCalled();
   });
 
   it("rejects a body with no state, and state that is not a Yjs update", async () => {

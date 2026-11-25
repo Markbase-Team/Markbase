@@ -16,6 +16,7 @@ import {
   deleteDocumentGroup,
   fileWriterOf,
   ensureDefaultVault,
+  indexPropertiesQuietly,
   getDocument,
   listDocumentsForUser,
   listSharedDocumentsForUser,
@@ -219,6 +220,9 @@ export const createDocEndpoint = endpoint({
     // Every document must live in a vault or it syncs to no folder at all.
     vault_id: body.vault_id ?? (await ensureDefaultVault(a.actor.userId)).id,
   });
+  // A document can be born with front matter; its properties are indexed from
+  // the first version, not the first edit.
+  await indexPropertiesQuietly(created.id, created.content);
   // An agent gets back what it wrote as text, not the editor's copies: the
   // same answer docs_readDoc gives it (a 7 KB document came back as 230 KB).
   return json({ doc: viaMcp(req) ? withoutEditorCopies(created) : created }, 201);

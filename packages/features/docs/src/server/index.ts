@@ -134,7 +134,7 @@ export {
   requireDocCapability,
 } from "./docs-auth";
 export type { EditResult, Writer } from "./doc-crdt";
-export { readDocCrdt, editDocCrdt, versionCredit } from "./doc-crdt";
+export { readDocCrdt, editDocCrdt, versionCredit, indexPropertiesQuietly } from "./doc-crdt";
 export { hookProvider, recordHookEvent, recordedDocReads } from "./doc-reads";
 export { nudgeAfterWrite, nudgeKindFor } from "./sync-nudges";
 export {
@@ -150,3 +150,4 @@ export type { Revived } from "./revive-doc";
 export { reviveForFile } from "./revive-doc";
 export { dispatchMentions } from "./dispatch-mentions";
 export { addConfirmation, listConfirmations } from "./confirmations";
+export { indexDocProperties } from "./properties";

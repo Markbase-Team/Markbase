@@ -17,6 +17,7 @@ const reviveForFile = vi.fn();
 const getVault = vi.fn();
 const ensureDefaultVault = vi.fn();
 
+vi.mock("../src/server/properties", () => ({ indexDocProperties: async () => true }));
 vi.mock("../src/server/documents", () => ({
   createDocument: (input: Record<string, string | null | undefined | { kind: string }>) => createDocument(input),
   getDocument: async () => null,

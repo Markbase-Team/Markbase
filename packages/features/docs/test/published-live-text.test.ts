@@ -50,6 +50,7 @@ function query(table: Row[]) {
   return q;
 }
 
+vi.mock("../src/server/properties", () => ({ indexDocProperties: async () => true }));
 vi.mock("@markbase/server/supabase", () => ({
   supabase: { schema: () => ({ from: () => query(rows) }) },
 }));

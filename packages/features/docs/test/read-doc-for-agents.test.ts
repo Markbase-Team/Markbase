@@ -34,6 +34,7 @@ vi.mock("../src/server/vaults", async (importOriginal) => ({
   userOwnsVault: async () => true,
   ensureDefaultVault: async () => ({ id: "vault_1" }),
 }));
+vi.mock("../src/server/properties", () => ({ indexDocProperties: async () => true }));
 vi.mock("../src/server/links", () => ({ getLinkByToken: async () => null }));
 vi.mock("../src/server/owner-name", () => ({ ownerDisplayName: async (u: string) => u }));
 vi.mock("@markbase/server/db/agent-sessions", async (importOriginal) => ({
