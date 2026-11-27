@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ReportAppOpen } from "@markbase/ui/report-app-open";
 import { FileText, Loader2 } from "lucide-react";
 import { api } from "@markbase/shared/api-client";
 import { DocsShell, type DocsPorts, type DocsRouting } from "@markbase/docs/ui";
@@ -214,6 +215,7 @@ createRoot(document.getElementById("root")!).render(
     <PromptProvider>
       <App />
       <Toaster />
+      <ReportAppOpen />
     </PromptProvider>
   </DesktopNavigation>
 );

@@ -16,8 +16,11 @@ export interface FunnelEventRow {
 /** As much of the database client as this needs, so a test can hand in a stub. */
 export interface EventWriter {
   insert(row: FunnelEventRow): Promise<{ error: { message: string } | null }>;
-  /** Whether the account already has this event, for one that happens once. */
-  has?(userId: string, name: string): Promise<boolean>;
+  /**
+   * Whether the account already has this event — at all, or since a time and
+   * from a source, for one kept once a day.
+   */
+  has?(userId: string, name: string, within?: { since: string; source: string }): Promise<boolean>;
 }
 
 const TABLE = "funnel_events";
@@ -27,12 +30,10 @@ const tableWriter: EventWriter = {
     const { error } = await supabase.from(TABLE).insert(row);
     return { error };
   },
-  has: async (userId, name) => {
-    const { count, error } = await supabase
-      .from(TABLE)
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("name", name);
+  has: async (userId, name, within) => {
+    let q = supabase.from(TABLE).select("id", { count: "exact", head: true }).eq("user_id", userId).eq("name", name);
+    if (within) q = q.gte("created_at", within.since).eq("source", within.source);
+    const { count, error } = await q;
     if (error) throw new Error(error.message);
     return (count ?? 0) > 0;
   },
@@ -75,6 +76,30 @@ export async function recordFunnelEventOnce(
 ): Promise<boolean> {
   try {
     if (await (writer.has ?? tableWriter.has)?.(userId, event.name)) return false;
+  } catch (err) {
+    console.warn(`[funnel-events] ${event.name} not checked: ${err instanceof Error ? err.message : String(err)}`);
+    return false;
+  }
+  return recordFunnelEvent(userId, event, writer);
+}
+
+/** Midnight UTC of the day `now` falls in, ISO. */
+function startOfDay(now: Date): string {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+}
+
+/**
+ * Record an event kept at most once a day (UTC) per account and source
+ * ("app.open"), unless today's is already there. True when it was written.
+ */
+export async function recordFunnelEventDaily(
+  userId: string,
+  event: FunnelEvent,
+  writer: EventWriter = tableWriter,
+  now: Date = new Date()
+): Promise<boolean> {
+  try {
+    if (await (writer.has ?? tableWriter.has)?.(userId, event.name, { since: startOfDay(now), source: event.source })) return false;
   } catch (err) {
     console.warn(`[funnel-events] ${event.name} not checked: ${err instanceof Error ? err.message : String(err)}`);
     return false;

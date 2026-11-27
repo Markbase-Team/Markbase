@@ -5,5 +5,5 @@
 import "@markbase/shared/analytics/funnel/onboarding";
 import "@markbase/docs/funnels";
 
-export { appFunnel, onboardingFunnel, signupSource } from "@markbase/shared/analytics/funnel/onboarding";
+export { appFunnel, onboardingFunnel, returningFunnel, signupSource } from "@markbase/shared/analytics/funnel/onboarding";
 export { docsFunnel, connectModalFunnel } from "@markbase/docs/funnels";

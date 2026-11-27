@@ -49,12 +49,17 @@ const NAME = /^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/;
 // On globalThis for the same reason as the endpoint observers: the code that
 // declares and the code that checks can be bundled apart.
 const REGISTRY = Symbol.for("markbase.funnel-events");
+const DAILY = Symbol.for("markbase.funnel-events-daily");
 interface RegistryGlobals {
   [REGISTRY]?: Map<string, string>;
+  [DAILY]?: Set<string>;
 }
 const globals: RegistryGlobals = globalThis as typeof globalThis & RegistryGlobals;
 function registry(): Map<string, string> {
   return (globals[REGISTRY] ??= new Map<string, string>());
+}
+function daily(): Set<string> {
+  return (globals[DAILY] ??= new Set<string>());
 }
 
 /** What a declaration hands back: its names, and a way to report one of them. */
@@ -73,13 +78,26 @@ export interface FunnelEvents<N extends string> {
  * Declare the funnel events `owner` reports. Names are `thing.action` in lower
  * case ("account.sign_in") — the action only; where it happened is the
  * event's source. Declaring one twice, from anywhere, throws.
+ *
+ * `daily` names the ones kept at most once a day per account and source
+ * ("app.open"): a page reports them every time and the server keeps the
+ * first, so a funnel can ask "came back on another day" without a row per
+ * page load.
  */
-export function defineFunnelEvents<const N extends string>(owner: string, names: readonly N[]): FunnelEvents<N> {
+export function defineFunnelEvents<const N extends string>(
+  owner: string,
+  names: readonly N[],
+  options: { daily?: readonly N[] } = {}
+): FunnelEvents<N> {
   for (const name of names) {
     if (!NAME.test(name)) throw new Error(`Funnel event ${name} must be thing.action, lower case`);
     const had = registry().get(name);
     if (had !== undefined && had !== owner) throw new Error(`Funnel event ${name} is declared by both ${had} and ${owner}`);
     registry().set(name, owner);
+  }
+  for (const name of options.daily ?? []) {
+    if (!names.includes(name)) throw new Error(`Funnel event ${name} is daily but not declared`);
+    daily().add(name);
   }
   return {
     owner,
@@ -99,6 +117,11 @@ export function defineFunnelEvents<const N extends string>(owner: string, names:
 /** Whether someone declared this name. */
 export function isFunnelEventName(value: string | null | undefined): boolean {
   return typeof value === "string" && registry().has(value);
+}
+
+/** Whether an event is kept at most once a day per account and source. */
+export function isDailyFunnelEvent(name: string): boolean {
+  return daily().has(name);
 }
 
 /** Every declared name, with who declared it. */

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { callerFromHeaders } from "@markbase/shared/auth";
-import { parseFunnelEvent, type FunnelEventBody } from "@markbase/shared/analytics/funnel/events";
-import { recordFunnelEvent } from "@markbase/server/analytics/funnel/events-store";
+import { isDailyFunnelEvent, parseFunnelEvent, type FunnelEventBody } from "@markbase/shared/analytics/funnel/events";
+import { recordFunnelEvent, recordFunnelEventDaily } from "@markbase/server/analytics/funnel/events-store";
 import "@/lib/funnels";
 
 export const runtime = "nodejs";
@@ -23,6 +23,9 @@ export async function POST(req: NextRequest) {
   }
   const event = parseFunnelEvent(body);
   if (!event) return NextResponse.json({ error: "Unknown event or source" }, { status: 400 });
-  const recorded = await recordFunnelEvent(caller.ownerId, event);
+  // One kept once a day ("app.open") is reported on every load; today's first wins.
+  const recorded = isDailyFunnelEvent(event.name)
+    ? await recordFunnelEventDaily(caller.ownerId, event)
+    : await recordFunnelEvent(caller.ownerId, event);
   return NextResponse.json({ recorded }, { status: recorded ? 201 : 202 });
 }

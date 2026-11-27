@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defineFunnel, funnelById, listFunnels, type Funnel } from "../../../src/analytics/funnel/funnels";
-import { onboardingFunnel } from "../../../src/analytics/funnel/onboarding";
+import { onboardingFunnel, returningFunnel } from "../../../src/analytics/funnel/onboarding";
 
 const steps: Funnel["steps"] = [
   { id: "a", label: "A", signals: [{ event: "x.a" }] },
@@ -12,6 +12,7 @@ describe("defineFunnel", () => {
     const f = defineFunnel({ id: "test_ok", title: "T", subject: "account", windowDays: 3, steps });
     expect(funnelById("test_ok")).toBe(f);
     expect(listFunnels()).toContain(onboardingFunnel);
+    expect(funnelById("returning")).toBe(returningFunnel);
   });
 
   it("refuses a funnel that is not one", () => {
